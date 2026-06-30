@@ -1,0 +1,26 @@
+# ─────────────────────────────────────────
+#  Frontend .gitignore
+# ─────────────────────────────────────────
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+*.tsbuildinfo
+
+# Coverage
+coverage/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

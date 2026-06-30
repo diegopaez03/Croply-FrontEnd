@@ -1,0 +1,11 @@
+/**
+ * Assets directory.
+ *
+ * Organize static assets by type:
+ *   images/    — JPG, PNG, WebP images
+ *   icons/     — SVG icons not from lucide-react
+ *   fonts/     — Self-hosted web fonts (if needed)
+ *
+ * Vite imports assets as URLs:
+ *   import logoUrl from '@assets/images/logo.png'
+ */
