@@ -4,6 +4,11 @@
   "description": "Croply — Frontend SPA (React + Vite + Shadcn/ui)",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@11.5.1",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
