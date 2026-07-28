@@ -63,22 +63,32 @@ export const authService = {
       }
 
       // Login exitoso mock
+      const mockUsuario = {
+        id_Usuario: data.email === 'primeracceso@finca.com' ? 46 : 45,
+        email: data.email,
+        nombre: "Juan",
+        apellido: "Pérez",
+        estado: "Activo",
+        fecha_alta: "2026-03-15T10:00:00Z",
+        rol_sistema: null,
+        fincas: [
+          { id_Finca: 12, nombre_finca: "La Esperanza", rol_finca: "ADMIN_FINCA" }
+        ]
+      } as const;
+
+      const mockPayload = {
+        debe_cambiar_contrasena: data.email === 'primeracceso@finca.com',
+        usuario: mockUsuario
+      };
+
+      const b64Payload = btoa(unescape(encodeURIComponent(JSON.stringify(mockPayload))));
+      const mockToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${b64Payload}.mocksignature`;
+
       const mockResponse: LoginResponse = {
-        accessToken: "eyJhbGciOiJIUzI1NiIsIn...",
+        accessToken: mockToken,
         expiresIn: 3600,
-        debe_cambiar_contrasena: data.email === 'primeracceso@finca.com', // Se activa mock para HU-AC-06
-        usuario: {
-          id_Usuario: 45,
-          email: "usuario@finca.com",
-          nombre: "Juan",
-          apellido: "Pérez",
-          estado: "Activo",
-          fecha_alta: "2026-03-15T10:00:00Z",
-          rol_sistema: null,
-          fincas: [
-            { id_Finca: 12, nombre_finca: "La Esperanza", rol_finca: "ADMIN_FINCA" }
-          ]
-        }
+        debe_cambiar_contrasena: mockPayload.debe_cambiar_contrasena,
+        usuario: mockUsuario as any
       };
       
       return mockResponse;

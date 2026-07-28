@@ -38,15 +38,15 @@ export function HeaderAdminCroply() {
         {/* Profile Info */}
         <UserMenuDropdown>
           <button className="flex items-center gap-3 pl-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg">
-            <div className="flex flex-col items-end w-28 text-left md:text-right">
-              <p className="text-sm font-semibold text-foreground leading-4 font-sans truncate w-full text-right">
+            <div className="flex flex-col items-end text-right max-w-[200px]">
+              <p className="text-sm font-semibold text-foreground leading-4 font-sans truncate w-full">
                 {usuario ? `${usuario.nombre} ${usuario.apellido}` : 'Admin Usuario'}
               </p>
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight mt-0.5 leading-4 font-sans">
                 {usuario?.fincas?.[0]?.rol_finca?.replace('_', ' ') || 'SUPER ADMIN'}
               </p>
             </div>
-            <div className="flex items-center gap-1 size-8 rounded-lg text-foreground hover:bg-muted justify-center">
+            <div className="flex items-center gap-1 size-12 rounded-lg text-foreground hover:bg-muted justify-center">
                <HugeiconsIcon icon={UserCircle02Icon} className="size-8" />
                <HugeiconsIcon icon={ArrowDown01Icon} className="size-4 text-muted-foreground" />
             </div>

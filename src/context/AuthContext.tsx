@@ -1,5 +1,11 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UsuarioAuth } from '../types/auth.types';
+import { jwtDecode } from 'jwt-decode';
+
+interface DecodedToken {
+  usuario: UsuarioAuth;
+  debe_cambiar_contrasena?: boolean;
+}
 
 interface AuthContextType {
   usuario: UsuarioAuth | null;
@@ -14,39 +20,67 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('accessToken');
+  });
+
   const [usuario, setUsuario] = useState<UsuarioAuth | null>(() => {
-    const storedUser = localStorage.getItem('usuario');
-    if (storedUser) {
+    const storedToken = localStorage.getItem('accessToken');
+    if (storedToken) {
       try {
-        return JSON.parse(storedUser);
-      } catch (e) {
-        console.error('Failed to parse stored user', e);
+        const decoded = jwtDecode<DecodedToken>(storedToken);
+        return decoded.usuario || null;
+      } catch (err) {
         return null;
       }
     }
     return null;
   });
-  
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('accessToken');
-  });
 
   const [debeCambiarContrasena, setDebeCambiarContrasena] = useState<boolean>(() => {
-    return localStorage.getItem('debeCambiarContrasena') === 'true';
+    const storedToken = localStorage.getItem('accessToken');
+    if (storedToken) {
+      try {
+        const decoded = jwtDecode<DecodedToken>(storedToken);
+        return decoded.debe_cambiar_contrasena || false;
+      } catch (err) {
+        return false;
+      }
+    }
+    return false;
   });
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem('accessToken');
+    if (storedToken) {
+      try {
+        jwtDecode<DecodedToken>(storedToken);
+      } catch (err) {
+        // Token inválido o corrupto -> auto logout
+        logoutState();
+      }
+    }
+    
+    // Limpieza de keys viejas en caso de que existan
+    localStorage.removeItem('usuario');
+    localStorage.removeItem('debeCambiarContrasena');
+  }, []);
 
   const loginState = (newUsuario: UsuarioAuth, newToken: string, debeCambiar: boolean = false) => {
     setUsuario(newUsuario);
     setToken(newToken);
     setDebeCambiarContrasena(debeCambiar);
     localStorage.setItem('accessToken', newToken);
-    localStorage.setItem('usuario', JSON.stringify(newUsuario));
-    localStorage.setItem('debeCambiarContrasena', String(debeCambiar));
+    
+    // Nos aseguramos de limpiar cualquier dato legacy
+    localStorage.removeItem('usuario');
+    localStorage.removeItem('debeCambiarContrasena');
   };
 
   const completarPrimerAcceso = () => {
     setDebeCambiarContrasena(false);
-    localStorage.setItem('debeCambiarContrasena', 'false');
+    // En el mundo real, acá el backend debería mandar un nuevo token JWT 
+    // donde debe_cambiar_contrasena venga en false. Por ahora limpiamos local.
   };
 
   const logoutState = () => {
@@ -62,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{ 
       usuario, 
       token, 
-      isAuthenticated: !!token, 
+      isAuthenticated: !!token && !!usuario, 
       debeCambiarContrasena,
       loginState, 
       completarPrimerAcceso,

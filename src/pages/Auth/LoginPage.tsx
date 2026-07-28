@@ -174,12 +174,12 @@ export default function LoginPage() {
 
             {/* Signup Link */}
             <div className="mt-2 text-center text-sm font-normal text-muted-foreground">
-              No tienes cuenta?{' '}
+              ¿Necesitás una cuenta?{' '}
               <Link
-                to="/registro"
+                to="/digitalizar-finca"
                 className="text-primary hover:underline font-medium"
               >
-                Crear cuenta
+                Solicitá la digitalización de tu finca
               </Link>
             </div>
           </form>

@@ -32,6 +32,28 @@ import { showSuccessToast } from '../../utils/successHandler';
 
 import logoImg from '../../assets/images/LogoCroplyHoriz.svg';
 
+const formatPhone = (val: string) => {
+  let cleaned = val.replace(/[^\d+]/g, '');
+  if (cleaned.startsWith('+54') && cleaned.length > 3) {
+     let rest = cleaned.substring(3);
+     if (rest.startsWith('9')) {
+        rest = rest.substring(1);
+        let formatted = '+54 9';
+        if (rest.length > 0) formatted += ' ' + rest.substring(0, 3);
+        if (rest.length > 3) formatted += ' ' + rest.substring(3, 7);
+        if (rest.length > 7) formatted += '-' + rest.substring(7, 11);
+        return formatted;
+     } else {
+        let formatted = '+54';
+        if (rest.length > 0) formatted += ' ' + rest.substring(0, 3);
+        if (rest.length > 3) formatted += ' ' + rest.substring(3, 7);
+        if (rest.length > 7) formatted += '-' + rest.substring(7, 11);
+        return formatted;
+     }
+  }
+  return cleaned;
+};
+
 export default function DigitalizarFincaPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -54,7 +76,11 @@ export default function DigitalizarFincaPage() {
   const onSubmit = async (values: SolicitudDigitalizacionFormValues) => {
     setIsSubmitting(true);
     try {
-      const response = await solicitudesService.solicitarDigitalizacion(values);
+      const payload = {
+        ...values,
+        telefono_contacto: values.telefono_contacto.replace(/[\s-]/g, '')
+      };
+      const response = await solicitudesService.solicitarDigitalizacion(payload);
       showSuccessToast(response.message);
       setIsSuccess(true);
     } catch (error) {
@@ -89,7 +115,7 @@ export default function DigitalizarFincaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans pb-24">
+    <div className="min-h-screen bg-background flex flex-col font-sans">
       {/* Header Simple */}
       <header className="w-full h-[110px] bg-card flex items-center px-6 md:px-12 lg:px-24 border-b border-border">
         <Link to="/">
@@ -97,7 +123,7 @@ export default function DigitalizarFincaPage() {
         </Link>
       </header>
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 mt-12 md:mt-16">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-6 mt-12 md:mt-16 mb-16">
         
         {/* Page Header */}
         <div className="mb-12 text-center">
@@ -155,7 +181,11 @@ export default function DigitalizarFincaPage() {
                         <FormItem className="md:col-span-2">
                           <FormLabel>Teléfono de Contacto</FormLabel>
                           <FormControl>
-                            <Input placeholder="+549 2610 000 000" {...field} />
+                            <Input 
+                              placeholder="+54 9 261 000-0000" 
+                              {...field}
+                              onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -294,7 +324,7 @@ export default function DigitalizarFincaPage() {
             </div>
             <h4 className="font-semibold text-foreground">Seguridad Garantizada</h4>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Tus datos personales permanecen resguardados de forma privada y encriptada
+              Tus datos personales permanecen resguardados de forma privada.
             </p>
           </div>
           <div className="flex flex-col items-center space-y-3">
@@ -316,15 +346,14 @@ export default function DigitalizarFincaPage() {
             </p>
           </div>
         </div>
-        <footer className="w-full bg-background border-t border-border pt-16 pb-8 px-6 md:px-12 lg:px-24">
-          <div className="max-w-7xl mx-auto pt-8 border-t border-border flex justify-center text-center">
-            <p className="text-sm text-muted-foreground">
-              © 2026 Croply. Todos los derechos reservados.
-            </p>
-          </div>
-        </footer>
 
       </main>
+
+      <footer className="w-full border-t border-border bg-background pt-4 pb-8 flex justify-center text-center mt-auto">
+        <p className="text-sm text-muted-foreground mt-4">
+          © 2026 Croply. Todos los derechos reservados.
+        </p>
+      </footer>
     </div>
   );
 }
