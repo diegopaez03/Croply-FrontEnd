@@ -44,7 +44,7 @@ export default function PrimerAccesoPage() {
       if (isSystemAdmin) {
         navigate('/admin-croply/dashboard');
       } else {
-        navigate('/admin-finca/dashboard');
+        navigate('/admin-finca/mi-finca');
       }
     },
     onError: (error) => {

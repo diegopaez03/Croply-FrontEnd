@@ -17,9 +17,9 @@ export default function AIRecommendationSection() {
   ];
 
   return (
-    <section className="w-full py-24 bg-background">
-      <div className="mx-auto px-6 md:px-8">
-        <div className="bg-primary/5 border border-primary/10 rounded-[20px] p-8 md:p-12 relative overflow-hidden flex flex-col lg:flex-row gap-16 items-center">
+    <section className="w-full py-16 md:py-24 bg-background">
+      <div className="mx-auto px-4 sm:px-6 md:px-8 max-w-7xl">
+        <div className="bg-primary/5 border border-primary/10 rounded-[20px] p-6 sm:p-8 md:p-12 relative overflow-hidden flex flex-col lg:flex-row gap-10 md:gap-16 items-center">
           
           {/* Background Tractor Icon */}
           <div className="absolute top-0 right-0 opacity-10 pointer-events-none transform translate-x-4 -translate-y-4">
@@ -33,11 +33,11 @@ export default function AIRecommendationSection() {
             Potenciado por Inteligencia Artificial
           </div>
           
-          <h2 className="text-3xl md:text-4xl font-semibold text-primary tracking-tight leading-tight">
+          <h2 className="text-2xl md:text-4xl font-semibold text-primary tracking-tight leading-tight">
             Anticipá problemas antes de que ocurran.
           </h2>
           
-          <p className="text-lg text-muted-foreground leading-relaxed">
+          <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
             Nuestra plataforma integra lecturas de sensores IoT y servicios climáticos en tiempo real para generar recomendaciones y alertas personalizadas. Tomá decisiones respaldadas por datos objetivos para eficientizar tus ciclos de riego y proteger la salud de tu cultivo.
           </p>
 
@@ -52,12 +52,12 @@ export default function AIRecommendationSection() {
         </div>
 
         {/* Right Stats Grid */}
-        <div className="flex-1 w-full grid grid-cols-2 gap-4 md:gap-6">
+        <div className="flex-1 w-full grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
           {stats.map((stat, idx) => (
-            <Card key={idx} className={`border-border bg-card shadow-sm hover:shadow-md transition-all ${idx % 2 !== 0 ? 'mt-8 md:mt-12' : ''}`}>
-              <CardContent className="p-6 md:p-8 flex flex-col justify-center h-full gap-2">
-                <div className="text-3xl md:text-4xl font-bold text-primary">{stat.value}</div>
-                <div className="text-sm text-muted-foreground font-medium leading-snug">{stat.label}</div>
+            <Card key={idx} className={`border-border bg-card shadow-sm hover:shadow-md transition-all ${idx % 2 !== 0 ? 'mt-4 md:mt-12' : ''}`}>
+              <CardContent className="p-4 sm:p-6 md:p-8 flex flex-col justify-center h-full gap-2">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">{stat.value}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground font-medium leading-snug">{stat.label}</div>
               </CardContent>
             </Card>
           ))}

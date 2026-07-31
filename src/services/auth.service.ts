@@ -45,7 +45,13 @@ export const authService = {
         return Promise.reject(err);
       }
 
-      if (data.email !== 'usuario@finca.com' && data.email !== 'primeracceso@finca.com' || data.contrasena !== 'Password123!') {
+      const validUsers: Record<string, string> = {
+        'usuario@finca.com': 'Password123!',
+        'primeracceso@finca.com': 'Password123!',
+        'admin@croply.app': 'MockAdmin123!'
+      };
+
+      if (!validUsers[data.email] || validUsers[data.email] !== data.contrasena) {
         // Simulamos credenciales inválidas (ERR-01 de HU-AC-01)
         const err = new AxiosError('Invalid Credentials');
         err.response = {
@@ -63,18 +69,32 @@ export const authService = {
       }
 
       // Login exitoso mock
-      const mockUsuario = {
-        id_Usuario: data.email === 'primeracceso@finca.com' ? 46 : 45,
-        email: data.email,
-        nombre: "Juan",
-        apellido: "Pérez",
-        estado: "Activo",
-        fecha_alta: "2026-03-15T10:00:00Z",
-        rol_sistema: null,
-        fincas: [
-          { id_Finca: 12, nombre_finca: "La Esperanza", rol_finca: "ADMIN_FINCA" }
-        ]
-      } as const;
+      let mockUsuario: any;
+      if (data.email === 'admin@croply.app') {
+        mockUsuario = {
+          id_Usuario: 1,
+          email: data.email,
+          nombre: "Super",
+          apellido: "Admin",
+          estado: "Activo",
+          fecha_alta: "2026-03-15T10:00:00Z",
+          rol_sistema: "ADMIN_CROPLY",
+          fincas: []
+        };
+      } else {
+        mockUsuario = {
+          id_Usuario: data.email === 'primeracceso@finca.com' ? 46 : 45,
+          email: data.email,
+          nombre: "Juan",
+          apellido: "Pérez",
+          estado: "Activo",
+          fecha_alta: "2026-03-15T10:00:00Z",
+          rol_sistema: null,
+          fincas: [
+            { id_Finca: 12, nombre_finca: "La Esperanza", rol_finca: "ADMIN_FINCA" }
+          ]
+        };
+      }
 
       const mockPayload = {
         debe_cambiar_contrasena: data.email === 'primeracceso@finca.com',

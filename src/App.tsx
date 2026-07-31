@@ -15,6 +15,21 @@ import DigitalizarFincaPage from './pages/Landing/DigitalizarFincaPage'
 import DashboardAdminFincaPage from './pages/AdminFinca/DashboardAdminFincaPage'
 import DashboardAdminCroplyPage from './pages/AdminCroply/DashboardAdminCroplyPage'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
+import { PerfilRoute } from './components/layout/PerfilRoute'
+
+import AdminFincaLayout from './components/layout/AdminFincaLayout'
+
+function PlaceholderAdminFinca({ title }: { title: string }) {
+  return (
+    <div className="flex items-center justify-center h-full w-full">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-2">{title}</h2>
+        <p className="text-muted-foreground">Sección en construcción</p>
+        {/* TODO: Completar con el contenido real */}
+      </div>
+    </div>
+  );
+}
 
 /**
  * App — Root router component.
@@ -41,11 +56,22 @@ function App() {
               <Route path="/primer-acceso" element={<PrimerAccesoPage />} />
             </Route>
             
-            <Route path="/admin-finca/dashboard" element={<DashboardAdminFincaPage />} />
+            <Route element={<AdminFincaLayout />}>
+              <Route path="/admin-finca/mi-finca" element={<DashboardAdminFincaPage />} />
+              <Route path="/admin-finca/biblioteca" element={<PlaceholderAdminFinca title="Biblioteca de cultivos" />} />
+              <Route path="/admin-finca/agroquimicos" element={<PlaceholderAdminFinca title="Agroquímicos" />} />
+              <Route path="/admin-finca/costos" element={<PlaceholderAdminFinca title="Costos" />} />
+              <Route path="/admin-finca/gestion-usuarios" element={<PlaceholderAdminFinca title="Gestión de usuarios" />} />
+              <Route path="/admin-finca/soporte" element={<PlaceholderAdminFinca title="Ayuda y soporte" />} />
+            </Route>
 
             <Route element={<AdminCroplyLayout />}>
               <Route path="/admin-croply/dashboard" element={<DashboardAdminCroplyPage />} />
               <Route path="/admin-croply/gestion-usuarios" element={<GestionClientesPage />} />
+            </Route>
+            
+            {/* Rutas compartidas que deciden su layout dinámicamente */}
+            <Route element={<PerfilRoute />}>
               <Route path="/perfil" element={<PerfilPage />} />
             </Route>
           </Route>

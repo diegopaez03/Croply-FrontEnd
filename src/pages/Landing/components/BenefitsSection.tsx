@@ -22,10 +22,10 @@ export default function BenefitsSection() {
   ];
 
   return (
-    <section className="w-full py-24 bg-background">
+    <section className="w-full py-16 md:py-24 bg-background">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
-        <div className="mb-16 text-center">
-          <h2 className="text-3xl md:text-4xl font-semibold text-primary tracking-tight ">
+        <div className="mb-12 md:mb-16 text-center">
+          <h2 className="text-2xl md:text-4xl font-semibold text-primary tracking-tight ">
             Tecnología al servicio de la tierra
           </h2>
           <div className="w-20 h-1 bg-primary mt-4 rounded-full mx-auto" />
@@ -38,9 +38,9 @@ export default function BenefitsSection() {
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                   <HugeiconsIcon icon={benefit.icon} className="w-8 h-8" />
                 </div>
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold text-foreground">{benefit.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">
+                <div className="space-y-3 md:space-y-4">
+                  <h3 className="text-lg md:text-xl font-semibold text-foreground">{benefit.title}</h3>
+                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
                     {benefit.description}
                   </p>
                 </div>

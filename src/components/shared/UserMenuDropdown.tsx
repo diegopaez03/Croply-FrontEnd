@@ -7,16 +7,19 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 
+import { useAuth } from '../../context/AuthContext';
+
 interface UserMenuDropdownProps {
   children: React.ReactNode;
 }
 
 export function UserMenuDropdown({ children }: UserMenuDropdownProps) {
   const navigate = useNavigate();
+  const { logoutState } = useAuth();
 
   const handleCerrarSesion = () => {
-    // TODO: cerrar sesión - pendiente de confirmar con el equipo
-    console.log('TODO: cerrar sesión - pendiente de confirmar con el equipo');
+    logoutState();
+    navigate('/login');
   };
 
   const handleMiCuenta = () => {

@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+export const passwordSchema = z
+  .string()
+  .min(1, { message: "La contraseña es requerida" })
+  .min(8, { message: "Debe tener al menos 8 caracteres" })
+  .regex(/[A-Z]/, { message: "Debe contener al menos una mayúscula, una minúscula y un número" })
+  .regex(/[a-z]/, { message: "Debe contener al menos una mayúscula, una minúscula y un número" })
+  .regex(/[0-9]/, { message: "Debe contener al menos una mayúscula, una minúscula y un número" });
+
 export const loginSchema = z.object({
   email: z
     .string()
@@ -20,10 +28,7 @@ export const registerAdminFincaSchema = z.object({
     .min(1, { message: "El correo electrónico es requerido" })
     .email({ message: "Debe ser un correo electrónico válido" }),
   telefono: z.string().optional(),
-  contrasena_temporal: z
-    .string()
-    .min(1, { message: "La contraseña temporal es requerida" })
-    .min(8, { message: "Debe tener al menos 8 caracteres" }),
+  contrasena_temporal: passwordSchema,
   id_Rol: z.preprocess((val) => (val === "" || val === undefined ? null : Number(val)), z.number().nullable().optional()),
   estado: z.enum(["Activo", "Pendiente", "Inactivo"], {
     required_error: "El estado es requerido",
@@ -39,10 +44,7 @@ export const registroInvitadoSchema = z.object({
     .string()
     .min(1, { message: "El correo electrónico es requerido" })
     .email({ message: "Debe ser un correo electrónico válido" }),
-  contrasena: z
-    .string()
-    .min(1, { message: "La contraseña es requerida" })
-    .min(8, { message: "Debe tener al menos 8 caracteres" }),
+  contrasena: passwordSchema,
   confirmarContrasena: z
     .string()
     .min(1, { message: "La confirmación de la contraseña es requerida" }),
@@ -63,10 +65,7 @@ export const olvideContrasenaSchema = z.object({
 export type OlvideContrasenaFormValues = z.infer<typeof olvideContrasenaSchema>;
 
 export const resetearContrasenaSchema = z.object({
-  nueva_contrasena: z
-    .string()
-    .min(1, { message: "La contraseña es requerida" })
-    .min(8, { message: "Debe tener al menos 8 caracteres" }),
+  nueva_contrasena: passwordSchema,
   confirmar_contrasena: z
     .string()
     .min(1, { message: "La confirmación de la contraseña es requerida" }),
@@ -81,10 +80,7 @@ export const cambioContrasenaSchema = z.object({
   contrasena_actual: z
     .string()
     .min(1, { message: "La contraseña actual es requerida" }),
-  nueva_contrasena: z
-    .string()
-    .min(1, { message: "La nueva contraseña es requerida" })
-    .min(8, { message: "Debe tener al menos 8 caracteres" }),
+  nueva_contrasena: passwordSchema,
   confirmar_contrasena: z
     .string()
     .min(1, { message: "La confirmación de la contraseña es requerida" }),
@@ -96,10 +92,7 @@ export const cambioContrasenaSchema = z.object({
 export type CambioContrasenaFormValues = z.infer<typeof cambioContrasenaSchema>;
 
 export const primerAccesoSchema = z.object({
-  nueva_contrasena: z
-    .string()
-    .min(1, { message: "La nueva contraseña es requerida" })
-    .min(8, { message: "Debe tener al menos 8 caracteres" }),
+  nueva_contrasena: passwordSchema,
   confirmar_contrasena: z
     .string()
     .min(1, { message: "La confirmación de la contraseña es requerida" }),

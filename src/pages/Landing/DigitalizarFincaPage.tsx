@@ -30,7 +30,7 @@ import { solicitudesService } from '../../services/solicitudes.service';
 import { handleFormError } from '../../utils/errorHandler';
 import { showSuccessToast } from '../../utils/successHandler';
 
-import logoImg from '../../assets/images/LogoCroplyHoriz.svg';
+import logoImg from '../../assets/images/LogoCroply.svg';
 
 const formatPhone = (val: string) => {
   let cleaned = val.replace(/[^\d+]/g, '');
