@@ -29,7 +29,7 @@ export const solicitudesService = {
       // Respuesta de éxito (201 Created mock)
       return {
         message: '¡Solicitud enviada con éxito! Nuestro equipo se pondrá en contacto a la brevedad.',
-        id_Solicitud: Math.floor(Math.random() * 1000) + 1,
+        id_solicitud_df: Math.floor(Math.random() * 1000) + 1,
         nombre_completo: data.nombre_completo,
         correo_electronico: data.correo_electronico,
         estado: 'Pendiente',

@@ -65,10 +65,10 @@ export default function RegistroInvitadoPage() {
   });
 
   const onSubmit = (values: RegistroInvitadoFormValues) => {
-    if (!validacionData?.id_InvitacionFinca) return;
+    if (!validacionData?.id_invitacion_finca) return;
 
     registroMutation.mutate({
-      id_InvitacionFinca: validacionData.id_InvitacionFinca,
+      id_invitacion_finca: validacionData.id_invitacion_finca,
       nombre: values.nombre,
       apellido: values.apellido,
       contrasena: values.contrasena,

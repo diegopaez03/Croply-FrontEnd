@@ -12,7 +12,7 @@ export interface SolicitudDigitalizacionRequest {
 
 export interface SolicitudDigitalizacionResponse {
   message: string;
-  id_Solicitud: number;
+  id_solicitud_df: number;
   nombre_completo: string;
   correo_electronico: string;
   estado: string;

@@ -1,107 +1,97 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UsuarioAuth } from '../types/auth.types';
-import { jwtDecode } from 'jwt-decode';
-
-interface DecodedToken {
-  usuario: UsuarioAuth;
-  debe_cambiar_contrasena?: boolean;
-}
+import {
+  ACCESS_TOKEN_KEY,
+  parseSessionFromAccessToken,
+} from '../utils/auth-token';
 
 interface AuthContextType {
   usuario: UsuarioAuth | null;
   token: string | null;
   isAuthenticated: boolean;
   debeCambiarContrasena: boolean;
-  loginState: (usuario: UsuarioAuth, token: string, debeCambiarContrasena?: boolean) => void;
+  loginState: (accessToken: string) => void;
   completarPrimerAcceso: () => void;
   logoutState: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function readStoredSession() {
+  const storedToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+  if (!storedToken) {
+    return { token: null, usuario: null, debeCambiarContrasena: false };
+  }
+
+  const session = parseSessionFromAccessToken(storedToken);
+  if (!session) {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    return { token: null, usuario: null, debeCambiarContrasena: false };
+  }
+
+  return {
+    token: storedToken,
+    usuario: session.usuario,
+    debeCambiarContrasena: session.debeCambiarContrasena,
+  };
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('accessToken');
-  });
+  const initialSession = readStoredSession();
 
-  const [usuario, setUsuario] = useState<UsuarioAuth | null>(() => {
-    const storedToken = localStorage.getItem('accessToken');
-    if (storedToken) {
-      try {
-        const decoded = jwtDecode<DecodedToken>(storedToken);
-        return decoded.usuario || null;
-      } catch (err) {
-        return null;
-      }
-    }
-    return null;
-  });
-
-  const [debeCambiarContrasena, setDebeCambiarContrasena] = useState<boolean>(() => {
-    const storedToken = localStorage.getItem('accessToken');
-    if (storedToken) {
-      try {
-        const decoded = jwtDecode<DecodedToken>(storedToken);
-        return decoded.debe_cambiar_contrasena || false;
-      } catch (err) {
-        return false;
-      }
-    }
-    return false;
-  });
+  const [token, setToken] = useState<string | null>(initialSession.token);
+  const [usuario, setUsuario] = useState<UsuarioAuth | null>(initialSession.usuario);
+  const [debeCambiarContrasena, setDebeCambiarContrasena] = useState<boolean>(
+    initialSession.debeCambiarContrasena,
+  );
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('accessToken');
-    if (storedToken) {
-      try {
-        jwtDecode<DecodedToken>(storedToken);
-      } catch (err) {
-        // Token inválido o corrupto -> auto logout
-        logoutState();
-      }
-    }
-    
-    // Limpieza de keys viejas en caso de que existan
+    // Limpieza de keys legacy (usuario / flag guardados aparte del token)
     localStorage.removeItem('usuario');
     localStorage.removeItem('debeCambiarContrasena');
   }, []);
 
-  const loginState = (newUsuario: UsuarioAuth, newToken: string, debeCambiar: boolean = false) => {
-    setUsuario(newUsuario);
-    setToken(newToken);
-    setDebeCambiarContrasena(debeCambiar);
-    localStorage.setItem('accessToken', newToken);
-    
-    // Nos aseguramos de limpiar cualquier dato legacy
+  const logoutState = () => {
+    setUsuario(null);
+    setToken(null);
+    setDebeCambiarContrasena(false);
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem('usuario');
+    localStorage.removeItem('debeCambiarContrasena');
+  };
+
+  const loginState = (accessToken: string) => {
+    const session = parseSessionFromAccessToken(accessToken);
+    if (!session) {
+      logoutState();
+      return;
+    }
+
+    setUsuario(session.usuario);
+    setToken(accessToken);
+    setDebeCambiarContrasena(session.debeCambiarContrasena);
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+
     localStorage.removeItem('usuario');
     localStorage.removeItem('debeCambiarContrasena');
   };
 
   const completarPrimerAcceso = () => {
     setDebeCambiarContrasena(false);
-    // En el mundo real, acá el backend debería mandar un nuevo token JWT 
-    // donde debe_cambiar_contrasena venga en false. Por ahora limpiamos local.
-  };
-
-  const logoutState = () => {
-    setUsuario(null);
-    setToken(null);
-    setDebeCambiarContrasena(false);
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('usuario');
-    localStorage.removeItem('debeCambiarContrasena');
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      usuario, 
-      token, 
-      isAuthenticated: !!token && !!usuario, 
-      debeCambiarContrasena,
-      loginState, 
-      completarPrimerAcceso,
-      logoutState 
-    }}>
+    <AuthContext.Provider
+      value={{
+        usuario,
+        token,
+        isAuthenticated: !!token && !!usuario,
+        debeCambiarContrasena,
+        loginState,
+        completarPrimerAcceso,
+        logoutState,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

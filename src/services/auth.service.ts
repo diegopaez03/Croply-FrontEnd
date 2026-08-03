@@ -68,37 +68,48 @@ export const authService = {
         return Promise.reject(err);
       }
 
-      // Login exitoso mock
-      let mockUsuario: any;
+      // Login exitoso mock — payload alineado con AuthJwtPayload del backend
+      const debeCambiar = data.email === 'primeracceso@finca.com';
+      let mockUsuario: LoginResponse['usuario'];
+
       if (data.email === 'admin@croply.app') {
         mockUsuario = {
-          id_Usuario: 1,
+          id_usuario: 1,
           email: data.email,
-          nombre: "Super",
-          apellido: "Admin",
-          estado: "Activo",
-          fecha_alta: "2026-03-15T10:00:00Z",
-          rol_sistema: "ADMIN_CROPLY",
-          fincas: []
+          nombre: 'Super',
+          apellido: 'Admin',
+          estado: 'Activo',
+          fecha_alta: '2026-03-15T10:00:00Z',
+          rol_sistema: 'ADMIN_CROPLY',
+          fincas: [],
         };
       } else {
         mockUsuario = {
-          id_Usuario: data.email === 'primeracceso@finca.com' ? 46 : 45,
+          id_usuario: debeCambiar ? 46 : 45,
           email: data.email,
-          nombre: "Juan",
-          apellido: "Pérez",
-          estado: "Activo",
-          fecha_alta: "2026-03-15T10:00:00Z",
+          nombre: 'Juan',
+          apellido: 'Pérez',
+          estado: 'Activo',
+          fecha_alta: '2026-03-15T10:00:00Z',
           rol_sistema: null,
           fincas: [
-            { id_Finca: 12, nombre_finca: "La Esperanza", rol_finca: "ADMIN_FINCA" }
-          ]
+            { id_finca: 12, nombre_finca: 'La Esperanza', rol_finca: 'ADMIN_FINCA' },
+          ],
         };
       }
 
       const mockPayload = {
-        debe_cambiar_contrasena: data.email === 'primeracceso@finca.com',
-        usuario: mockUsuario
+        sub: mockUsuario.id_usuario,
+        email: mockUsuario.email,
+        debe_cambiar_contrasena: debeCambiar,
+        rol_sistema: mockUsuario.rol_sistema,
+        token_version: 0,
+        nombre: mockUsuario.nombre,
+        apellido: mockUsuario.apellido,
+        estado: mockUsuario.estado,
+        fecha_alta: mockUsuario.fecha_alta,
+        fincas: mockUsuario.fincas,
+        exp: Math.floor(Date.now() / 1000) + 3600,
       };
 
       const b64Payload = btoa(unescape(encodeURIComponent(JSON.stringify(mockPayload))));
@@ -107,10 +118,10 @@ export const authService = {
       const mockResponse: LoginResponse = {
         accessToken: mockToken,
         expiresIn: 3600,
-        debe_cambiar_contrasena: mockPayload.debe_cambiar_contrasena,
-        usuario: mockUsuario as any
+        debe_cambiar_contrasena: debeCambiar,
+        usuario: mockUsuario,
       };
-      
+
       return mockResponse;
     }
 
@@ -145,13 +156,13 @@ export const authService = {
       // Registro exitoso mock
       const mockResponse: import('../types/auth.types').RegisterAdminFincaResponse = {
         message: "Usuario registrado correctamente",
-        id_Usuario: Math.floor(Math.random() * 1000) + 100,
+        id_usuario: Math.floor(Math.random() * 1000) + 100,
         email: data.email,
         nombre: data.nombre,
         apellido: data.apellido,
         telefono: data.telefono,
         estado: data.estado,
-        id_Rol: data.id_Rol,
+        id_rol: data.id_rol,
         fecha_alta: new Date().toISOString(),
         fecha_baja: null
       };
@@ -205,7 +216,7 @@ export const authService = {
       return {
         valido: true,
         email_invitado: 'invitado@finca.com',
-        id_InvitacionFinca: 123
+        id_invitacion_finca: 123
       };
     }
 
@@ -223,7 +234,7 @@ export const authService = {
       return {
         message: 'Registro completado exitosamente',
         usuario: {
-          id_Usuario: 99,
+          id_usuario: 99,
           email: 'invitado@finca.com',
           nombre: data.nombre,
           apellido: data.apellido,

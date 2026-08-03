@@ -4,13 +4,13 @@ export interface LoginRequest {
 }
 
 export interface FincaRol {
-  id_Finca: number;
+  id_finca: number;
   nombre_finca: string;
   rol_finca: string;
 }
 
 export interface UsuarioAuth {
-  id_Usuario: number;
+  id_usuario: number;
   email: string;
   nombre: string;
   apellido: string;
@@ -18,6 +18,27 @@ export interface UsuarioAuth {
   fecha_alta: string;
   rol_sistema: string | null;
   fincas: FincaRol[];
+}
+
+/** Claims del JWT emitido por el backend (AuthJwtPayload). */
+export interface AuthJwtPayload {
+  sub: number;
+  email: string;
+  debe_cambiar_contrasena: boolean;
+  rol_sistema: string | null;
+  token_version: number;
+  nombre: string;
+  apellido: string;
+  estado: "Activo" | "Pendiente" | "Inactivo";
+  fecha_alta: string;
+  fincas: FincaRol[];
+  exp?: number;
+  iat?: number;
+}
+
+export interface AuthSession {
+  usuario: UsuarioAuth;
+  debeCambiarContrasena: boolean;
 }
 
 export interface LoginResponse {
@@ -33,19 +54,19 @@ export interface RegisterAdminFincaRequest {
   apellido: string;
   telefono?: string;
   contrasena_temporal: string;
-  id_Rol?: number | null;
+  id_rol?: number | null;
   estado: "Activo" | "Pendiente" | "Inactivo";
 }
 
 export interface RegisterAdminFincaResponse {
   message: string;
-  id_Usuario: number;
+  id_usuario: number;
   email: string;
   nombre: string;
   apellido: string;
   telefono?: string;
   estado: "Activo" | "Pendiente" | "Inactivo";
-  id_Rol?: number | null;
+  id_rol?: number | null;
   fecha_alta: string;
   fecha_baja?: string | null;
 }
@@ -53,11 +74,11 @@ export interface RegisterAdminFincaResponse {
 export interface ValidarInvitacionResponse {
   valido: boolean;
   email_invitado: string;
-  id_InvitacionFinca: number;
+  id_invitacion_finca: number;
 }
 
 export interface RegistrarInvitadoRequest {
-  id_InvitacionFinca: number;
+  id_invitacion_finca: number;
   nombre: string;
   apellido: string;
   contrasena: string;
@@ -66,7 +87,7 @@ export interface RegistrarInvitadoRequest {
 export interface RegistrarInvitadoResponse {
   message: string;
   usuario: {
-    id_Usuario: number;
+    id_usuario: number;
     email: string;
     nombre: string;
     apellido: string;

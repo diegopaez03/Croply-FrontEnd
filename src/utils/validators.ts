@@ -29,7 +29,7 @@ export const registerAdminFincaSchema = z.object({
     .email({ message: "Debe ser un correo electrónico válido" }),
   telefono: z.string().optional(),
   contrasena_temporal: passwordSchema,
-  id_Rol: z.preprocess((val) => (val === "" || val === undefined ? null : Number(val)), z.number().nullable().optional()),
+  id_rol: z.preprocess((val) => (val === "" || val === undefined ? null : Number(val)), z.number().nullable().optional()),
   estado: z.enum(["Activo", "Pendiente", "Inactivo"], {
     required_error: "El estado es requerido",
   }).default("Pendiente"),

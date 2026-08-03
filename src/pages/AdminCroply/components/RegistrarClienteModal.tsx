@@ -157,7 +157,7 @@ export function RegistrarClienteModal({ open, onOpenChange }: RegistrarClienteMo
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="id_Rol"
+                name="id_rol"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Rol</FormLabel>

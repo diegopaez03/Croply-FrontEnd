@@ -35,20 +35,17 @@ export default function LoginPage() {
   const loginMutation = useMutation({
     mutationFn: authService.login,
     onSuccess: (data) => {
-      // Manejar "debe_cambiar_contrasena"
+      // La sesión se deriva de los claims del accessToken (no se guarda el usuario aparte)
+      loginState(data.accessToken);
+
       if (data.debe_cambiar_contrasena) {
-        loginState(data.usuario, data.accessToken, true);
         navigate('/primer-acceso');
         return;
       }
 
-      // Login normal: Determinar redirección basada en rol
       showSuccessToast({ message: "Inicio de sesión exitoso" });
-      loginState(data.usuario, data.accessToken, false);
-      
-      const isSystemAdmin = !!data.usuario.rol_sistema;
-      
-      if (isSystemAdmin) {
+
+      if (data.usuario.rol_sistema) {
         navigate('/admin-croply/dashboard');
       } else {
         navigate('/admin-finca/mi-finca');
