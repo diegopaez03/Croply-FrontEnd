@@ -9,6 +9,7 @@ function mapPayloadToUsuario(payload: AuthJwtPayload): UsuarioAuth {
     email: payload.email,
     nombre: payload.nombre,
     apellido: payload.apellido,
+    telefono: payload.telefono,
     estado: payload.estado,
     fecha_alta: payload.fecha_alta,
     rol_sistema: payload.rol_sistema,

@@ -1,91 +1,165 @@
-
+import React from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { UserListIcon, PencilEdit02Icon, Delete02Icon, ArrowLeft01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
+import { ArrowLeft01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
 
-// TODO: Implementar en HU-GU-08
-export function TablaConPaginacion() {
+export interface ColumnDef<T> {
+  key: string;
+  label: string;
+  align?: 'left' | 'center' | 'right';
+  render: (item: T) => React.ReactNode;
+}
+
+export interface TablaConPaginacionProps<T> {
+  title?: string;
+  icon?: React.ReactNode;
+  columns: ColumnDef<T>[];
+  data: T[];
+  isLoading?: boolean;
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  pageSize?: number;
+  onPageChange: (page: number) => void;
+  emptyStateTitle?: string;
+  emptyStateMessage?: string;
+  keyExtractor?: (item: T, index: number) => string | number;
+}
+
+export function TablaConPaginacion<T>({
+  title,
+  icon,
+  columns,
+  data,
+  isLoading = false,
+  currentPage,
+  totalPages,
+  totalItems,
+  pageSize = 10,
+  onPageChange,
+  emptyStateTitle = "No se encontraron resultados",
+  emptyStateMessage = "No hay registros para mostrar.",
+  keyExtractor
+}: TablaConPaginacionProps<T>) {
+  
+  const generatePageNumbers = () => {
+    const pages = [];
+    // Logica simplificada para mostrar siempre todas las paginas (asumiendo que no hay miles)
+    // En una app real, si totalPages es > 5, se mostrarían elipses
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
+  const getRowKey = (item: any, index: number) => {
+    if (keyExtractor) return keyExtractor(item, index);
+    return item.id || index;
+  };
+
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
+
   return (
-    <div className="bg-white border border-border rounded-xl shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.06)] w-full flex flex-col">
-      {/* Table Header / Tabs placeholder */}
-      <div className="bg-white border-b border-border h-14 px-6">
-        <div className="flex gap-8 h-full">
-          <div className="border-b-2 border-primary flex items-center justify-center pt-4 pb-4">
-            <p className="text-primary font-bold text-base">Administradores</p>
-          </div>
-          <div className="flex items-center justify-center py-4 cursor-not-allowed opacity-50">
-            <p className="text-foreground text-base">Solicitudes de Clientes</p>
-          </div>
-        </div>
-      </div>
-
+    <div className="bg-white border border-border rounded-xl shadow-sm w-full flex flex-col">
       {/* Table Title and Pagination summary */}
-      <div className="bg-muted/50 border-b border-border px-6 py-6 flex justify-between items-center">
-        <div className="flex gap-2 items-center">
-          <div className="text-primary">
-            <HugeiconsIcon icon={UserListIcon} className="size-6" strokeWidth={1.5} />
+      {(title || icon) && (
+        <div className="bg-muted/50 border-b border-border px-6 py-6 flex justify-between items-center">
+          <div className="flex gap-2 items-center">
+            {icon && <div className="text-primary">{icon}</div>}
+            {title && <h2 className="text-primary font-semibold text-xl font-sans">{title}</h2>}
           </div>
-          <h2 className="text-primary font-semibold text-xl font-sans">Lista de Administradores</h2>
+          <p className="text-muted-foreground text-sm font-normal font-sans">
+            {totalItems > 0 ? `Mostrando ${startItem}-${endItem} de ${totalItems} registros` : '0 registros'}
+          </p>
         </div>
-        <p className="text-muted-foreground text-sm font-normal font-sans">Mostrando 1-10 de 124 registros</p>
-      </div>
+      )}
 
-      {/* Table content (Mock for layout) */}
+      {/* Table content */}
       <div className="overflow-x-auto w-full">
         <table className="w-full text-left border-collapse min-w-[970px]">
           <thead className="bg-muted/80">
             <tr>
-              <th className="border-b border-border py-4 px-4 text-muted-foreground font-semibold text-sm font-sans">Nombre</th>
-              <th className="border-b border-border py-4 px-4 text-muted-foreground font-semibold text-sm font-sans text-center">Email</th>
-              <th className="border-b border-border py-4 px-4 text-muted-foreground font-semibold text-sm font-sans text-center">Teléfono</th>
-              <th className="border-b border-border py-4 px-4 text-muted-foreground font-semibold text-sm font-sans text-center">Rol</th>
-              <th className="border-b border-border py-4 px-4 text-muted-foreground font-semibold text-sm font-sans">Estado de cuenta</th>
-              <th className="border-b border-border py-4 px-4 text-muted-foreground font-semibold text-sm font-sans text-center">Acciones</th>
+              {columns.map((col) => (
+                <th 
+                  key={col.key} 
+                  className={`border-b border-border py-4 px-4 text-muted-foreground font-semibold text-sm font-sans ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'}`}
+                >
+                  {col.label}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {[
-              { name: "Carlos Mendoza", email: "c.mendoza@agroterra.com", phone: "+54 114555-0123", role: "---", status: "PENDIENTE", color: "bg-[#ffee9c] border-[#e9c162] text-muted-foreground" },
-              { name: "María Eugenia Lopez", email: "m.lopez@estancia-sol.cl", phone: "+54 114555-0123", role: "Administrador de Sistema", status: "ACTIVO", color: "bg-[#dcfce7] border-[#bbf7d0] text-[#15803d]" },
-              { name: "Roberto Sanchez", email: "rsanchez@campo-verde.ar", phone: "+54 114555-0123", role: "Administrador de Sistema", status: "INACTIVO", color: "bg-[#f3f4f6] border-[#d1d5db] text-[#4b5563]" },
-              { name: "Lucía Fernández", email: "lfernandez@pampa.com.ar", phone: "+54 119988-7766", role: "Administrador de Sistema", status: "ACTIVO", color: "bg-[#dcfce7] border-[#bbf7d0] text-[#15803d]" },
-            ].map((row, idx) => (
-              <tr key={idx} className="bg-white">
-                <td className="border-b border-border py-4 px-4 font-semibold text-base font-sans leading-6">{row.name}</td>
-                <td className="border-b border-border py-4 px-4 text-center text-base font-sans leading-6 text-foreground">{row.email}</td>
-                <td className="border-b border-border py-4 px-4 text-center text-base font-sans leading-6 text-foreground">{row.phone}</td>
-                <td className="border-b border-border py-4 px-4 text-center text-base font-sans leading-6 text-foreground">{row.role}</td>
-                <td className="border-b border-border py-4 px-4">
-                  <span className={`px-3.5 py-1 rounded-full border text-xs font-bold uppercase tracking-wider font-sans ${row.color}`}>
-                    {row.status}
-                  </span>
-                </td>
-                <td className="border-b border-border py-4 px-4 text-center">
-                  <div className="flex gap-2 justify-center">
-                    <button className="p-2 text-muted-foreground hover:bg-muted rounded-md opacity-50 cursor-not-allowed"><HugeiconsIcon icon={PencilEdit02Icon} className="size-6" strokeWidth={1.5} /></button>
-                    <button className="p-2 text-red-500 hover:bg-red-50 rounded-md opacity-50 cursor-not-allowed"><HugeiconsIcon icon={Delete02Icon} className="size-6" strokeWidth={1.5} /></button>
+            {isLoading ? (
+              <tr>
+                <td colSpan={columns.length} className="py-8 text-center text-muted-foreground">
+                  <div className="flex justify-center items-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-3"></div>
+                    Cargando...
                   </div>
                 </td>
               </tr>
-            ))}
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="py-12 text-center text-muted-foreground">
+                  <p className="text-lg font-medium text-foreground mb-1">{emptyStateTitle}</p>
+                  <p className="text-sm">{emptyStateMessage}</p>
+                </td>
+              </tr>
+            ) : (
+              data.map((row, idx) => (
+                <tr key={getRowKey(row, idx)} className="bg-white hover:bg-muted/30 transition-colors">
+                  {columns.map((col) => (
+                    <td 
+                      key={`${getRowKey(row, idx)}-${col.key}`} 
+                      className={`border-b border-border py-4 px-4 text-base font-sans leading-6 text-foreground ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'}`}
+                    >
+                      {col.render(row)}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Pagination Footer */}
-      <div className="bg-muted/50 px-6 py-4 flex justify-between items-center border-t border-border">
-        <p className="text-muted-foreground text-sm font-sans">Página 1 de 13</p>
-        <div className="flex gap-2 items-center">
-          <button className="flex items-center justify-center size-8 rounded border border-border bg-white text-muted-foreground hover:bg-muted disabled:opacity-50" disabled>
-            <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" strokeWidth={1.5} />
-          </button>
-          <button className="flex items-center justify-center size-8 rounded bg-primary text-primary-foreground font-semibold">1</button>
-          <button className="flex items-center justify-center size-8 rounded bg-transparent text-muted-foreground hover:bg-muted font-semibold">2</button>
-          <button className="flex items-center justify-center size-8 rounded bg-transparent text-muted-foreground hover:bg-muted font-semibold">3</button>
-          <button className="flex items-center justify-center size-8 rounded border border-border bg-white text-muted-foreground hover:bg-muted">
-            <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" strokeWidth={1.5} />
-          </button>
+      {totalPages > 0 && (
+        <div className="bg-muted/50 px-6 py-4 flex justify-between items-center border-t border-border">
+          <p className="text-muted-foreground text-sm font-sans">
+            Página {currentPage} de {totalPages}
+          </p>
+          <div className="flex gap-2 items-center">
+            <button 
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage <= 1 || isLoading}
+              className="flex items-center justify-center size-8 rounded border border-border bg-white text-muted-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+            >
+              <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" strokeWidth={1.5} />
+            </button>
+            
+            {generatePageNumbers().map((p) => (
+              <button 
+                key={p}
+                onClick={() => onPageChange(p)}
+                disabled={isLoading}
+                className={`flex items-center justify-center size-8 rounded font-semibold transition-colors ${p === currentPage ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground hover:bg-muted'}`}
+              >
+                {p}
+              </button>
+            ))}
+
+            <button 
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages || isLoading}
+              className="flex items-center justify-center size-8 rounded border border-border bg-white text-muted-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+            >
+              <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" strokeWidth={1.5} />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

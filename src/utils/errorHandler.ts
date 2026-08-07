@@ -9,14 +9,21 @@ export interface ApiErrorResponse {
   field?: string;
 }
 
+export interface ErrorHandlerOptions {
+  /** Función a ejecutar si el recurso no existe (ERR-05), útil para redirigir en carga inicial (GET) */
+  onNotFoundRedirect?: () => void;
+}
+
 /**
  * Procesa los errores de la API (Axios) y los mapea al formulario o muestra un toast global.
  * @param error El error capturado (generalmente de axios)
  * @param setError Función de react-hook-form para setear errores en campos específicos
+ * @param options Opciones adicionales para casos específicos como redirecciones
  */
 export const handleFormError = (
   error: unknown,
-  setError?: UseFormSetError<any>
+  setError?: UseFormSetError<any>,
+  options?: ErrorHandlerOptions
 ) => {
   if (axios.isAxiosError(error) && error.response) {
     const data = error.response.data as ApiErrorResponse;
@@ -27,6 +34,21 @@ export const handleFormError = (
         type: "server",
         message: data.message,
       });
+      return;
+    }
+
+    // ERR-04 — Recurso en uso (409)
+    if (data.errorCode === "RESOURCE_IN_USE" || data.statusCode === 409) {
+      toast.error(data.message || "No se puede eliminar el recurso porque está en uso.");
+      return;
+    }
+
+    // ERR-05 — Recurso no encontrado (404)
+    if (data.errorCode === "RESOURCE_NOT_FOUND" || data.statusCode === 404) {
+      toast.error(data.message || "El recurso solicitado no existe o ya fue eliminado.");
+      if (options?.onNotFoundRedirect) {
+        options.onNotFoundRedirect();
+      }
       return;
     }
 

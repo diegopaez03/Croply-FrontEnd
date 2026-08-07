@@ -8,12 +8,14 @@ import RecuperarContrasenaPage from './pages/Auth/RecuperarContrasenaPage'
 import ResetearContrasenaPage from './pages/Auth/ResetearContrasenaPage'
 import AdminCroplyLayout from './components/layout/AdminCroplyLayout'
 import GestionClientesPage from './pages/AdminCroply/GestionClientesPage'
-import PerfilPage from './pages/AdminCroply/PerfilPage'
+import PerfilPage from './pages/Perfil/PerfilPage'
 import PrimerAccesoPage from './pages/Auth/PrimerAccesoPage'
 import LandingPage from './pages/Landing/LandingPage'
 import DigitalizarFincaPage from './pages/Landing/DigitalizarFincaPage'
 import DashboardAdminFincaPage from './pages/AdminFinca/DashboardAdminFincaPage'
 import DashboardAdminCroplyPage from './pages/AdminCroply/DashboardAdminCroplyPage'
+import CatalogosBasePage from './pages/AdminCroply/CatalogosBasePage'
+import GestionUsuariosPage from './pages/AdminFinca/GestionUsuariosPage'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { PerfilRoute } from './components/layout/PerfilRoute'
 
@@ -61,14 +63,16 @@ function App() {
               <Route path="/admin-finca/biblioteca" element={<PlaceholderAdminFinca title="Biblioteca de cultivos" />} />
               <Route path="/admin-finca/agroquimicos" element={<PlaceholderAdminFinca title="Agroquímicos" />} />
               <Route path="/admin-finca/costos" element={<PlaceholderAdminFinca title="Costos" />} />
-              <Route path="/admin-finca/gestion-usuarios" element={<PlaceholderAdminFinca title="Gestión de usuarios" />} />
+              <Route path="/admin-finca/gestion-usuarios" element={<GestionUsuariosPage />} />
               <Route path="/admin-finca/soporte" element={<PlaceholderAdminFinca title="Ayuda y soporte" />} />
             </Route>
 
             <Route element={<AdminCroplyLayout />}>
               <Route path="/admin-croply/dashboard" element={<DashboardAdminCroplyPage />} />
               <Route path="/admin-croply/gestion-usuarios" element={<GestionClientesPage />} />
+              <Route path="/admin-croply/catalogos-base" element={<CatalogosBasePage />} />
             </Route>
+
             
             {/* Rutas compartidas que deciden su layout dinámicamente */}
             <Route element={<PerfilRoute />}>
