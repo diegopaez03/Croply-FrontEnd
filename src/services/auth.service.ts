@@ -154,9 +154,11 @@ export const authService = {
       }
 
       // Registro exitoso mock
+      const id_usuario = Math.floor(Math.random() * 1000) + 100;
+
       const mockResponse: import('../types/auth.types').RegisterAdminFincaResponse = {
         message: "Usuario registrado correctamente",
-        id_usuario: Math.floor(Math.random() * 1000) + 100,
+        id_usuario,
         email: data.email,
         nombre: data.nombre,
         apellido: data.apellido,
@@ -166,6 +168,21 @@ export const authService = {
         fecha_alta: new Date().toISOString(),
         fecha_baja: null
       };
+
+      import('./usuarios.service').then(({ usuariosService }) => {
+        // En una app real, el rol se asocia con un nombre, pero por ahora simulamos que no tiene o que es ID 1 (Admin de Sistema)
+        usuariosService._mockAddUsuario({
+          id_usuario,
+          nombre: data.nombre,
+          apellido: data.apellido,
+          email: data.email,
+          telefono: data.telefono,
+          estado: data.estado,
+          // Para que no se rompa la tabla, le agregamos el rol si lo mandó.
+          // En los mocks actuales de roles, 1 es Admin de Finca. Si no viene rol, le ponemos null.
+          rol: data.id_rol ? { id_rol: data.id_rol, nombre_rol: "Administrador de Finca" } : null
+        });
+      });
       
       return mockResponse;
     }

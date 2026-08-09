@@ -13,6 +13,7 @@ interface AuthContextType {
   loginState: (accessToken: string) => void;
   completarPrimerAcceso: () => void;
   logoutState: () => void;
+  updateUsuario: (datos: Partial<UsuarioAuth>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -80,6 +81,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setDebeCambiarContrasena(false);
   };
 
+  const updateUsuario = (datos: Partial<UsuarioAuth>) => {
+    setUsuario((prev) => {
+      if (!prev) return prev;
+      return { ...prev, ...datos };
+    });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -90,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginState,
         completarPrimerAcceso,
         logoutState,
+        updateUsuario,
       }}
     >
       {children}

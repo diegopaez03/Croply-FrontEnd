@@ -1,11 +1,14 @@
-
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { registerAdminFincaSchema, RegisterAdminFincaFormValues } from '../../../utils/validators';
 import { authService } from '../../../services/auth.service';
+import { rolesService } from '../../../services/roles.service';
 import { handleFormError } from '../../../utils/errorHandler';
 import { showSuccessToast } from '../../../utils/successHandler';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ViewIcon, ViewOffSlashIcon } from '@hugeicons/core-free-icons';
 
 // Shadcn UI components
 import {
@@ -35,6 +38,8 @@ interface RegistrarClienteModalProps {
 }
 
 export function RegistrarClienteModal({ open, onOpenChange }: RegistrarClienteModalProps) {
+  const [showPassword, setShowPassword] = useState(false);
+  
   const form = useForm<RegisterAdminFincaFormValues>({
     resolver: zodResolver(registerAdminFincaSchema),
     defaultValues: {
@@ -47,10 +52,19 @@ export function RegistrarClienteModal({ open, onOpenChange }: RegistrarClienteMo
     },
   });
 
+  const queryClient = useQueryClient();
+
+  const { data: rolesData, isLoading: isLoadingRoles } = useQuery({
+    queryKey: ['rolesSistema'],
+    queryFn: rolesService.getRolesSistema,
+    enabled: open,
+  });
+
   const mutation = useMutation({
     mutationFn: authService.registrarAdminFinca,
     onSuccess: (data) => {
       showSuccessToast(data);
+      queryClient.invalidateQueries({ queryKey: ['usuariosCroply'] });
       form.reset();
       onOpenChange(false);
     },
@@ -65,6 +79,7 @@ export function RegistrarClienteModal({ open, onOpenChange }: RegistrarClienteMo
 
   const onCancel = () => {
     form.reset();
+    setShowPassword(false);
     onOpenChange(false);
   };
 
@@ -146,7 +161,25 @@ export function RegistrarClienteModal({ open, onOpenChange }: RegistrarClienteMo
                   <FormItem>
                     <FormLabel>Contraseña temporal *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ingresá una contraseña" type="password" {...field} />
+                      <div className="relative">
+                        <Input 
+                          placeholder="Ingresá una contraseña" 
+                          type={showPassword ? 'text' : 'password'} 
+                          className="pr-10"
+                          {...field} 
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground focus:outline-none"
+                        >
+                          {showPassword ? (
+                            <HugeiconsIcon icon={ViewIcon} className="h-4 w-4" />
+                          ) : (
+                            <HugeiconsIcon icon={ViewOffSlashIcon} className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -162,13 +195,18 @@ export function RegistrarClienteModal({ open, onOpenChange }: RegistrarClienteMo
                   <FormItem>
                     <FormLabel>Rol</FormLabel>
                     <FormControl>
-                      <select 
+                      <select
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         {...field}
                         value={field.value || ''}
+                        disabled={isLoadingRoles}
                       >
                         <option value="">Sin rol asignado (Opcional)</option>
-                        {/* TODO: cargar catálogo real de roles cuando se implemente HU-GU-01 */}
+                        {rolesData?.roles?.map((rol: any) => (
+                          <option key={rol.id_rol} value={rol.id_rol}>
+                            {rol.nombre_rol}
+                          </option>
+                        ))}
                       </select>
                     </FormControl>
                     <FormMessage />

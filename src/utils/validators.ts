@@ -125,3 +125,18 @@ export const solicitudDigitalizacionSchema = z.object({
 });
 
 export type SolicitudDigitalizacionFormValues = z.infer<typeof solicitudDigitalizacionSchema>;
+
+export const rolSchema = z.object({
+  nombre_rol: z
+    .string()
+    .min(3, { message: "El nombre del rol debe tener al menos 3 caracteres" })
+    .max(30, { message: "El nombre del rol no puede superar los 30 caracteres" })
+    .regex(/^[a-zA-Z0-9\sáéíóúÁÉÍÓÚñÑüÜ]+$/, { message: "El nombre del rol solo puede contener letras y números" }),
+  descripcion: z.string().optional(),
+  permisos: z.array(z.number()).min(1, { message: "Un rol debe contener al menos un permiso habilitado." }),
+});
+
+export type RolFormValues = z.infer<typeof rolSchema>;
+
+export const rolFincaSchema = rolSchema;
+export type RolFincaFormValues = z.infer<typeof rolFincaSchema>;

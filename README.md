@@ -32,7 +32,7 @@ Variables principales:
 | Variable | Valores | Descripción |
 | --- | --- | --- |
 | `VITE_USE_MOCKS` | `true` / `false` | Ver sección "Modo Mock" abajo |
-| `VITE_API_URL` | URL | Base del backend real (ej. `http://localhost:3000/api/v1`) |
+| `VITE_API_BASE_URL` | URL | Base del backend real, **incluyendo el prefijo** `/api/v1` (ej. `http://localhost:3000/api/v1`) |
 
 ## Levantar el proyecto
 
@@ -47,7 +47,9 @@ Por defecto queda disponible en `http://localhost:5173`.
 El proyecto soporta trabajar **sin** depender de que el backend esté corriendo, mediante un interruptor global:
 
 - **`VITE_USE_MOCKS=true`**: cada servicio (`src/services/*.service.ts`) devuelve datos estáticos simulados en vez de llamar a una API real. Útil para maquetar o probar el frontend sin backend levantado. Cada HU tiene definidos usuarios/tokens/valores "falsos" que disparan distintos casos (éxito, errores puntuales).
-- **`VITE_USE_MOCKS=false`**: las llamadas van directo al backend real, definido en `VITE_API_URL`. Para esto necesitás el [repo del backend](https://github.com/diegopaez03/Croply-BackEnd) corriendo en paralelo (ver su propio README para levantarlo).
+- **`VITE_USE_MOCKS=false`**: las llamadas van directo al backend real, definido en `VITE_API_BASE_URL`. Para esto necesitás el [repo del backend](https://github.com/diegopaez03/Croply-BackEnd) corriendo en paralelo (ver su propio README para levantarlo).
+
+> Los paths de los servicios se escriben **sin** el prefijo `/api/v1` (ej. `/roles/sistema`): el prefijo lo aporta `VITE_API_BASE_URL`. Duplicarlo produce `/api/v1/api/v1/...` y un 404.
 
 > Por defecto el `.env.example` trae `VITE_USE_MOCKS=true`, para que cualquiera pueda levantar el frontend y probarlo sin necesitar el backend andando.
 

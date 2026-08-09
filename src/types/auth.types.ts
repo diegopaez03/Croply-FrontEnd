@@ -14,6 +14,7 @@ export interface UsuarioAuth {
   email: string;
   nombre: string;
   apellido: string;
+  telefono?: string;
   estado: "Activo" | "Pendiente" | "Inactivo";
   fecha_alta: string;
   rol_sistema: string | null;
@@ -29,6 +30,7 @@ export interface AuthJwtPayload {
   token_version: number;
   nombre: string;
   apellido: string;
+  telefono?: string;
   estado: "Activo" | "Pendiente" | "Inactivo";
   fecha_alta: string;
   fincas: FincaRol[];

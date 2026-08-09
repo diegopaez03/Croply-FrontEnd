@@ -1,4 +1,4 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminCroplyLayout from './AdminCroplyLayout';
 import AdminFincaLayout from './AdminFincaLayout';
