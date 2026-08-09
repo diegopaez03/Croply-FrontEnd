@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 import { rolesService } from "@/services/roles.service";
 import { CatalogoListaSimple } from "@/components/shared/CatalogoListaSimple";
-import { RolSistema } from "@/types/roles.types";
+import { getPermisoIds, RolSistema } from "@/types/roles.types";
 import { rolSchema, RolFormValues } from "@/utils/validators";
 import { handleFormError } from "@/utils/errorHandler";
 import { showSuccessToast } from "@/utils/successHandler";
@@ -115,7 +115,7 @@ export function SeccionRolesSistema() {
       form.reset({
         nombre_rol: role.nombre_rol,
         descripcion: role.descripcion || "",
-        permisos: role.permisos || [],
+        permisos: getPermisoIds(role.permisos),
       });
     } else {
       setSelectedRole(null);

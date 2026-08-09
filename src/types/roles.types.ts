@@ -1,9 +1,15 @@
+/**
+ * El backend devuelve los permisos como objetos; los mocks locales todavía
+ * usan ids sueltos. Normalizar con `getPermisoIds` antes de consumirlos.
+ */
+export type PermisoAsignado = number | Permiso;
+
 export interface RolSistema {
   id_rol: number;
   nombre_rol: string;
   descripcion?: string;
   cantidad_usuarios_asignados: number;
-  permisos?: number[];
+  permisos?: PermisoAsignado[];
 }
 
 export interface RolesSistemaResponse {
@@ -36,7 +42,7 @@ export interface RolFinca {
   nombre_rol: string;
   descripcion?: string;
   cantidad_usuarios_asignados: number;
-  permisos?: number[];
+  permisos?: PermisoAsignado[];
 }
 
 export interface RolesFincaResponse {
@@ -67,6 +73,10 @@ export interface AsignarRolFincaResponse {
 export interface Permiso {
   id_permiso: number;
   nombre_permiso: string;
+}
+
+export function getPermisoIds(permisos?: PermisoAsignado[]): number[] {
+  return (permisos ?? []).map((p) => (typeof p === 'number' ? p : p.id_permiso));
 }
 
 export interface PermisosResponse {

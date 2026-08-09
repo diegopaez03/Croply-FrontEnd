@@ -64,7 +64,7 @@ export const invitacionesService = {
         message: 'Invitación enviada correctamente'
       };
     }
-    const response = await apiClient.post<InvitacionResponse>(`/api/v1/fincas/${idFinca}/invitaciones`, data);
+    const response = await apiClient.post<InvitacionResponse>(`/fincas/${idFinca}/invitaciones`, data);
     return response.data;
   },
 
@@ -75,7 +75,7 @@ export const invitacionesService = {
         message: 'Invitación reenviada correctamente.'
       };
     }
-    const response = await apiClient.post<InvitacionResponse>(`/api/v1/invitaciones/${idInvitacionFinca}/reenviar`);
+    const response = await apiClient.post<InvitacionResponse>(`/invitaciones/${idInvitacionFinca}/reenviar`);
     return response.data;
   }
 };

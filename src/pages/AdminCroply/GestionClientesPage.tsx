@@ -55,6 +55,23 @@ export default function GestionClientesPage() {
     enabled: activeTab === 'administradores'
   });
 
+  // Conteos globales de las cards (independientes de los filtros de la tabla).
+  // pageSize=1: solo necesitamos pagination.totalItems.
+  const { data: statsTotal } = useQuery({
+    queryKey: ['usuariosCroply', 'stats', 'total'],
+    queryFn: () => usuariosService.getUsuariosCroply({ page: 1, pageSize: 1 }),
+  });
+  const { data: statsActivos } = useQuery({
+    queryKey: ['usuariosCroply', 'stats', 'activos'],
+    queryFn: () =>
+      usuariosService.getUsuariosCroply({ page: 1, pageSize: 1, estado: 'Activo' }),
+  });
+  const { data: statsPendientes } = useQuery({
+    queryKey: ['usuariosCroply', 'stats', 'pendientes'],
+    queryFn: () =>
+      usuariosService.getUsuariosCroply({ page: 1, pageSize: 1, estado: 'Pendiente' }),
+  });
+
   const { data: solicitudesData, isLoading: isLoadingSolicitudes } = useQuery({
     queryKey: ['solicitudes', pageSolicitudes],
     queryFn: () => solicitudesService.getSolicitudes({ page: pageSolicitudes, pageSize }),
@@ -216,19 +233,19 @@ export default function GestionClientesPage() {
           iconBgColor="bg-primary/10" 
           labelTop="TOTAL" 
           labelBottom="CLIENTES" 
-          value={124} 
+          value={statsTotal?.pagination.totalItems ?? 0} 
         />
         <CardMetrica 
           icon={<HugeiconsIcon icon={CheckmarkCircle02Icon} className="text-green-700 size-6" strokeWidth={1.5} />} 
           iconBgColor="bg-green-100" 
           labelTop="ACTIVOS" 
-          value={118} 
+          value={statsActivos?.pagination.totalItems ?? 0} 
         />
         <CardMetrica 
           icon={<HugeiconsIcon icon={MoreHorizontalCircle02Icon} className="text-yellow-700 size-6" strokeWidth={1.5} />} 
           iconBgColor="bg-yellow-100" 
           labelTop="PENDIENTES" 
-          value={6} 
+          value={statsPendientes?.pagination.totalItems ?? 0} 
         />
       </div>
 

@@ -69,7 +69,7 @@ export const rolesService = {
         }, 300);
       });
     }
-    const response = await apiClient.get<RolesSistemaResponse>('/api/v1/roles/sistema');
+    const response = await apiClient.get<RolesSistemaResponse>('/roles/sistema');
     return response.data;
   },
 
@@ -112,7 +112,7 @@ export const rolesService = {
         }, 500);
       });
     }
-    const response = await apiClient.post<{ message: string } & RolSistema>('/api/v1/roles/sistema', data);
+    const response = await apiClient.post<{ message: string } & RolSistema>('/roles/sistema', data);
     return response.data;
   },
 
@@ -166,7 +166,7 @@ export const rolesService = {
         }, 500);
       });
     }
-    const response = await apiClient.put<{ message: string }>(`/api/v1/roles/sistema/${id_rol}`, data);
+    const response = await apiClient.put<{ message: string }>(`/roles/sistema/${id_rol}`, data);
     return response.data;
   },
 
@@ -181,7 +181,7 @@ export const rolesService = {
         }, 300);
       });
     }
-    const response = await apiClient.get<PermisosResponse>('/api/v1/roles/permisos?ambito=sistema');
+    const response = await apiClient.get<PermisosResponse>('/roles/permisos?ambito=sistema');
     return response.data;
   },
 
@@ -212,7 +212,7 @@ export const rolesService = {
         }, 500);
       });
     }
-    const response = await apiClient.put<GuardarPermisosResponse>(`/api/v1/roles/sistema/${id_rol}/permisos`, data);
+    const response = await apiClient.put<GuardarPermisosResponse>(`/roles/sistema/${id_rol}/permisos`, data);
     return response.data;
   },
 
@@ -251,7 +251,7 @@ export const rolesService = {
         }, 500);
       });
     }
-    const response = await apiClient.delete<{ message: string, id_rol: number }>(`/api/v1/roles/sistema/${id_rol}`);
+    const response = await apiClient.delete<{ message: string, id_rol: number }>(`/roles/sistema/${id_rol}`);
     return response.data;
   },
 
@@ -309,7 +309,7 @@ export const rolesService = {
         }, 500);
       });
     }
-    const response = await apiClient.put<AsignarRolSistemaResponse>(`/api/v1/usuarios/${id_usuario}/rol-sistema`, data);
+    const response = await apiClient.put<AsignarRolSistemaResponse>(`/usuarios/${id_usuario}/rol-sistema`, data);
     return response.data;
   }
 };
@@ -346,7 +346,7 @@ export const rolesFincaService = {
         }, 300);
       });
     }
-    const response = await apiClient.get(`/api/v1/fincas/${id_finca}/roles`);
+    const response = await apiClient.get(`/fincas/${id_finca}/roles`);
     return response.data;
   },
 
@@ -390,7 +390,7 @@ export const rolesFincaService = {
         }, 500);
       });
     }
-    const response = await apiClient.post(`/api/v1/fincas/${id_finca}/roles`, data);
+    const response = await apiClient.post(`/fincas/${id_finca}/roles`, data);
     return response.data;
   },
 
@@ -442,7 +442,7 @@ export const rolesFincaService = {
         }, 500);
       });
     }
-    const response = await apiClient.put(`/api/v1/fincas/${id_finca}/roles/${id_rol}`, data);
+    const response = await apiClient.put(`/fincas/${id_finca}/roles/${id_rol}`, data);
     return response.data;
   },
 
@@ -457,7 +457,7 @@ export const rolesFincaService = {
         }, 300);
       });
     }
-    const response = await apiClient.get<PermisosResponse>('/api/v1/roles/permisos?ambito=finca');
+    const response = await apiClient.get<PermisosResponse>('/roles/permisos?ambito=finca');
     return response.data;
   },
 
@@ -488,7 +488,7 @@ export const rolesFincaService = {
         }, 500);
       });
     }
-    const response = await apiClient.put<GuardarPermisosResponse>(`/api/v1/fincas/${id_finca}/roles/${id_rol}/permisos`, data);
+    const response = await apiClient.put<GuardarPermisosResponse>(`/fincas/${id_finca}/roles/${id_rol}/permisos`, data);
     return response.data;
   },
 
@@ -537,7 +537,7 @@ export const rolesFincaService = {
         }, 500);
       });
     }
-    const response = await apiClient.delete(`/api/v1/fincas/${id_finca}/roles/${id_rol}`);
+    const response = await apiClient.delete(`/fincas/${id_finca}/roles/${id_rol}`);
     return response.data;
   },
 
@@ -580,7 +580,7 @@ export const rolesFincaService = {
         }, 500);
       });
     }
-    const response = await apiClient.put<AsignarRolFincaResponse>(`/api/v1/fincas/${id_finca}/usuarios/${id_usuario_finca}/rol`, data);
+    const response = await apiClient.put<AsignarRolFincaResponse>(`/fincas/${id_finca}/usuarios/${id_usuario_finca}/rol`, data);
     return response.data;
   }
 };

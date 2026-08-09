@@ -2,6 +2,41 @@ import { apiClient } from './api';
 import { AxiosError } from 'axios';
 import { SolicitudDigitalizacionRequest, SolicitudDigitalizacionResponse } from '../types/solicitudes.types';
 
+export interface GetSolicitudesRequest {
+  page: number;
+  pageSize: number;
+  search?: string;
+  estado?: string;
+}
+
+/** El backend valida `estado` como enum: los centinelas de la UI no viajan. */
+function limpiarFiltrosSolicitudes(params: GetSolicitudesRequest) {
+  const { search, estado, ...resto } = params;
+  return {
+    ...resto,
+    ...(search?.trim() ? { search: search.trim() } : {}),
+    ...(estado && estado !== 'todos' ? { estado } : {}),
+  };
+}
+
+function filtrarMockSolicitudes(params: GetSolicitudesRequest) {
+  let filtradas = [...mockSolicitudes];
+
+  if (params.search?.trim()) {
+    const s = params.search.trim().toLowerCase();
+    filtradas = filtradas.filter(
+      (x) =>
+        x.nombre_completo.toLowerCase().includes(s) ||
+        x.correo_electronico.toLowerCase().includes(s)
+    );
+  }
+  if (params.estado && params.estado !== 'todos') {
+    filtradas = filtradas.filter((x) => x.estado === params.estado);
+  }
+
+  return filtradas;
+}
+
 export const solicitudesService = {
   solicitarDigitalizacion: async (data: SolicitudDigitalizacionRequest): Promise<SolicitudDigitalizacionResponse> => {
     const useMocks = import.meta.env.VITE_USE_MOCKS === 'true';
@@ -54,13 +89,14 @@ export const solicitudesService = {
     return response.data;
   },
 
-  getSolicitudes: async (params: { page: number; pageSize: number }): Promise<any> => {
+  getSolicitudes: async (params: GetSolicitudesRequest): Promise<any> => {
     if (import.meta.env.VITE_USE_MOCKS === 'true') {
       return new Promise((resolve) => {
         setTimeout(() => {
+          const filtradas = filtrarMockSolicitudes(params);
           const start = (params.page - 1) * params.pageSize;
           const end = start + params.pageSize;
-          const paginatedItems = mockSolicitudes.slice(start, end).map(s => ({
+          const paginatedItems = filtradas.slice(start, end).map(s => ({
             id_solicitud_df: s.id_solicitud_df,
             fecha_solicitud: s.fecha_solicitud,
             nombre_completo: s.nombre_completo,
@@ -73,14 +109,16 @@ export const solicitudesService = {
             pagination: {
               page: params.page,
               pageSize: params.pageSize,
-              totalItems: mockSolicitudes.length,
-              totalPages: Math.ceil(mockSolicitudes.length / params.pageSize)
+              totalItems: filtradas.length,
+              totalPages: Math.ceil(filtradas.length / params.pageSize)
             }
           });
         }, 500);
       });
     }
-    const response = await apiClient.get('/api/v1/solicitudes-digitalizacion', { params });
+    const response = await apiClient.get('/solicitudes-digitalizacion', {
+      params: limpiarFiltrosSolicitudes(params),
+    });
     return response.data;
   },
 
@@ -97,7 +135,7 @@ export const solicitudesService = {
         }, 500);
       });
     }
-    const response = await apiClient.get(`/api/v1/solicitudes-digitalizacion/${id}`);
+    const response = await apiClient.get(`/solicitudes-digitalizacion/${id}`);
     return response.data;
   },
 
@@ -112,7 +150,7 @@ export const solicitudesService = {
         }, 500);
       });
     }
-    const response = await apiClient.put(`/api/v1/solicitudes-digitalizacion/${id}/estado`, { estado });
+    const response = await apiClient.put(`/solicitudes-digitalizacion/${id}/estado`, { estado });
     return response.data;
   }
 };

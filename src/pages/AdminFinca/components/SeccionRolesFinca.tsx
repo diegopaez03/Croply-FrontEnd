@@ -10,7 +10,7 @@ import { rolesFincaService } from "@/services/roles.service";
 import { RolFincaFormValues, rolFincaSchema } from "@/utils/validators";
 import { handleFormError } from "@/utils/errorHandler";
 import { CatalogoListaSimple } from "@/components/shared/CatalogoListaSimple";
-import { RolFinca } from "@/types/roles.types";
+import { getPermisoIds, RolFinca } from "@/types/roles.types";
 
 import {
   Dialog,
@@ -128,7 +128,7 @@ export function SeccionRolesFinca({ idFinca }: { idFinca: number }) {
       form.reset({
         nombre_rol: role.nombre_rol,
         descripcion: role.descripcion || "",
-        permisos: role.permisos || [],
+        permisos: getPermisoIds(role.permisos),
       });
     } else {
       setSelectedRole(null);

@@ -1,19 +1,45 @@
-# Contrato de API — Épica 2: Administrar Usuarios y Roles
+﻿# Contrato de API — Épica 2: Administrar Usuarios y Roles
 
 Propietario: Paula Rodriguez
 
 > Se define lo que el backend debe implementar y lo que el frontend puede esperar recibir. Es un acuerdo entre ambas partes, no una imposición de un lado sobre el otro.
-> 
-> 
+>
 > Este contrato **no repite** las convenciones transversales ya definidas en la epica anterior (ERR-01, ERR-02, ERR-03, y la convención de `message` en respuestas exitosas). Antes de implementar cualquier manejo de errores o mensajes de éxito en esta épica, se debe revisar cómo ya están resueltos en el repositorio (servicios, handlers y componentes existentes) y **reutilizarlos tal cual están** — no redefinirlos ni crear una versión paralela. Solo se detallan acá los errores y casos **específicos** de los endpoints de esta épica, que no entran en ese patrón ya resuelto.
-> 
+
+---
+
+## Convención transversal: multi-finca
+
+Un usuario puede administrar **más de una finca**. El backend nunca infiere la finca desde el JWT: el alcance viaja siempre en la URL o en la query.
+
+- `GET /api/v1/fincas/mis-fincas` devuelve las fincas del usuario autenticado. Alimenta el **selector de finca activa** del frontend, que fija el alcance del resto del sistema.
+
+```json
+{
+  "fincas": [
+    {
+      "id_finca": 12,
+      "nombre_finca": "Finca Demo Croply",
+      "rol_finca": "ADMIN_FINCA",
+      "nombre_rol": "Administrador de Finca",
+      "es_admin": true
+    }
+  ]
+}
+```
+
+- Los endpoints `/api/v1/fincas/:id_finca/...` siguen scoped a una finca puntual y devuelven `403 FORBIDDEN` si el usuario no la administra.
+- Para la vista agregada ("ver todas las fincas juntas") existe `GET /api/v1/fincas/usuarios`, descripto en HU-GU-08/09/10.
+
+Las vinculaciones vencidas (`fecha_fin_rol` pasada) no cuentan en ninguno de los dos casos.
+
+**Naming de identificadores:** todos los `id_*` del contrato van en **minúscula con guion bajo**, tanto en URLs como en bodies (`id_rol`, `id_usuario`, `id_finca`, `id_invitacion_finca`, `id_solicitud_df`). Cualquier aparición previa en CamelCase (`id_Rol`, `id_InvitacionFinca`) era una errata de la documentación; el backend nunca las expuso así.
 
 ---
 
 ## Errores Transversales que se agregan en esta Épica
 
 **ERR-04 — Recurso en uso, no se puede eliminar**
-
 *Backend debe:* si se intenta dar de baja un recurso que tiene entidades activas dependiendo de él (ej. un rol con usuarios asignados), devolver:
 
 ```json
@@ -27,8 +53,7 @@ Propietario: Paula Rodriguez
 *Frontend debe:* mostrar el mensaje sin ejecutar el borrado. Nota: esto solo aplica al caso de roles de **finca** (HU-GU-03), donde dar de baja con usuarios asignados está prohibido. Para roles de **sistema** (HU-GU-01), el negocio permite la baja igual y desasigna a los usuarios — ahí no aplica ERR-04, se resuelve del lado del éxito (ver HU-GU-01 más abajo).
 
 **ERR-05 — Recurso no encontrado**
-
-*Backend debe:* Devolver este error cada vez que el frontend intente consultar, editar, eliminar o accionar sobre una entidad utilizando un identificador en la URL (ej. `:id_Rol`, `:id_Usuario`, `:id_Finca`, `:id_Solicitud`) que no existe en la base de datos, fue eliminado previamente, o pertenece a un ámbito al que el usuario no tiene acceso.
+*Backend debe:* Devolver este error cada vez que el frontend intente consultar, editar, eliminar o accionar sobre una entidad utilizando un identificador en la URL (ej. `:id_rol`, `:id_usuario`, `:id_finca`, `:id_solicitud_df`) que no existe en la base de datos, fue eliminado previamente, o pertenece a un ámbito al que el usuario no tiene acceso.
 
 ```json
 {
@@ -61,6 +86,9 @@ Propietario: Paula Rodriguez
       "id_rol": 5,
       "nombre_rol": "Administrador de Finca",
       "descripcion": "Rol con acceso completo a la gestión de una finca",
+      "permisos": [
+        { "id_permiso": 1, "nombre_permiso": "Gestión de finca y parcelas" }
+      ],
       "cantidad_usuarios_asignados": 12
     }
   ]
@@ -68,7 +96,8 @@ Propietario: Paula Rodriguez
 ```
 
 > `cantidad_usuarios_asignados` es clave: el frontend lo usa para decidir **qué texto de confirmación mostrar** antes de dar de baja un rol (el mensaje es distinto si tiene 0 usuarios vs 1+), sin tener que hacer una consulta aparte.
-> 
+>
+> `permisos` viene con el mismo shape que en el listado de roles de finca, para que el modal de edición pueda precargar los checkboxes sin una consulta adicional. Un rol recién creado, sin permisos guardados todavía, devuelve `permisos: []`.
 
 ### Crear rol
 
@@ -98,7 +127,7 @@ Mismo shape que la creación en el request. `200 OK` con `message: "Rol actualiz
 
 ### Dar de baja rol
 
-`DELETE /api/v1/roles/sistema/:id_Rol`
+`DELETE /api/v1/roles/sistema/:id_rol`
 
 Se ejecuta una baja lógica, seteando ‘fecha_baja_rol’.
 
@@ -112,7 +141,6 @@ Se ejecuta una baja lógica, seteando ‘fecha_baja_rol’.
 ```
 
 > Si el rol no tenía usuarios asignados, `message` es simplemente `"Rol dado de baja correctamente"`.
-> 
 
 ### Errores
 
@@ -141,7 +169,7 @@ Se ejecuta una baja lógica, seteando ‘fecha_baja_rol’.
 }
 ```
 
-### Errores
+### Errores a usar
 
 **ERR-05** (`RESOURCE_NOT_FOUND`).
 
@@ -185,7 +213,6 @@ Se ejecuta una baja lógica, seteando ‘fecha_baja_rol’.
 ```
 
 > `nombre_rol`: obligatorio, entre 3 y 30 caracteres alfanuméricos — **el backend debe validar longitud y formato**, no solo presencia (esto es más estricto que un simple ERR-01).
-> 
 
 `201 Created` con `message: "Rol creado correctamente"` y el shape del rol creado (igual al de listar).
 
@@ -196,13 +223,13 @@ Se ejecuta una baja lógica, seteando ‘fecha_baja_rol’.
 ### Errores
 
 - `REQUIRED_FIELD` / `DUPLICATE_VALUE` (nombre repetido en la finca) → ERR-01/ERR-02.
-- **`400 Bad Request`** — sin ningún permiso seleccionado:
+- `400 Bad Request` — sin ningún permiso seleccionado:
 
 ```json
     { "statusCode": 400, "errorCode": "NO_PERMISSIONS_SELECTED", "message": "Debe seleccionar al menos un permiso para guardar el rol." }
 ```
 
-- **`409 Conflict`** — intento de dar de baja un rol con usuarios asignados → **ERR-04** (`RESOURCE_IN_USE`).
+- `409 Conflict` — intento de dar de baja un rol con usuarios asignados → **ERR-04** (`RESOURCE_IN_USE`).
 
 ---
 
@@ -216,7 +243,20 @@ Se ejecuta una baja lógica, seteando ‘fecha_baja_rol’.
 { "id_rol": 21 }
 ```
 
-`200 OK` con `message: "Rol asignado correctamente."`
+> La key del body es `id_rol` en minúscula, igual que en el resto del contrato.
+
+`200 OK`:
+
+```json
+{
+  "message": "Rol asignado correctamente.",
+  "id_usuario_finca": 302,
+  "id_rol": 21,
+  "nombre_rol": "Encargado"
+}
+```
+
+> `id_usuario_finca` es el identificador de la vinculación usuario-finca, no el del usuario. Viene en el listado de HU-GU-08.
 
 ### Errores
 
@@ -242,7 +282,10 @@ Se ejecuta una baja lógica, seteando ‘fecha_baja_rol’.
 ```
 
 > Nota: el listado de permisos por ámbito (los 7 módulos para sistema vs los 3 para finca) es **dato maestro del backend**, no algo que el frontend deba hardcodear — por eso este endpoint, aunque la HU no lo menciona explícitamente como pantalla propia, es necesario para que el modal de permisos no tenga los módulos hardcodeados en el frontend.
-> 
+
+### Permisos ya asignados a un rol
+
+No hay endpoint dedicado: tanto `GET /api/v1/roles/sistema` como `GET /api/v1/fincas/:id_finca/roles` devuelven el array `permisos` de cada rol. Con eso alcanza para precargar los checkboxes al abrir el modal de edición.
 
 ### Guardar permisos de un rol
 
@@ -256,7 +299,7 @@ Se ejecuta una baja lógica, seteando ‘fecha_baja_rol’.
 
 ### Errores
 
-**`400 Bad Request`** — sin ningún permiso seleccionado:
+`400 Bad Request` — sin ningún permiso seleccionado:
 
 ```json
 { "statusCode": 400, "errorCode": "NO_PERMISSIONS_SELECTED", "message": "Un rol debe contener al menos un permiso habilitado." }
@@ -275,7 +318,6 @@ Se ejecuta una baja lógica, seteando ‘fecha_baja_rol’.
 ```
 
 > `estado`: uno de `Activo | Inactivo` para Admin de Finca; `Activo | Inactivo | Pendiente` para Admin Croply. **El backend valida que el rol del solicitante tenga permiso para setear el valor recibido** — si un Admin de Finca intenta mandar `"Pendiente"`, es un `403 Forbidden`, no un simple error de validación de campo.
-> 
 
 `200 OK`:
 
@@ -288,12 +330,11 @@ Se ejecuta una baja lógica, seteando ‘fecha_baja_rol’.
 ```
 
 > Si el usuario pasa de `Activo` a `Inactivo`: el backend debe invalidar cualquier sesión activa de ese usuario (no solo cambiar el estado en la base).
-`message` es distinto en un caso puntual: si el usuario estaba en `Pendiente` (invitación no aceptada) y se lo pasa a `Inactivo`, el mensaje es `"Estado de cuenta actualizado correctamente. La invitación pendiente fue cancelada."` — mismo patrón que vimos en HU-AC-03a/HU-GU-01, el backend decide el texto exacto según el caso, la estructura (`message`) es siempre la misma.
-> 
+> `message` es distinto en un caso puntual: si el usuario estaba en `Pendiente` (invitación no aceptada) y se lo pasa a `Inactivo`, el mensaje es `"Estado de cuenta actualizado correctamente. La invitación pendiente fue cancelada."` — mismo patrón que vimos en HU-AC-03a/HU-GU-01, el backend decide el texto exacto según el caso, la estructura (`message`) es siempre la misma.
 
 ### Errores
 
-**`403 Forbidden`** — el rol del solicitante no tiene permiso para setear ese valor de estado:
+`403 Forbidden` — el rol del solicitante no tiene permiso para setear ese valor de estado:
 
 ```json
 { "statusCode": 403, "errorCode": "STATE_NOT_ALLOWED", "message": "No tenés permisos para asignar este estado de cuenta." }
@@ -326,13 +367,15 @@ Se ejecuta una baja lógica, seteando ‘fecha_baja_rol’.
 
 ### Reenviar invitación
 
-`POST /api/v1/invitaciones/:id_InvitacionFinca/reenviar`
+`POST /api/v1/invitaciones/:id_invitacion_finca/reenviar`
 
 `200 OK` con `message: "Invitación reenviada correctamente."` — invalida el token anterior y genera uno nuevo.
 
+> El path param es `id_invitacion_finca` en minúscula, igual que el campo que devuelve el alta y que el 409 de más abajo.
+
 ### Errores
 
-**`409 Conflict`** — ya existe una invitación pendiente para ese correo en esta finca. **Este NO es un error bloqueante clásico**: la HU pide que el frontend muestre, dentro del mismo modal, un botón "Reenviar invitación" en vez de un simple mensaje de error. Por eso el shape trae el `id_invitacion_finca` existente, para que el frontend pueda llamar directo al endpoint de reenvío sin tener que buscarlo:
+`409 Conflict` — ya existe una invitación pendiente para ese correo en esta finca. **Este NO es un error bloqueante clásico**: la HU pide que el frontend muestre, dentro del mismo modal, un botón "Reenviar invitación" en vez de un simple mensaje de error. Por eso el shape trae el `id_invitacion_finca` existente, para que el frontend pueda llamar directo al endpoint de reenvío sin tener que buscarlo:
 
 ```json
 {
@@ -343,7 +386,7 @@ Se ejecuta una baja lógica, seteando ‘fecha_baja_rol’.
 }
 ```
 
-**`400 Bad Request`** — el correo ya pertenece a un usuario activo vinculado a esta finca:
+`400 Bad Request` — el correo ya pertenece a un usuario activo vinculado a esta finca:
 
 ```json
 { "statusCode": 400, "errorCode": "USER_ALREADY_LINKED", "message": "Este usuario ya se encuentra vinculado a tu establecimiento." }
@@ -357,16 +400,25 @@ Las tres HU comparten el mismo endpoint — búsqueda y filtros son query params
 
 - **Autenticación:** Requerida (Rol: Administrador Croply o Administrador de Finca)
 
-`GET /api/v1/usuarios` (ámbito Croply — administradores de finca) o `GET /api/v1/fincas/:id_finca/usuarios` (ámbito finca)
+Hay tres endpoints según el ámbito, con los mismos query params y la misma envoltura de paginación:
 
-**Query params:** `page` (default 1), `pageSize` (default 10), `search` (nombre/apellido/correo, case-insensitive), `id_rol`, `estado`
+| Endpoint | Ámbito | Cuándo se usa |
+| --- | --- | --- |
+| `GET /api/v1/usuarios` | Croply | Pestaña "Lista de administradores" |
+| `GET /api/v1/fincas/:id_finca/usuarios` | Una finca | Gestión de usuarios con una finca activa seleccionada |
+| `GET /api/v1/fincas/usuarios` | Todas las fincas administradas | Vista multi-finca con columna "Finca" |
+
+**Query params:** `page` (default 1), `pageSize` (default 10), `search` (nombre/apellido/correo, case-insensitive), `id_rol`, `estado`. `GET /api/v1/fincas/usuarios` acepta además `id_finca` para acotar a una finca puntual sin cambiar de endpoint.
+
+> Los filtros van omitidos cuando no aplican: el backend valida `id_rol` como entero y `estado` como enum, así que valores centinela de la UI (`"todos"`, `""`) devuelven `400`.
+
+### Ámbito Croply
 
 ```json
 {
   "usuarios": [
     {
       "id_usuario": 46,
-      "id_usuario_finca": 302,
       "nombre": "Carlos",
       "apellido": "Mendoza",
       "email": "c.mendoza@agroterra.com",
@@ -384,13 +436,38 @@ Las tres HU comparten el mismo endpoint — búsqueda y filtros son query params
 }
 ```
 
-> `id_usuario_finca` solo viaja en el listado de **ámbito finca** (`GET /fincas/:id_finca/usuarios`) — es el identificador de la relación puntual entre ese usuario y esa finca, necesario para HU-GU-04 (`PUT /fincas/:id_finca/usuarios/:id_usuario_finca/rol`). En el listado de ámbito Croply (`GET /usuarios`), este campo no aplica y puede omitirse o venir `null`, ya que ese endpoint no se usa para asignar roles de finca.
-> 
+> **Alcance:** el filtrado es responsabilidad del backend, no del frontend. `GET /api/v1/usuarios` devuelve los usuarios de ámbito Croply — administradores Croply, clientes dados de alta desde "Gestión de Clientes" y administradores de finca — **tengan o no un rol de sistema asignado** (`rol: null` si todavía no se les asignó uno). Los empleados vinculados únicamente a una finca no aparecen acá: se listan por los endpoints de ámbito finca.
 
-> Para el ámbito Croply, HU-GU-08 pide dos pestañas separadas (Administradores / Solicitudes de clientes) — la pestaña "Solicitudes" **no** usa este endpoint, usa el de HU-GU-13 más abajo. Este endpoint es solo para la pestaña "Lista de administradores" y para el listado de finca.
-> 
+### Ámbito finca
 
-Sin resultados (lista vacía por falta de datos, no por filtro): `usuarios: []`, `pagination.totalItems: 0` — el frontend distingue "no hay usuarios en el entorno" de "no hay resultados para el filtro" mirando si había `search`/`id_Rol`/`estado` en la request que disparó la respuesta vacía, no por un campo del backend.
+Una fila por **vinculación usuario-finca**, no por usuario: en la vista multi-finca un mismo usuario aparece una vez por cada finca en la que trabaja.
+
+```json
+{
+  "usuarios": [
+    {
+      "id_usuario": 46,
+      "id_usuario_finca": 302,
+      "nombre": "Carlos",
+      "apellido": "Mendoza",
+      "email": "c.mendoza@agroterra.com",
+      "telefono": "+549115550123",
+      "rol": { "id_rol": 21, "nombre_rol": "Encargado" },
+      "finca": { "id_finca": 12, "nombre_finca": "Finca Demo Croply" },
+      "estado": "Pendiente"
+    }
+  ],
+  "pagination": { "page": 1, "pageSize": 10, "totalItems": 124, "totalPages": 13 }
+}
+```
+
+> `id_usuario_finca` identifica la relación puntual entre ese usuario y esa finca, y es lo que consume HU-GU-04 (`PUT /fincas/:id_finca/usuarios/:id_usuario_finca/rol`). `finca` alimenta la columna "Finca" de la vista multi-finca; en el listado scoped a una finca viene igual, siempre con el mismo valor.
+>
+> En el listado de ámbito Croply ninguno de los dos campos aplica y no se envían.
+
+Para el ámbito Croply, HU-GU-08 pide dos pestañas separadas (Administradores / Solicitudes de clientes) — la pestaña "Solicitudes" **no** usa este endpoint, usa el de HU-GU-13 más abajo.
+
+Sin resultados (lista vacía por falta de datos, no por filtro): `usuarios: []`, `pagination.totalItems: 0` — el frontend distingue "no hay usuarios en el entorno" de "no hay resultados para el filtro" mirando si había `search`/`id_rol`/`estado` en la request que disparó la respuesta vacía, no por un campo del backend.
 
 ### Errores
 
@@ -421,7 +498,6 @@ Ninguno específico — es una consulta, no dispara ERR-01/02/03 salvo error ine
 ```
 
 > `email` no viaja en el request — es no editable, tal cual pide la HU. Si el backend recibe `email` en el body igual, debe ignorarlo, no rechazarlo (para no romper si el frontend algún día lo manda por error de armado del payload).
-> 
 
 `200 OK` con `message: "Perfil actualizado correctamente."` y el objeto actualizado.
 
@@ -435,8 +511,9 @@ Ninguno específico — es una consulta, no dispara ERR-01/02/03 salvo error ine
 
 **No expone ningún endpoint consumido por el frontend.** Es responsabilidad exclusiva del backend: cada endpoint de esta épica (y de las anteriores/futuras que involucren altas, cambios de estado, cambios de rol u operaciones destructivas) debe internamente escribir en `LogOperaciones` al ejecutarse con éxito.
 
+> El cambio de estado de solicitudes de digitalización (HU-GU-13) entra en el alcance de esta HU: queda registrado en `LogOperaciones` con actor, recurso, descripción y fecha. Eso cubre también la trazabilidad de "última modificación de estado" que pide el AC de HU-GU-13, sin necesidad de exponerla en ningún endpoint.
+
 > Importante para el backend: si el logging falla, la operación principal **igual debe completarse con éxito** para el usuario — el log es un side-effect, no debe bloquear ni degradar la respuesta del endpoint principal. Esto no cambia nada del contrato de request/response de los endpoints ya definidos arriba, es una nota de implementación.
-> 
 
 ---
 
@@ -447,6 +524,8 @@ Ninguno específico — es una consulta, no dispara ERR-01/02/03 salvo error ine
 ### Listar solicitudes
 
 `GET /api/v1/solicitudes-digitalizacion?page=1&pageSize=10`
+
+**Query params:** `page` (default 1), `pageSize` (default 10), `search` (nombre completo o correo, case-insensitive), `estado` (`Pendiente | Contactado | Aprobada | Rechazada`).
 
 ```json
 {
@@ -465,7 +544,6 @@ Ninguno específico — es una consulta, no dispara ERR-01/02/03 salvo error ine
 ```
 
 > Ordenado por `fecha_solicitud` descendente — responsabilidad del backend, no del frontend.
-> 
 
 ### Ver detalle de una solicitud
 
@@ -497,13 +575,16 @@ Ninguno específico — es una consulta, no dispara ERR-01/02/03 salvo error ine
 ```
 
 > `estado`: uno de `Pendiente | Contactado | Aprobada | Rechazada`.
-> 
 
 `200 OK` con `message: "Estado actualizado correctamente."`
 
 ### Sin solicitudes registradas
 
-El frontend distingue "vacío por no haber datos" mirando `pagination.totalItems === 0` sin filtros aplicados (esta HU no tiene filtros, a diferencia de HU-GU-08/09/10).
+El frontend distingue "vacío por no haber datos" mirando `pagination.totalItems === 0` sin `search` ni `estado` en la request, mismo criterio que HU-GU-08/09/10.
+
+### Fuera de alcance
+
+El borrado de solicitudes no está contemplado: una solicitud se resuelve cambiando su estado a `Rechazada`, no eliminándola, para no perder la trazabilidad.
 
 ### Errores
 

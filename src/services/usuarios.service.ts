@@ -83,6 +83,21 @@ function filterAndPaginate(data: UsuarioListado[], params: GetUsuariosRequest): 
 // SERVICES
 // ============================================================================
 
+/**
+ * El backend valida `id_rol` como entero y `estado` como enum, así que los
+ * valores centinela de la UI ("todos", "") no pueden viajar en la query.
+ */
+function limpiarFiltros(params: GetUsuariosRequest): GetUsuariosRequest {
+  const limpio: GetUsuariosRequest = {};
+  for (const [clave, valor] of Object.entries(params)) {
+    if (valor === undefined || valor === null || valor === '' || valor === 'todos') {
+      continue;
+    }
+    limpio[clave as keyof GetUsuariosRequest] = valor as never;
+  }
+  return limpio;
+}
+
 export const usuariosService = {
   /**
    * Obtiene la lista paginada de usuarios de Croply (Administradores de Sistema).
@@ -95,7 +110,9 @@ export const usuariosService = {
         }, 800);
       });
     }
-    const response = await apiClient.get<GetUsuariosResponse>('/api/v1/usuarios', { params });
+    const response = await apiClient.get<GetUsuariosResponse>('/usuarios', {
+      params: limpiarFiltros(params),
+    });
     return response.data;
   },
 
@@ -111,7 +128,9 @@ export const usuariosService = {
         }, 800);
       });
     }
-    const response = await apiClient.get<GetUsuariosResponse>(`/api/v1/fincas/${idFinca}/usuarios`, { params });
+    const response = await apiClient.get<GetUsuariosResponse>(`/fincas/${idFinca}/usuarios`, {
+      params: limpiarFiltros(params),
+    });
     return response.data;
   },
 
@@ -226,7 +245,7 @@ export const usuariosService = {
         }, 500);
       });
     }
-    const response = await apiClient.put<ActualizarEstadoResponse>(`/api/v1/usuarios/${id_usuario}/estado`, data);
+    const response = await apiClient.put<ActualizarEstadoResponse>(`/usuarios/${id_usuario}/estado`, data);
     return response.data;
   },
 
@@ -250,7 +269,7 @@ export const usuariosService = {
         }, 500);
       });
     }
-    const response = await apiClient.get<PerfilResponse>('/api/v1/usuarios/me');
+    const response = await apiClient.get<PerfilResponse>('/usuarios/me');
     return response.data;
   },
 
@@ -272,7 +291,7 @@ export const usuariosService = {
         }, 500);
       });
     }
-    const response = await apiClient.put<ActualizarPerfilResponse>('/api/v1/usuarios/me', data);
+    const response = await apiClient.put<ActualizarPerfilResponse>('/usuarios/me', data);
     return response.data;
   }
 };
