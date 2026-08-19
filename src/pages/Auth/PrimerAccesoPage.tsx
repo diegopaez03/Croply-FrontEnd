@@ -17,11 +17,13 @@ import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../components/ui/form';
 
+import { parseSessionFromAccessToken } from '../../utils/auth-token';
+
 import logoImg from '../../assets/images/LogoCroplyHoriz.svg';
 
 export default function PrimerAccesoPage() {
   const navigate = useNavigate();
-  const { completarPrimerAcceso, usuario } = useAuth();
+  const { loginState } = useAuth();
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -37,10 +39,12 @@ export default function PrimerAccesoPage() {
     mutationFn: authService.contrasenaPrimerAcceso,
     onSuccess: (data) => {
       showSuccessToast(data);
-      completarPrimerAcceso();
+      loginState(data.accessToken);
 
-      // Redirigir al dashboard según el rol
-      const isSystemAdmin = !!usuario?.rol_sistema;
+      // Redirigir al dashboard leyendo la respuesta fresca o decodificando el nuevo JWT
+      const role = data.usuario?.rol_sistema || parseSessionFromAccessToken(data.accessToken)?.usuario.rol_sistema;
+      const isSystemAdmin = !!role;
+      
       if (isSystemAdmin) {
         navigate('/admin-croply/dashboard');
       } else {
