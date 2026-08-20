@@ -140,3 +140,56 @@ export type RolFormValues = z.infer<typeof rolSchema>;
 
 export const rolFincaSchema = rolSchema;
 export type RolFincaFormValues = z.infer<typeof rolFincaSchema>;
+
+export const EPOCAS_CULTIVO = ['Todo_el_anio', 'Primavera_verano', 'Otonio_invierno'] as const;
+export const FORMAS_SIEMBRA = ['Directa', 'Almacigo'] as const;
+
+const numeroRequerido = (mensaje: string) =>
+  z.preprocess(
+    (val) => (val === '' || val === undefined || val === null ? undefined : Number(val)),
+    z
+      .number({
+        required_error: mensaje,
+        invalid_type_error: 'Debe ser un número válido',
+      })
+      .int({ message: 'Debe ser un número entero' })
+      .min(1, { message: 'Debe ser mayor a 0' }),
+  );
+
+export const cultivoBaseSchema = z
+  .object({
+    nombre_cultivo_base: z
+      .string()
+      .min(1, { message: 'El nombre del cultivo es requerido' })
+      .max(80, { message: 'El nombre no puede superar los 80 caracteres' }),
+    descripcion_cb: z.string().min(1, { message: 'La descripción es requerida' }),
+    epoca_cultivo: z.enum(EPOCAS_CULTIVO, {
+      errorMap: () => ({ message: 'La temporada es requerida' }),
+    }),
+    forma_siembra: z.enum(FORMAS_SIEMBRA, {
+      errorMap: () => ({ message: 'La forma de siembra es requerida' }),
+    }),
+    mes_desde: z.string().min(1, { message: 'El mes de inicio es requerido' }),
+    mes_hasta: z.string().min(1, { message: 'El mes de fin es requerido' }),
+    ciclo_desde: numeroRequerido('Los días a cosecha son requeridos'),
+    ciclo_hasta: numeroRequerido('Los días a cosecha son requeridos'),
+  })
+  .refine((data) => Number(data.ciclo_hasta) >= Number(data.ciclo_desde), {
+    message: 'El máximo debe ser mayor o igual al mínimo',
+    path: ['ciclo_hasta'],
+  });
+
+export type CultivoBaseFormValues = z.infer<typeof cultivoBaseSchema>;
+
+export const variedadSchema = z.object({
+  nombre_variedad: z
+    .string()
+    .min(1, { message: 'El nombre de la variedad es requerido' })
+    .max(80, { message: 'El nombre no puede superar los 80 caracteres' }),
+  distancia_plantas: numeroRequerido('La distancia entre plantas es requerida'),
+  distancia_surcos: numeroRequerido('La distancia entre surcos es requerida'),
+  dias_a_cosecha: numeroRequerido('Los días a cosecha son requeridos'),
+  observaciones: z.string().optional(),
+});
+
+export type VariedadFormValues = z.infer<typeof variedadSchema>;
