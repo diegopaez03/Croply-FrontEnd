@@ -193,3 +193,79 @@ export const variedadSchema = z.object({
 });
 
 export type VariedadFormValues = z.infer<typeof variedadSchema>;
+
+const diaRelativo = z.preprocess(
+  (val) => (val === '' || val === undefined || val === null ? undefined : Number(val)),
+  z
+    .number({
+      required_error: 'El día relativo es requerido',
+      invalid_type_error: 'Debe ser un número válido',
+    })
+    .int({ message: 'Debe ser un número entero' })
+    .min(0, { message: 'El día relativo no puede ser negativo' }),
+);
+
+const tareaPlantillaSchema = z
+  .object({
+    dia_relativo_tp: diaRelativo,
+    id_tipo_tarea: z.preprocess(
+      (val) => (val === '' || val === undefined || val === null ? undefined : Number(val)),
+      z.number({ required_error: 'El tipo de tarea es requerido' }).min(1, {
+        message: 'El tipo de tarea es requerido',
+      }),
+    ),
+    descripcion_tp: z.string().min(1, { message: 'La descripción es requerida' }),
+    nombre_producto: z.string().optional(),
+    dosis_aa: z.string().optional(),
+  })
+  .superRefine((tarea, ctx) => {
+    if (Number(tarea.id_tipo_tarea) !== 5) return;
+    if (!tarea.nombre_producto?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['nombre_producto'],
+        message: 'El producto es requerido para aplicación de agroquímico',
+      });
+    }
+    if (!tarea.dosis_aa?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['dosis_aa'],
+        message: 'La dosis es requerida para aplicación de agroquímico',
+      });
+    }
+  });
+
+export const plantillaBaseSchema = z.object({
+  nombre_pb: z
+    .string()
+    .min(1, { message: 'El nombre de la plantilla es requerido' })
+    .max(120, { message: 'El nombre no puede superar los 120 caracteres' }),
+  cultivos: z
+    .array(
+      z.object({
+        id_cultivo_base: z.number(),
+        modo_variedades: z.enum(['todas', 'especificas']),
+        ids_variedades: z.array(z.number()),
+      }),
+    )
+    .min(1, { message: 'Debés seleccionar al menos un cultivo' }),
+  hitos: z
+    .array(
+      z.object({
+        nombre_hpb: z
+          .string()
+          .min(1, { message: 'El nombre del hito es requerido' })
+          .max(80, { message: 'El nombre del hito no puede superar los 80 caracteres' }),
+        tareas: z
+          .array(tareaPlantillaSchema)
+          .min(1, { message: 'El hito debe tener al menos una tarea para poder guardarse.' }),
+      }),
+    )
+    .min(1, {
+      message: 'La plantilla debe tener al menos un hito con una tarea para poder guardarse.',
+    }),
+});
+
+export type PlantillaBaseFormValues = z.infer<typeof plantillaBaseSchema>;
+

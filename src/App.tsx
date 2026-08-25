@@ -15,6 +15,9 @@ import DigitalizarFincaPage from './pages/Landing/DigitalizarFincaPage'
 import DashboardAdminFincaPage from './pages/AdminFinca/DashboardAdminFincaPage'
 import DashboardAdminCroplyPage from './pages/AdminCroply/DashboardAdminCroplyPage'
 import CatalogosBasePage from './pages/AdminCroply/CatalogosBasePage'
+import PlantillasListadoPage from './pages/AdminCroply/PlantillasListadoPage'
+import PlantillaNuevaPage from './pages/AdminCroply/PlantillaNuevaPage'
+import PlantillaDetallePage from './pages/AdminCroply/PlantillaDetallePage'
 import GestionUsuariosPage from './pages/AdminFinca/GestionUsuariosPage'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { PerfilRoute } from './components/layout/PerfilRoute'
@@ -71,6 +74,9 @@ function App() {
               <Route path="/admin-croply/dashboard" element={<DashboardAdminCroplyPage />} />
               <Route path="/admin-croply/gestion-usuarios" element={<GestionClientesPage />} />
               <Route path="/admin-croply/catalogos-base" element={<CatalogosBasePage />} />
+              <Route path="/admin-croply/plantillas" element={<PlantillasListadoPage />} />
+              <Route path="/admin-croply/plantillas/nueva" element={<PlantillaNuevaPage />} />
+              <Route path="/admin-croply/plantillas/:id" element={<PlantillaDetallePage />} />
             </Route>
 
             

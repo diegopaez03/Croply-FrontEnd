@@ -18,7 +18,15 @@ export function NavbarAdminCroply({ mobile }: NavbarAdminCroplyProps) {
   const baseClasses = "flex flex-col w-64 bg-sidebar border-r border-border h-full shrink-0";
   const layoutClasses = mobile ? baseClasses : `hidden md:flex ${baseClasses}`;
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === '/admin-croply/catalogos-base') {
+      return (
+        location.pathname === path ||
+        location.pathname.startsWith('/admin-croply/plantillas')
+      );
+    }
+    return location.pathname === path;
+  };
 
   return (
     <nav className={layoutClasses}>
