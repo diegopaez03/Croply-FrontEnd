@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { cultivosService } from '../services/cultivos.service';
-import { CrearCultivoBaseRequest, CrearVariedadRequest } from '../types/cultivos.types';
+import { CrearCultivoBaseRequest, CrearVariedadRequest, ListarCultivosBaseQuery } from '../types/cultivos.types';
 
 export const cultivosBaseQueryKey = ['cultivosBase'] as const;
 
@@ -8,10 +8,10 @@ export function cultivoBaseQueryKey(id: number | null) {
   return ['cultivoBase', id] as const;
 }
 
-export function useCultivosBase() {
+export function useCultivosBase(params: ListarCultivosBaseQuery = {}) {
   return useQuery({
-    queryKey: cultivosBaseQueryKey,
-    queryFn: () => cultivosService.listar(),
+    queryKey: [...cultivosBaseQueryKey, params],
+    queryFn: () => cultivosService.listar(params),
   });
 }
 

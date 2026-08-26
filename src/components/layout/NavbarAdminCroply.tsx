@@ -22,6 +22,7 @@ export function NavbarAdminCroply({ mobile }: NavbarAdminCroplyProps) {
     if (path === '/admin-croply/catalogos-base') {
       return (
         location.pathname === path ||
+        location.pathname === '/cultivos' ||
         location.pathname.startsWith('/admin-croply/plantillas')
       );
     }
