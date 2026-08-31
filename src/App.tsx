@@ -15,7 +15,14 @@ import DigitalizarFincaPage from './pages/Landing/DigitalizarFincaPage'
 import DashboardAdminFincaPage from './pages/AdminFinca/DashboardAdminFincaPage'
 import DashboardAdminCroplyPage from './pages/AdminCroply/DashboardAdminCroplyPage'
 import CatalogosBasePage from './pages/AdminCroply/CatalogosBasePage'
+import CultivosListadoPage from './pages/AdminCroply/CultivosListadoPage'
+import PlantillasListadoPage from './pages/AdminCroply/PlantillasListadoPage'
+import PlantillaNuevaPage from './pages/AdminCroply/PlantillaNuevaPage'
+import PlantillaDetallePage from './pages/AdminCroply/PlantillaDetallePage'
 import GestionUsuariosPage from './pages/AdminFinca/GestionUsuariosPage'
+import BibliotecaCultivosPage from './pages/AdminFinca/BibliotecaCultivosPage'
+import CultivoBibliotecaDetallePage from './pages/AdminFinca/CultivoBibliotecaDetallePage'
+import GenerarPlanAccionPage from './pages/AdminFinca/GenerarPlanAccionPage'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { PerfilRoute } from './components/layout/PerfilRoute'
 
@@ -60,7 +67,9 @@ function App() {
             
             <Route element={<AdminFincaLayout />}>
               <Route path="/admin-finca/mi-finca" element={<DashboardAdminFincaPage />} />
-              <Route path="/admin-finca/biblioteca" element={<PlaceholderAdminFinca title="Biblioteca de cultivos" />} />
+              <Route path="/admin-finca/biblioteca" element={<BibliotecaCultivosPage />} />
+              <Route path="/admin-finca/biblioteca/:id/generar-plan" element={<GenerarPlanAccionPage />} />
+              <Route path="/admin-finca/biblioteca/:id" element={<CultivoBibliotecaDetallePage />} />
               <Route path="/admin-finca/agroquimicos" element={<PlaceholderAdminFinca title="Agroquímicos" />} />
               <Route path="/admin-finca/costos" element={<PlaceholderAdminFinca title="Costos" />} />
               <Route path="/admin-finca/gestion-usuarios" element={<GestionUsuariosPage />} />
@@ -71,6 +80,10 @@ function App() {
               <Route path="/admin-croply/dashboard" element={<DashboardAdminCroplyPage />} />
               <Route path="/admin-croply/gestion-usuarios" element={<GestionClientesPage />} />
               <Route path="/admin-croply/catalogos-base" element={<CatalogosBasePage />} />
+              <Route path="/admin-croply/cultivos" element={<CultivosListadoPage />} />
+              <Route path="/admin-croply/plantillas" element={<PlantillasListadoPage />} />
+              <Route path="/admin-croply/plantillas/nueva" element={<PlantillaNuevaPage />} />
+              <Route path="/admin-croply/plantillas/:id" element={<PlantillaDetallePage />} />
             </Route>
 
             

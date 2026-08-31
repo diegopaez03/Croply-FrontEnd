@@ -7,11 +7,14 @@ export interface ApiErrorResponse {
   errorCode: string;
   message: string;
   field?: string;
+  id_variedad?: number;
 }
 
 export interface ErrorHandlerOptions {
   /** Función a ejecutar si el recurso no existe (ERR-05), útil para redirigir en carga inicial (GET) */
   onNotFoundRedirect?: () => void;
+  /** HU-BC-02 ERR-07: resaltar la variedad conflictiva */
+  onVarietyAlreadyAssigned?: (id_variedad?: number) => void;
 }
 
 /**
@@ -37,6 +40,27 @@ export const handleFormError = (
       return;
     }
 
+    // ERR-06 — Cronograma vacío
+    if (data.errorCode === "EMPTY_SCHEDULE") {
+      if (setError) {
+        setError("hitos", { type: "server", message: data.message });
+      }
+      toast.error(data.message || "La plantilla debe tener al menos un hito con una tarea para poder guardarse.");
+      return;
+    }
+
+    // ERR-07 — Variedad ya cubierta por otra plantilla específica
+    if (data.errorCode === "VARIETY_ALREADY_ASSIGNED") {
+      if (setError) {
+        setError("cultivos", { type: "server", message: data.message });
+      }
+      toast.error(data.message || "Esta variedad ya tiene una plantilla específica asignada.");
+      if (options?.onVarietyAlreadyAssigned) {
+        options.onVarietyAlreadyAssigned(data.id_variedad);
+      }
+      return;
+    }
+
     // ERR-04 — Recurso en uso (409)
     if (data.errorCode === "RESOURCE_IN_USE" || data.statusCode === 409) {
       toast.error(data.message || "No se puede eliminar el recurso porque está en uso.");
@@ -52,11 +76,8 @@ export const handleFormError = (
       return;
     }
 
-    // Cualquier otro error del servidor (401, 403, 500)
-    console.log('DEBUG → llegando al toast', data.message);
     toast.error(data.message || "Ha ocurrido un error inesperado.");
   } else {
-    // Errores de red o sin respuesta del servidor
     toast.error("Error de conexión. Verifique su internet e intente nuevamente.");
   }
 };
