@@ -1,60 +1,115 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Add01Icon, ArrowLeft01Icon, Plant01Icon } from '@hugeicons/core-free-icons';
+import { 
+  ArrowLeft01Icon, 
+  Calendar01Icon, 
+  Plant01Icon, 
+  FlowSquareIcon, 
+  CheckmarkCircle01Icon, 
+  Add01Icon, 
+  MapsLocation01Icon,
+  Delete01Icon,
+  Alert01Icon
+} from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/context/AuthContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useCultivoBase } from '@/hooks/useCultivosBase';
-import { usePlantillaBase } from '@/hooks/usePlantillasBase';
-import { useParcelasPorFinca } from '@/hooks/useParcelas';
+import { useFincasQuery, useFincaQuery } from '@/hooks/useFincas';
+import { usePlanPreview, useCrearPlanAccion } from '@/hooks/usePlanesAccion';
 import { handleFormError } from '@/utils/errorHandler';
 import { showSuccessToast } from '@/utils/successHandler';
-import { idPlantillaParaVariedad } from '@/utils/resolver-plantilla';
 import { eventosDesdeHitos } from '@/utils/plan-calendario';
-import { HitosPlanGrid } from './components/HitosPlanGrid';
+import { generarPlanAccionSchema, GenerarPlanAccionFormValues } from '@/utils/validators';
 import { CalendarioPlanMensual } from './components/CalendarioPlanMensual';
-
-const SELECT_CLASS =
-  'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
-
-interface FilaSiembra {
-  id: string;
-  id_variedad: number | '';
-  id_finca: number | '';
-  id_parcela: number | '';
-  superficie_ha: string;
-}
 
 export default function GenerarPlanAccionPage() {
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { usuario } = useAuth();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const idCultivo = Number(id);
-  const variedadInicial = Number(searchParams.get('variedad'));
 
-  const { data: detalle, isLoading, error } = useCultivoBase(
+  const initFinca = searchParams.get('id_finca') ? Number(searchParams.get('id_finca')) : undefined;
+  const initParcela = searchParams.get('id_parcela') ? Number(searchParams.get('id_parcela')) : undefined;
+
+  const form = useForm<GenerarPlanAccionFormValues>({
+    resolver: zodResolver(generarPlanAccionSchema),
+    defaultValues: {
+      id_finca: initFinca,
+      id_parcela: initParcela,
+      fecha_inicio: format(new Date(), 'yyyy-MM-dd'),
+      asignaciones: [],
+    },
+  });
+
+  const idFinca = form.watch('id_finca');
+  const idParcela = form.watch('id_parcela');
+  const fechaInicioStr = form.watch('fecha_inicio');
+  const asignaciones = form.watch('asignaciones');
+
+  const { data: detalle, isLoading: loadingCultivo, error } = useCultivoBase(
     Number.isFinite(idCultivo) ? idCultivo : null,
   );
+  
+  const { data: fincasRes, isLoading: loadingFincas } = useFincasQuery(1, 100);
+  
+  const { data: fincaDetalle, isLoading: loadingFincaDetalle } = useFincaQuery(idFinca || null);
 
-  const fincas = usuario?.fincas ?? [];
-  const [filas, setFilas] = useState<FilaSiembra[]>([]);
-  const [fechaSiembra, setFechaSiembra] = useState(() => format(new Date(), 'yyyy-MM-dd'));
-  const [mesVisible, setMesVisible] = useState(() => new Date());
-  const [tareasActivas, setTareasActivas] = useState<Set<number>>(new Set());
-  const [errorForm, setErrorForm] = useState<string | null>(null);
+  const { data: planPreview } = usePlanPreview(idCultivo, idParcela || null);
+  const queryClient = useQueryClient();
 
-  const filaPrincipal = filas[0];
-  const idVariedadActiva = typeof filaPrincipal?.id_variedad === 'number' ? filaPrincipal.id_variedad : null;
-  const idFincaActiva = typeof filaPrincipal?.id_finca === 'number' ? filaPrincipal.id_finca : null;
-  const idParcelaActiva = typeof filaPrincipal?.id_parcela === 'number' ? filaPrincipal.id_parcela : null;
+  const { mutate: crearPlan, isPending: isCreating } = useCrearPlanAccion(
+    (msg) => {
+      queryClient.invalidateQueries({ queryKey: ['fincas'] });
+      if (idFinca) queryClient.invalidateQueries({ queryKey: ['finca', idFinca] });
+      if (idParcela) queryClient.invalidateQueries({ queryKey: ['parcela', idParcela] });
+      queryClient.invalidateQueries({ queryKey: ['planPreview'] });
+      showSuccessToast({ message: msg });
+      navigate(`/admin-finca/parcelas/${idParcela}`);
+    },
+    (err: any) => {
+      if (err?.response?.data?.field === 'superficie_asignada') {
+        form.setError('root.superficie_excedida', { 
+          type: 'manual', 
+          message: 'La superficie total supera el límite real disponible en la parcela.' 
+        });
+      } else {
+        handleFormError(err, form.setError);
+      }
+    }
+  );
 
-  const { data: parcelas = [] } = useParcelasPorFinca(idFincaActiva);
-  const idPlantilla = detalle ? idPlantillaParaVariedad(detalle, idVariedadActiva) : null;
-  const { data: plantilla } = usePlantillaBase(idPlantilla);
+  const { fields: asignacionFields, replace, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'asignaciones',
+  });
+
+  // Inyectar superficie_disponible en el formulario para validación local Zod
+  useEffect(() => {
+    if (planPreview?.superficie_disponible_parcela !== undefined) {
+      form.setValue('superficie_disponible', planPreview.superficie_disponible_parcela);
+    } else {
+      form.setValue('superficie_disponible', undefined);
+    }
+  }, [planPreview?.superficie_disponible_parcela, form]);
+
+  // Si no había asignaciones y el preview carga las variedades de la plantilla, agregar la primera
+  useEffect(() => {
+    if (planPreview && planPreview.plantillas.length > 0 && asignacionFields.length === 0) {
+      const p = planPreview.plantillas[0];
+      if (p.variedades.length > 0) {
+        replace([{ id_variedad: p.variedades[0].id_variedad, superficie_asignada: 0 }]);
+      }
+    }
+  }, [planPreview, replace, asignacionFields.length]);
 
   useEffect(() => {
     if (error) {
@@ -64,72 +119,41 @@ export default function GenerarPlanAccionPage() {
     }
   }, [error, navigate]);
 
-  useEffect(() => {
-    if (!detalle || filas.length > 0) return;
-    const variedad =
-      detalle.variedades.find((v) => v.id_variedad === variedadInicial)?.id_variedad
-      ?? detalle.variedades[0]?.id_variedad
-      ?? '';
-    setFilas([
-      {
-        id: 'fila-1',
-        id_variedad: variedad,
-        id_finca: fincas[0]?.id_finca ?? '',
-        id_parcela: '',
-        superficie_ha: '2.5',
-      },
-    ]);
-  }, [detalle, fincas, filas.length, variedadInicial]);
+  const [tareasActivas, setTareasActivas] = useState<Set<number>>(new Set());
+  const [mesVisible, setMesVisible] = useState(() => new Date());
 
   useEffect(() => {
-    if (!plantilla) return;
-    const ids = new Set<number>();
-    plantilla.hitos.forEach((hito) => {
-      hito.tareas.forEach((tarea) => ids.add(tarea.id_tarea_plantilla));
-    });
-    setTareasActivas(ids);
-  }, [plantilla]);
-
-  useEffect(() => {
-    if (!filaPrincipal || filaPrincipal.id_parcela !== '' || parcelas.length === 0) return;
-    actualizarFila(filaPrincipal.id, { id_parcela: parcelas[0].id_parcela });
-  }, [filaPrincipal, parcelas]);
-
-  useEffect(() => {
-    if (fechaSiembra) {
-      setMesVisible(new Date(`${fechaSiembra}T00:00:00`));
+    if (planPreview && planPreview.plantillas.length > 0) {
+      const ids = new Set<number>();
+      planPreview.plantillas[0].hitos.forEach((hito: any) => {
+        hito.tareas.forEach((tarea: any) => ids.add(tarea.id_tarea_plantilla));
+      });
+      setTareasActivas(ids);
     }
-  }, [fechaSiembra]);
+  }, [planPreview]);
+
+  useEffect(() => {
+    if (fechaInicioStr) {
+      const parsed = new Date(`${fechaInicioStr}T00:00:00`);
+      if (!isNaN(parsed.getTime())) {
+        setMesVisible(parsed);
+      }
+    }
+  }, [fechaInicioStr]);
 
   const eventos = useMemo(() => {
-    if (!plantilla || !fechaSiembra) return [];
-    const hitosFiltrados = plantilla.hitos.map((hito) => ({
+    if (!planPreview || planPreview.plantillas.length === 0 || !fechaInicioStr) return [];
+    const hitosFiltrados = planPreview.plantillas[0].hitos.map((hito: any) => ({
       ...hito,
-      tareas: hito.tareas.filter((tarea) => tareasActivas.has(tarea.id_tarea_plantilla)),
+      tareas: hito.tareas.filter((tarea: any) => tareasActivas.has(tarea.id_tarea_plantilla)),
     }));
-    return eventosDesdeHitos(hitosFiltrados, new Date(`${fechaSiembra}T00:00:00`));
-  }, [plantilla, fechaSiembra, tareasActivas]);
+    const d = new Date(`${fechaInicioStr}T00:00:00`);
+    if (isNaN(d.getTime())) return [];
+    return eventosDesdeHitos(hitosFiltrados, d);
+  }, [planPreview, fechaInicioStr, tareasActivas]);
 
-  const parcelaSeleccionada = parcelas.find((p) => p.id_parcela === idParcelaActiva);
-  const fincaSeleccionada = fincas.find((f) => f.id_finca === idFincaActiva);
-  const variedadSeleccionada = detalle?.variedades.find((v) => v.id_variedad === idVariedadActiva);
-
-  const actualizarFila = (idFila: string, cambios: Partial<FilaSiembra>) => {
-    setFilas((prev) => prev.map((fila) => (fila.id === idFila ? { ...fila, ...cambios } : fila)));
-  };
-
-  const agregarFila = () => {
-    setFilas((prev) => [
-      ...prev,
-      {
-        id: `fila-${prev.length + 1}-${Date.now()}`,
-        id_variedad: detalle?.variedades[0]?.id_variedad ?? '',
-        id_finca: fincas[0]?.id_finca ?? '',
-        id_parcela: '',
-        superficie_ha: '',
-      },
-    ]);
-  };
+  const fincas = fincasRes?.fincas ?? [];
+  const parcelas = fincaDetalle?.parcelas ?? [];
 
   const toggleTarea = (id_tarea_plantilla: number) => {
     setTareasActivas((prev) => {
@@ -140,36 +164,21 @@ export default function GenerarPlanAccionPage() {
     });
   };
 
-  const asociar = () => {
-    setErrorForm(null);
-    if (!detalle) return;
-    if (!filaPrincipal || filaPrincipal.id_finca === '' || filaPrincipal.id_parcela === '') {
-      setErrorForm('Completá finca y parcela para asociar el plan.');
-      return;
-    }
-    if (detalle.variedades.length > 0 && filaPrincipal.id_variedad === '') {
-      setErrorForm('Seleccioná una variedad.');
-      return;
-    }
-    const superficie = Number(filaPrincipal.superficie_ha);
-    if (!Number.isFinite(superficie) || superficie <= 0) {
-      setErrorForm('La superficie a asignar debe ser mayor a 0.');
-      return;
-    }
-    if (parcelaSeleccionada && superficie > parcelaSeleccionada.superficie_disponible_ha) {
-      setErrorForm('La superficie supera la disponible en la parcela.');
-      return;
-    }
-    if (!idPlantilla) {
-      setErrorForm('Este cultivo no tiene un plan de acción predefinido disponible.');
-      return;
-    }
-    // TODO: Reemplazar por POST de PlanAccion (HU-BC-06) cuando existan las épicas 3 y 5.
-    showSuccessToast({ message: 'Cultivo y plan de acción asociados a la parcela.' });
-    navigate('/admin-finca/biblioteca');
+  const onSubmit = (data: GenerarPlanAccionFormValues) => {
+    crearPlan({
+      id_parcela: data.id_parcela,
+      data: {
+        id_cultivo_base: idCultivo,
+        asignaciones: data.asignaciones.map(a => ({
+          id_variedad: a.id_variedad,
+          superficie_asignada: a.superficie_asignada,
+          fecha_inicio: data.fecha_inicio
+        }))
+      }
+    });
   };
 
-  if (isLoading || !detalle) {
+  if (loadingCultivo || !detalle || loadingFincas) {
     return (
       <div className="flex justify-center items-center py-16 text-muted-foreground">
         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-3" />
@@ -178,189 +187,356 @@ export default function GenerarPlanAccionPage() {
     );
   }
 
+  const plantillaAsociada = planPreview?.plantillas[0];
+  const variedadesDisponibles = plantillaAsociada?.variedades ?? detalle.variedades ?? [];
+
+  const addVariety = () => {
+    if (variedadesDisponibles.length > 0) {
+      append({ id_variedad: variedadesDisponibles[0].id_variedad, superficie_asignada: 0 });
+    }
+  };
+
+  const totalAreaAsignada = asignaciones.reduce((acc, curr) => acc + (Number(curr.superficie_asignada) || 0), 0);
+  const selectedFinca = fincas.find((f: any) => f.id_finca === idFinca);
+  const selectedParcela = parcelas.find((p: any) => p.id_parcela === idParcela);
+
+  const superficieDisponibleInicial = planPreview?.superficie_disponible_parcela || 0;
+  const superficieRestante = Math.max(0, superficieDisponibleInicial - totalAreaAsignada);
+  const exceedsAvailability = totalAreaAsignada > superficieDisponibleInicial;
+
   return (
-    <div className="w-full max-w-screen-xl mx-auto pb-8">
-      <Link
-        to={`/admin-finca/biblioteca/${detalle.id_cultivo_base}`}
-        className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline mb-6"
-      >
-        <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
-        Volver
-      </Link>
+    <div className="w-full max-w-screen-xl mx-auto pb-32 space-y-6">
+      <div className="pt-6 px-4 md:px-0">
+        <Button 
+          type="button"
+          variant="outline" 
+          onClick={() => navigate(`/admin-finca/biblioteca/${idCultivo}${location.search}`)}
+          className="rounded-full gap-2 text-sm font-medium border-border shadow-sm mb-6 h-9 px-4 bg-background"
+        >
+          <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
+          Volver
+        </Button>
+        <h1 className="text-2xl md:text-3xl font-bold text-primary flex items-center gap-2">
+          Generar Plan de Acción: <span className="text-foreground">{detalle.nombre_cultivo_base}</span>
+        </h1>
+      </div>
 
-      <h1 className="text-3xl font-bold text-foreground mb-8">
-        Generar Plan de Acción: {detalle.nombre_cultivo_base}
-      </h1>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-4 md:px-0">
+          
+          <section className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-6 text-primary">
+              <HugeiconsIcon icon={Plant01Icon} className="size-5" strokeWidth={2} />
+              <h2 className="text-lg font-bold">Configuración de Siembra</h2>
+            </div>
+            
+            <div className="space-y-4">
+              {asignacionFields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                  <FormField
+                    control={form.control}
+                    name={`asignaciones.${index}.id_variedad`}
+                    render={({ field: selectField }) => (
+                      <FormItem>
+                        <FormLabel className="text-muted-foreground font-medium text-xs">Variedad</FormLabel>
+                        <Select 
+                          onValueChange={(val) => selectField.onChange(Number(val))} 
+                          value={selectField.value ? String(selectField.value) : undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="bg-background border-border h-11">
+                              <SelectValue placeholder="Seleccionar..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {variedadesDisponibles.map((v: any) => (
+                              <SelectItem key={v.id_variedad} value={String(v.id_variedad)}>{v.nombre_variedad}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-      <section className="bg-card border border-border rounded-xl p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-6">Configuración de Siembra</h2>
-        <div className="flex flex-col gap-6">
-          {filas.map((fila) => (
-            <div key={fila.id} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-              <div className="flex flex-col gap-2">
-                <Label>Variedad</Label>
-                <select
-                  className={SELECT_CLASS}
-                  value={fila.id_variedad}
-                  onChange={(e) =>
-                    actualizarFila(fila.id, {
-                      id_variedad: e.target.value ? Number(e.target.value) : '',
-                    })
-                  }
-                >
-                  <option value="">Seleccioná una variedad</option>
-                  {detalle.variedades.map((variedad) => (
-                    <option key={variedad.id_variedad} value={variedad.id_variedad}>
-                      {variedad.nombre_variedad}
-                    </option>
-                  ))}
-                </select>
+                  {index === 0 ? (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="id_finca"
+                        render={({ field: fField }) => (
+                          <FormItem>
+                            <FormLabel className="text-muted-foreground font-medium text-xs">Finca</FormLabel>
+                            <Select 
+                              onValueChange={(val) => {
+                                fField.onChange(Number(val));
+                                form.setValue('id_parcela', 0 as any); 
+                              }} 
+                              value={fField.value ? String(fField.value) : undefined}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="bg-background border-border h-11">
+                                  <SelectValue placeholder="Seleccionar..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {fincas.map((f: any) => (
+                                  <SelectItem key={f.id_finca} value={String(f.id_finca)}>{f.nombre_finca}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="id_parcela"
+                        render={({ field: pField }) => (
+                          <FormItem>
+                            <FormLabel className="text-muted-foreground font-medium text-xs">Parcela</FormLabel>
+                            <Select 
+                              onValueChange={(val) => pField.onChange(Number(val))} 
+                              value={pField.value ? String(pField.value) : undefined}
+                              disabled={!idFinca || loadingFincaDetalle}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="bg-background border-border h-11">
+                                  <SelectValue placeholder="Seleccionar..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {parcelas.map((p: any) => (
+                                  <SelectItem key={p.id_parcela} value={String(p.id_parcela)}>{p.nombre_parcela}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label className="text-muted-foreground/60 font-medium text-xs block">Finca</Label>
+                        <Select value={idFinca ? String(idFinca) : undefined} disabled>
+                          <SelectTrigger className="bg-muted/30 border-border h-11 text-muted-foreground">
+                            <SelectValue placeholder="Seleccionar..." />
+                          </SelectTrigger>
+                        </Select>
+                        <p className="text-[10px] text-muted-foreground/80 leading-tight mt-1">Coincide con variedad inicial</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-muted-foreground/60 font-medium text-xs block">Parcela</Label>
+                        <Select value={idParcela ? String(idParcela) : undefined} disabled>
+                          <SelectTrigger className="bg-muted/30 border-border h-11 text-muted-foreground">
+                            <SelectValue placeholder="Seleccionar..." />
+                          </SelectTrigger>
+                        </Select>
+                      </div>
+                    </>
+                  )}
+
+                  <FormField
+                    control={form.control}
+                    name={`asignaciones.${index}.superficie_asignada`}
+                    render={({ field: sField }) => (
+                      <FormItem>
+                        <FormLabel className="text-muted-foreground font-medium text-xs">Superficie a asignar (Ha)</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center gap-2">
+                            <div className="relative flex-1">
+                              <Input 
+                                type="number" 
+                                min={0} 
+                                step="0.01" 
+                                className={`bg-background h-11 pr-12 ${form.formState.errors.asignaciones?.[index]?.superficie_asignada ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                                {...sField} 
+                                value={sField.value === undefined ? '' : sField.value}
+                              />
+                              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">Ha</span>
+                            </div>
+                            {asignacionFields.length > 1 && (
+                              <Button 
+                                type="button"
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => remove(index)} 
+                                className="h-11 w-11 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                              >
+                                <HugeiconsIcon icon={Delete01Icon} className="size-5" />
+                              </Button>
+                            )}
+                          </div>
+                        </FormControl>
+                        {index === 0 && planPreview && !exceedsAvailability && (
+                          <div className="text-[11px] text-primary font-medium flex items-center mt-1">
+                            <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-3 mr-1" />
+                            Disponible: {superficieRestante.toFixed(2)} Ha
+                          </div>
+                        )}
+                        <FormMessage className="text-[11px]" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              ))}
+              
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={addVariety}
+                className="text-primary border-primary hover:bg-primary/5 mt-4 h-10 font-semibold"
+              >
+                <HugeiconsIcon icon={Add01Icon} className="size-4 mr-2" />
+                Agregar otra variedad
+              </Button>
+            </div>
+          </section>
+
+          {plantillaAsociada && (
+            <section className="bg-card border border-border rounded-2xl p-6 shadow-sm overflow-hidden">
+              <div className="flex items-center gap-2 mb-2 text-primary">
+                <HugeiconsIcon icon={FlowSquareIcon} className="size-5" strokeWidth={2} />
+                <h2 className="text-lg font-bold">Hitos del Cultivo</h2>
               </div>
-              <div className="flex flex-col gap-2">
-                <Label>Finca</Label>
-                <select
-                  className={SELECT_CLASS}
-                  value={fila.id_finca}
-                  onChange={(e) =>
-                    actualizarFila(fila.id, {
-                      id_finca: e.target.value ? Number(e.target.value) : '',
-                      id_parcela: '',
-                    })
-                  }
-                >
-                  <option value="">Seleccioná una finca</option>
-                  {fincas.map((finca) => (
-                    <option key={finca.id_finca} value={finca.id_finca}>
-                      {finca.nombre_finca}
-                    </option>
-                  ))}
-                </select>
+              <p className="text-sm text-muted-foreground mb-8">
+                Este es el cronograma base sugerido para el cultivo. Una vez que lo asignes a tu parcela, vas a poder modificar, borrar o agregar nuevas tareas y personalizar cada hito cuando quieras.
+              </p>
+              
+              <div className="flex overflow-x-auto pb-4 gap-8 custom-scrollbar">
+                {plantillaAsociada.hitos.map((hito: any, i: number) => {
+                  const tag = i === 0 ? "INICIO" : `+${hito.tareas[0]?.dia_relativo_tp || 0} Días`;
+                  const tagBg = i === 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground border border-border/50";
+                  
+                  return (
+                    <div key={hito.id_hito_plantilla} className="min-w-[280px] flex flex-col relative">
+                      {i !== plantillaAsociada.hitos.length - 1 && (
+                        <div className="absolute top-[1.35rem] left-[4rem] right-[-2rem] h-[2px] bg-border -z-10" />
+                      )}
+                      
+                      <div className="flex flex-col items-center self-start mb-4">
+                        <div className="flex items-center justify-center w-11 h-11 rounded-full bg-muted border-[3px] border-card text-primary/70 mb-2">
+                          <HugeiconsIcon icon={Plant01Icon} className="size-5" strokeWidth={1.5} /> 
+                        </div>
+                        <div className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${tagBg}`}>
+                          {tag}
+                        </div>
+                      </div>
+                      
+                      <h3 className="font-bold text-base mb-1">{hito.nombre_hpb}</h3>
+                      <p className="text-xs text-muted-foreground mb-4 line-clamp-1">{hito.tareas[0]?.descripcion_tp || 'Actividades de campo'}</p>
+                      
+                      <div className="space-y-2">
+                        {hito.tareas.map((tarea: any) => {
+                          const isActive = tareasActivas.has(tarea.id_tarea_plantilla);
+                          return (
+                            <div 
+                              key={tarea.id_tarea_plantilla} 
+                              className="flex items-start gap-2 cursor-pointer group"
+                              onClick={() => toggleTarea(tarea.id_tarea_plantilla)}
+                            >
+                              <div className={`mt-[2px] w-4 h-4 rounded border flex items-center justify-center transition-colors ${isActive ? 'bg-primary border-primary text-primary-foreground' : 'border-input bg-background group-hover:border-primary/50'}`}>
+                                {isActive && <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-3" strokeWidth={2.5} />}
+                              </div>
+                              <span className={`text-sm ${isActive ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                                {tarea.nombre_tipo_tarea}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="flex flex-col gap-2">
-                <Label>Parcela</Label>
-                <select
-                  className={SELECT_CLASS}
-                  value={fila.id_parcela}
-                  onChange={(e) =>
-                    actualizarFila(fila.id, {
-                      id_parcela: e.target.value ? Number(e.target.value) : '',
-                    })
-                  }
-                >
-                  <option value="">Seleccioná una parcela</option>
-                  {parcelas.map((parcela) => (
-                    <option key={parcela.id_parcela} value={parcela.id_parcela}>
-                      {parcela.nombre_parcela}
-                    </option>
-                  ))}
-                </select>
+            </section>
+          )}
+
+          {plantillaAsociada && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <section className="bg-card border border-border rounded-2xl p-6 shadow-sm md:col-span-1">
+              <div className="flex items-center gap-2 mb-4 text-primary">
+                <HugeiconsIcon icon={Calendar01Icon} className="size-5" strokeWidth={2} />
+                <h2 className="text-lg font-bold">Fecha de Siembra</h2>
               </div>
-              <div className="flex flex-col gap-2">
-                <Label>Superficie a asignar (Ha)</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={fila.superficie_ha}
-                  onChange={(e) => actualizarFila(fila.id, { superficie_ha: e.target.value })}
-                />
-                {parcelaSeleccionada && fila.id === filaPrincipal?.id && (
-                  <p className="text-xs font-medium text-[#1A7B48]">
-                    Disponible: {parcelaSeleccionada.superficie_disponible_ha.toFixed(2)} Ha
-                  </p>
+              
+              <FormField
+                control={form.control}
+                name="fecha_inicio"
+                render={({ field }) => (
+                  <FormItem className="mb-4">
+                    <FormControl>
+                      <Input type="date" className="h-11 bg-background block w-full justify-between [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <p className="text-[13px] text-muted-foreground leading-relaxed">
+                Seleccione el inicio del plan. Las tareas subsiguientes se recalcularán automáticamente basándose en este hito inicial.
+              </p>
+            </section>
+            
+            <section className="bg-[#FAF9F6] border border-border/60 rounded-2xl p-6 shadow-sm md:col-span-2 flex flex-col justify-center">
+              <h3 className="font-bold text-primary flex items-center gap-2 mb-4">
+                <HugeiconsIcon icon={MapsLocation01Icon} className="size-5" strokeWidth={2} /> 
+                Ubicación del Cultivo
+              </h3>
+              <ul className="space-y-2 text-foreground font-semibold text-[13px]">
+                <li className="flex items-center"><span className="text-muted-foreground w-16">Finca:</span> {selectedFinca?.nombre_finca || '-'}</li>
+                <li className="flex items-center"><span className="text-muted-foreground w-16">Parcela:</span> {selectedParcela?.nombre_parcela || '-'}</li>
+                <li className="flex items-center"><span className="text-muted-foreground w-16">Área:</span> {totalAreaAsignada > 0 ? `${totalAreaAsignada.toFixed(2)} Hectáreas` : '-'}</li>
+              </ul>
+            </section>
+          </div>
+          )}
+
+          {plantillaAsociada && (
+            <section className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+              <CalendarioPlanMensual
+                mesVisible={mesVisible}
+                onCambiarMes={setMesVisible}
+                eventos={eventos}
+              />
+            </section>
+          )}
+
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border p-4 px-8 z-50 lg:left-64">
+            <div className="max-w-5xl mx-auto flex items-center justify-between w-full gap-4">
+              <div className="flex-1 pr-4">
+                {exceedsAvailability && (
+                  <div className="flex items-center gap-2 text-destructive text-sm font-semibold animate-in fade-in zoom-in-95 duration-200">
+                    <HugeiconsIcon icon={Alert01Icon} className="size-5 shrink-0" />
+                    <span>
+                      La suma asignada ({totalAreaAsignada.toFixed(2)} Ha) supera la disponibilidad ({superficieDisponibleInicial.toFixed(2)} Ha)
+                    </span>
+                  </div>
                 )}
               </div>
-            </div>
-          ))}
-          <div>
-            <Button type="button" variant="outline" onClick={agregarFila}>
-              <HugeiconsIcon icon={Add01Icon} className="size-4" />
-              Agregar otra variedad
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section className="mb-8">
-        <h2 className="text-xl font-semibold mb-2">Hitos del Cultivo</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Este es el cronograma base sugerido. Podés personalizar las tareas antes de asociarlo a la parcela.
-        </p>
-        {idPlantilla == null ? (
-          <p className="text-sm text-muted-foreground">
-            Este cultivo no tiene un plan de acción predefinido disponible.
-          </p>
-        ) : plantilla ? (
-          <HitosPlanGrid
-            hitos={plantilla.hitos}
-            tareasActivas={tareasActivas}
-            onToggleTarea={toggleTarea}
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground">Cargando hitos...</p>
-        )}
-      </section>
-
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-card border border-border rounded-xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Fecha de Siembra</h2>
-          <Input
-            type="date"
-            value={fechaSiembra}
-            onChange={(e) => setFechaSiembra(e.target.value)}
-            className="max-w-xs"
-          />
-          <p className="text-sm text-muted-foreground mt-3">
-            Las tareas posteriores se recalculan a partir de esta fecha de inicio.
-          </p>
-        </div>
-        <div className="bg-[#FAF8F5] border border-border/60 rounded-xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Ubicación del Cultivo</h2>
-          <dl className="flex flex-col gap-2 text-sm">
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Finca</dt>
-              <dd className="font-medium">{fincaSeleccionada?.nombre_finca ?? '—'}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Parcela</dt>
-              <dd className="font-medium">{parcelaSeleccionada?.nombre_parcela ?? '—'}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Área</dt>
-              <dd className="font-medium">
-                {filaPrincipal?.superficie_ha ? `${filaPrincipal.superficie_ha} Hectáreas` : '—'}
-              </dd>
-            </div>
-            {variedadSeleccionada && (
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Variedad</dt>
-                <dd className="font-medium">{variedadSeleccionada.nombre_variedad}</dd>
+              <div className="flex items-center gap-3 shrink-0">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="rounded-full px-6 bg-background h-10 border-border/80 text-foreground font-semibold" 
+                  onClick={() => navigate(`/admin-finca/biblioteca/${idCultivo}${location.search}`)}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isCreating || !planPreview || asignacionFields.length === 0 || exceedsAvailability} 
+                  className="rounded-full px-6 h-10 font-semibold"
+                >
+                  {isCreating ? 'Guardando...' : 'Asociar cultivo y Plan de acción a parcela'}
+                </Button>
               </div>
-            )}
-          </dl>
-        </div>
-      </section>
-
-      <section className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Vista Mensual del Plan</h2>
-        <CalendarioPlanMensual
-          mesVisible={mesVisible}
-          onCambiarMes={setMesVisible}
-          eventos={eventos}
-        />
-      </section>
-
-      {errorForm && <p className="text-sm text-destructive mb-4">{errorForm}</p>}
-
-      <div className="flex flex-col sm:flex-row justify-end gap-3">
-        <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-          Cancelar
-        </Button>
-        <Button type="button" onClick={asociar}>
-          <HugeiconsIcon icon={Plant01Icon} className="size-4" />
-          Asociar cultivo y Plan de acción a parcela
-        </Button>
-      </div>
+            </div>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }

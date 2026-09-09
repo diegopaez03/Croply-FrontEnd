@@ -12,7 +12,7 @@ import {
 
 const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
 
-let mockTiposSensor: TipoSensor[] = [
+export let mockTiposSensor: TipoSensor[] = [
   {
     id_tipo_sensor: 15,
     codigo_tipo_sensor: "PH",

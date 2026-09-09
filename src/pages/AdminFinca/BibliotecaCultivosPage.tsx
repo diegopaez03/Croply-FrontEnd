@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { SearchBar } from '@/components/shared/SearchBar';
 import { useCultivosBase } from '@/hooks/useCultivosBase';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -15,6 +16,7 @@ export default function BibliotecaCultivosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useDebounce(searchTerm, 500);
   const [epoca, setEpoca] = useState<EpocaCultivo | ''>('');
+  const location = useLocation();
 
   const { data, isLoading } = useCultivosBase({
     search: debouncedSearch.trim() || undefined,
@@ -75,7 +77,7 @@ export default function BibliotecaCultivosPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {cultivos.map((cultivo) => (
-            <CultivoBibliotecaCard key={cultivo.id_cultivo_base} cultivo={cultivo} />
+            <CultivoBibliotecaCard key={cultivo.id_cultivo_base} cultivo={cultivo} searchString={location.search} />
           ))}
         </div>
       )}

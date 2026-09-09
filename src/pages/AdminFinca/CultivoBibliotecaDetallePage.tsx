@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,8 @@ export default function CultivoBibliotecaDetallePage() {
 
   const variedadSeleccionada = detalle?.variedades.find((v) => v.id_variedad === idVariedad);
 
+  const location = useLocation();
+
   if (isLoading || !detalle) {
     return (
       <div className="flex justify-center items-center py-16 text-muted-foreground">
@@ -57,7 +59,7 @@ export default function CultivoBibliotecaDetallePage() {
   return (
     <div className="w-full max-w-screen-xl mx-auto">
       <Link
-        to="/admin-finca/biblioteca"
+        to={`/admin-finca/biblioteca${location.search}`}
         className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline mb-6"
       >
         <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
@@ -71,13 +73,13 @@ export default function CultivoBibliotecaDetallePage() {
         </div>
         <Button
           disabled={idPlantilla == null}
-          onClick={() =>
+          onClick={() => {
+            const params = new URLSearchParams(location.search);
+            if (idVariedad) params.set('variedad', String(idVariedad));
             navigate(
-              `/admin-finca/biblioteca/${detalle.id_cultivo_base}/generar-plan${
-                idVariedad ? `?variedad=${idVariedad}` : ''
-              }`,
-            )
-          }
+              `/admin-finca/biblioteca/${detalle.id_cultivo_base}/generar-plan?${params.toString()}`,
+            );
+          }}
         >
           Generar plan de acción
         </Button>

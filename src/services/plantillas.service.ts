@@ -32,7 +32,7 @@ function delayReject(error: AxiosError, ms = 400): Promise<never> {
   return new Promise((_, reject) => setTimeout(() => reject(error), ms));
 }
 
-const mockPlantillas: PlantillaBaseDetalle[] = [
+export const mockPlantillas: PlantillaBaseDetalle[] = [
   {
     id_plantilla_base: 3,
     nombre_pb: 'Plan de Cultivo de Ajo',
