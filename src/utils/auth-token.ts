@@ -1,7 +1,21 @@
 import { jwtDecode } from 'jwt-decode';
 import { AuthJwtPayload, AuthSession, UsuarioAuth } from '../types/auth.types';
+import { PERMISOS_FINCA, PERMISOS_SISTEMA } from '../constants/permisos';
 
 export const ACCESS_TOKEN_KEY = 'accessToken';
+
+function permisosDesdePayload(payload: AuthJwtPayload): string[] {
+  if (payload.permisos?.length) {
+    return payload.permisos;
+  }
+  if (payload.rol_sistema === 'ADMIN_CROPLY') {
+    return [...PERMISOS_SISTEMA];
+  }
+  if ((payload.fincas ?? []).some((f) => f.rol_finca === 'ADMIN_FINCA')) {
+    return [...PERMISOS_FINCA];
+  }
+  return [];
+}
 
 function mapPayloadToUsuario(payload: AuthJwtPayload): UsuarioAuth {
   return {
@@ -14,6 +28,7 @@ function mapPayloadToUsuario(payload: AuthJwtPayload): UsuarioAuth {
     fecha_alta: payload.fecha_alta,
     rol_sistema: payload.rol_sistema,
     fincas: payload.fincas ?? [],
+    permisos: permisosDesdePayload(payload),
   };
 }
 

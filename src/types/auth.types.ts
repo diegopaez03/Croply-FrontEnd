@@ -19,6 +19,7 @@ export interface UsuarioAuth {
   fecha_alta: string;
   rol_sistema: string | null;
   fincas: FincaRol[];
+  permisos: string[];
 }
 
 /** Claims del JWT emitido por el backend (AuthJwtPayload). */
@@ -34,6 +35,7 @@ export interface AuthJwtPayload {
   estado: "Activo" | "Pendiente" | "Inactivo";
   fecha_alta: string;
   fincas: FincaRol[];
+  permisos?: string[];
   exp?: number;
   iat?: number;
 }

@@ -29,6 +29,8 @@ import FincaDetallePage from './pages/AdminCroply/FincaDetallePage'
 import ParcelaDetallePage from './pages/AdminFinca/ParcelaDetallePage'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { PerfilRoute } from './components/layout/PerfilRoute'
+import { RequirePermiso } from './components/layout/RequirePermiso'
+import { PERMISO_FINCA, PERMISO_SISTEMA } from './constants/permisos'
 
 import AdminFincaLayout from './components/layout/AdminFincaLayout'
 
@@ -72,26 +74,26 @@ function App() {
             <Route element={<AdminFincaLayout />}>
               <Route path="/admin-finca/mi-finca" element={<DashboardAdminFincaPage />} />
               <Route path="/admin-finca/parcelas/:id" element={<ParcelaDetallePage />} />
-              <Route path="/admin-finca/biblioteca" element={<BibliotecaCultivosPage />} />
-              <Route path="/admin-finca/biblioteca/:id/generar-plan" element={<GenerarPlanAccionPage />} />
-              <Route path="/admin-finca/biblioteca/:id" element={<CultivoBibliotecaDetallePage />} />
-              <Route path="/admin-finca/agroquimicos" element={<PlaceholderAdminFinca title="Agroquímicos" />} />
-              <Route path="/admin-finca/costos" element={<PlaceholderAdminFinca title="Costos" />} />
-              <Route path="/admin-finca/gestion-usuarios" element={<GestionUsuariosPage />} />
+              <Route path="/admin-finca/biblioteca" element={<RequirePermiso permisos={[PERMISO_FINCA.TAREAS_CAMPO]} redirectTo="/admin-finca/mi-finca"><BibliotecaCultivosPage /></RequirePermiso>} />
+              <Route path="/admin-finca/biblioteca/:id/generar-plan" element={<RequirePermiso permisos={[PERMISO_FINCA.TAREAS_CAMPO]} redirectTo="/admin-finca/mi-finca"><GenerarPlanAccionPage /></RequirePermiso>} />
+              <Route path="/admin-finca/biblioteca/:id" element={<RequirePermiso permisos={[PERMISO_FINCA.TAREAS_CAMPO]} redirectTo="/admin-finca/mi-finca"><CultivoBibliotecaDetallePage /></RequirePermiso>} />
+              <Route path="/admin-finca/agroquimicos" element={<RequirePermiso permisos={[PERMISO_FINCA.REGISTRO_AGROQUIMICOS]} redirectTo="/admin-finca/mi-finca"><PlaceholderAdminFinca title="Agroquímicos" /></RequirePermiso>} />
+              <Route path="/admin-finca/costos" element={<RequirePermiso permisos={[PERMISO_FINCA.REPORTES]} redirectTo="/admin-finca/mi-finca"><PlaceholderAdminFinca title="Costos" /></RequirePermiso>} />
+              <Route path="/admin-finca/gestion-usuarios" element={<RequirePermiso permisos={[PERMISO_FINCA.GESTION_TRABAJADORES]} redirectTo="/admin-finca/mi-finca"><GestionUsuariosPage /></RequirePermiso>} />
               <Route path="/admin-finca/soporte" element={<PlaceholderAdminFinca title="Ayuda y soporte" />} />
             </Route>
 
             <Route element={<AdminCroplyLayout />}>
               <Route path="/admin-croply/dashboard" element={<DashboardAdminCroplyPage />} />
-              <Route path="/admin-croply/gestion-usuarios" element={<GestionClientesPage />} />
-              <Route path="/admin-croply/catalogos-base" element={<CatalogosBasePage />} />
-              <Route path="/admin-croply/cultivos" element={<CultivosListadoPage />} />
-              <Route path="/admin-croply/fincas" element={<FincasListadoPage />} />
-              <Route path="/admin-croply/fincas/nueva" element={<FincaCrearPage />} />
-              <Route path="/admin-croply/fincas/:id" element={<FincaDetallePage />} />
-              <Route path="/admin-croply/plantillas" element={<PlantillasListadoPage />} />
-              <Route path="/admin-croply/plantillas/nueva" element={<PlantillaNuevaPage />} />
-              <Route path="/admin-croply/plantillas/:id" element={<PlantillaDetallePage />} />
+              <Route path="/admin-croply/gestion-usuarios" element={<RequirePermiso permisos={[PERMISO_SISTEMA.GESTION_USUARIOS, PERMISO_SISTEMA.SOLICITUDES_DIGITALIZACION]} redirectTo="/admin-croply/dashboard"><GestionClientesPage /></RequirePermiso>} />
+              <Route path="/admin-croply/catalogos-base" element={<RequirePermiso permisos={[PERMISO_SISTEMA.CATALOGOS_BASE]} redirectTo="/admin-croply/dashboard"><CatalogosBasePage /></RequirePermiso>} />
+              <Route path="/admin-croply/cultivos" element={<RequirePermiso permisos={[PERMISO_SISTEMA.CATALOGOS_BASE]} redirectTo="/admin-croply/dashboard"><CultivosListadoPage /></RequirePermiso>} />
+              <Route path="/admin-croply/fincas" element={<RequirePermiso permisos={[PERMISO_SISTEMA.FINCAS_INFRAESTRUCTURA]} redirectTo="/admin-croply/dashboard"><FincasListadoPage /></RequirePermiso>} />
+              <Route path="/admin-croply/fincas/nueva" element={<RequirePermiso permisos={[PERMISO_SISTEMA.FINCAS_INFRAESTRUCTURA]} redirectTo="/admin-croply/dashboard"><FincaCrearPage /></RequirePermiso>} />
+              <Route path="/admin-croply/fincas/:id" element={<RequirePermiso permisos={[PERMISO_SISTEMA.FINCAS_INFRAESTRUCTURA]} redirectTo="/admin-croply/dashboard"><FincaDetallePage /></RequirePermiso>} />
+              <Route path="/admin-croply/plantillas" element={<RequirePermiso permisos={[PERMISO_SISTEMA.CATALOGOS_BASE]} redirectTo="/admin-croply/dashboard"><PlantillasListadoPage /></RequirePermiso>} />
+              <Route path="/admin-croply/plantillas/nueva" element={<RequirePermiso permisos={[PERMISO_SISTEMA.CATALOGOS_BASE]} redirectTo="/admin-croply/dashboard"><PlantillaNuevaPage /></RequirePermiso>} />
+              <Route path="/admin-croply/plantillas/:id" element={<RequirePermiso permisos={[PERMISO_SISTEMA.CATALOGOS_BASE]} redirectTo="/admin-croply/dashboard"><PlantillaDetallePage /></RequirePermiso>} />
             </Route>
 
             
