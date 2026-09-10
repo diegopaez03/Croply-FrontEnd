@@ -173,6 +173,7 @@ export const cultivoBaseSchema = z
     mes_hasta: z.string().min(1, { message: 'El mes de fin es requerido' }),
     ciclo_desde: numeroRequerido('Los días a cosecha son requeridos'),
     ciclo_hasta: numeroRequerido('Los días a cosecha son requeridos'),
+    imagen_url: z.string().nullable().optional(),
   })
   .refine((data) => Number(data.ciclo_hasta) >= Number(data.ciclo_desde), {
     message: 'El máximo debe ser mayor o igual al mínimo',
@@ -190,6 +191,7 @@ export const variedadSchema = z.object({
   distancia_surcos: numeroRequerido('La distancia entre surcos es requerida'),
   dias_a_cosecha: numeroRequerido('Los días a cosecha son requeridos'),
   observaciones: z.string().optional(),
+  imagen_url: z.string().nullable().optional(),
 });
 
 export type VariedadFormValues = z.infer<typeof variedadSchema>;

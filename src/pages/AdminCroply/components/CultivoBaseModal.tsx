@@ -23,6 +23,7 @@ import {
   useEliminarVariedad,
 } from '@/hooks/useCultivosBase';
 import { CrearCultivoBaseRequest, CultivoBaseDetalle, VariedadDetalle } from '@/types/cultivos.types';
+import { ImageUploadField } from '@/components/shared/ImageUploadField';
 import { FormularioVariedadInline } from './FormularioVariedadInline';
 import {
   Dialog,
@@ -49,6 +50,7 @@ const FORM_DEFAULTS: CultivoBaseFormValues = {
   mes_hasta: '',
   ciclo_desde: undefined as unknown as number,
   ciclo_hasta: undefined as unknown as number,
+  imagen_url: null,
 };
 
 function mapDetalleAFormulario(detalle: CultivoBaseDetalle): CultivoBaseFormValues {
@@ -63,6 +65,7 @@ function mapDetalleAFormulario(detalle: CultivoBaseDetalle): CultivoBaseFormValu
     mes_hasta: meses.mes_hasta,
     ciclo_desde: ciclo.ciclo_desde,
     ciclo_hasta: ciclo.ciclo_hasta,
+    imagen_url: detalle.imagen_url ?? null,
   };
 }
 
@@ -74,6 +77,7 @@ function mapFormularioARequest(values: CultivoBaseFormValues): CrearCultivoBaseR
     forma_siembra: values.forma_siembra,
     mes_siembra: formatMesSiembra(values.mes_desde, values.mes_hasta),
     ciclo_productivo_cb: formatCicloProductivo(Number(values.ciclo_desde), Number(values.ciclo_hasta)),
+    imagen_url: values.imagen_url ?? null,
   };
 }
 
@@ -265,6 +269,24 @@ export function CultivoBaseModal({ open, onOpenChange, idCultivoBase }: CultivoB
                               <FormLabel>Descripción *</FormLabel>
                               <FormControl>
                                 <Textarea placeholder="Descripción agronómica del cultivo" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="imagen_url"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Imagen del cultivo</FormLabel>
+                              <FormControl>
+                                <ImageUploadField
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  disabled={isSavingFicha}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
