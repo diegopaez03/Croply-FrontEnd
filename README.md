@@ -6,6 +6,8 @@ Frontend de Croply (software de gestión agrícola). React 18 + Vite + TypeScrip
 
 ✅ **Épica 1 — Gestionar el Acceso a la Plataforma**: completa (HU-AC-01 a HU-AC-07).
 
+✅ **Épica 4 — Planificar Cultivos (HU-BC-01 a HU-BC-05)**: biblioteca de cultivos/variedades y plantillas. La ficha técnica y el formulario de variedad incluyen subida de imagen reutilizable (`ImageUploadField` → `POST /uploads/imagenes`). El renderizado de esas imágenes en listados queda pendiente.
+
 ## Requisitos previos
 
 - Node.js 20+
@@ -71,8 +73,8 @@ src/
 ├── components/
 │   ├── ui/          # Primitivos de shadcn/ui
 │   ├── layout/       # Navbar, Header, Layouts por rol
-│   └── shared/        # Componentes de dominio reutilizables entre pantallas
-├── services/        # Llamadas a la API, un archivo por dominio de negocio
+│   └── shared/        # Componentes de dominio reutilizables (SearchBar, ImageUploadField, …)
+├── services/        # Llamadas a la API, un archivo por dominio (incluye uploads.service.ts)
 ├── types/           # Interfaces de TypeScript, un archivo por entidad
 ├── hooks/           # Hooks reutilizables
 ├── context/         # Contextos globales (AuthContext)
