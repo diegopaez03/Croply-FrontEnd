@@ -381,8 +381,42 @@ export const authService = {
     if (useMocks) {
       await new Promise((resolve) => setTimeout(resolve, 800));
 
+      const mockUsuario: import('../types/auth.types').UsuarioAuth = {
+        id_usuario: 46,
+        email: 'primeracceso@finca.com',
+        nombre: 'Juan',
+        apellido: 'Pérez',
+        estado: 'Activo',
+        fecha_alta: '2026-03-15T10:00:00Z',
+        rol_sistema: null,
+        fincas: [
+          { id_finca: 12, nombre_finca: 'La Esperanza', rol_finca: 'ADMIN_FINCA' },
+        ],
+      };
+
+      const mockPayload = {
+        sub: mockUsuario.id_usuario,
+        email: mockUsuario.email,
+        debe_cambiar_contrasena: false,
+        rol_sistema: mockUsuario.rol_sistema,
+        token_version: 0,
+        nombre: mockUsuario.nombre,
+        apellido: mockUsuario.apellido,
+        estado: mockUsuario.estado,
+        fecha_alta: mockUsuario.fecha_alta,
+        fincas: mockUsuario.fincas,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      };
+
+      const b64Payload = btoa(unescape(encodeURIComponent(JSON.stringify(mockPayload))));
+      const mockToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${b64Payload}.mocksignature`;
+
       return {
-        message: 'Contraseña actualizada correctamente.'
+        message: 'Contraseña actualizada correctamente.',
+        accessToken: mockToken,
+        expiresIn: 3600,
+        debe_cambiar_contrasena: false,
+        usuario: mockUsuario
       };
     }
 

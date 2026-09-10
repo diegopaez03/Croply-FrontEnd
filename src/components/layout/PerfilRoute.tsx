@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminCroplyLayout from './AdminCroplyLayout';
 import AdminFincaLayout from './AdminFincaLayout';
+import { PendienteFincaPage } from '../../pages/Auth/PendienteFincaPage';
 
 export function PerfilRoute() {
   const { usuario } = useAuth();
@@ -10,19 +11,16 @@ export function PerfilRoute() {
     return <Navigate to="/login" replace />;
   }
 
-  // Si tiene rol de sistema, siempre es Admin Croply
-  if (usuario.rol_sistema === 'ADMIN_CROPLY') {
+  // Si usuario.rol_sistema tiene cualquier valor no nulo -> AdminCroplyLayout
+  if (usuario.rol_sistema) {
     return <AdminCroplyLayout />;
   }
 
-  // Lógica para roles de finca usando un switch para escalabilidad futura
-  const rolFinca = usuario.fincas?.[0]?.rol_finca;
-
-  switch (rolFinca) {
-    case 'ADMIN_FINCA':
-      return <AdminFincaLayout />;
-    default:
-      // Fallback a AdminFincaLayout si el rol de finca no tiene un layout específico todavía
-      return <AdminFincaLayout />;
+  // Si rol_sistema es null pero usuario.fincas?.length > 0 -> AdminFincaLayout
+  if (usuario.fincas && usuario.fincas.length > 0) {
+    return <AdminFincaLayout />;
   }
+
+  // Si no se cumple ninguna de las dos (usuario sin rol de sistema y sin finca)
+  return <PendienteFincaPage />;
 }
