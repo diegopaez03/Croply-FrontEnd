@@ -6,12 +6,13 @@ import { CultivoBaseListado } from '@/types/cultivos.types';
 
 interface CultivoBibliotecaCardProps {
   cultivo: CultivoBaseListado;
+  searchString?: string;
 }
 
-export function CultivoBibliotecaCard({ cultivo }: CultivoBibliotecaCardProps) {
+export function CultivoBibliotecaCard({ cultivo, searchString = '' }: CultivoBibliotecaCardProps) {
   return (
     <Link
-      to={`/admin-finca/biblioteca/${cultivo.id_cultivo_base}`}
+      to={`/admin-finca/biblioteca/${cultivo.id_cultivo_base}${searchString}`}
       className="bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-primary/30 transition-all flex flex-col"
     >
       <div className="h-36 bg-[#EAF2ED] flex items-center justify-center">

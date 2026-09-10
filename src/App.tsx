@@ -23,6 +23,10 @@ import GestionUsuariosPage from './pages/AdminFinca/GestionUsuariosPage'
 import BibliotecaCultivosPage from './pages/AdminFinca/BibliotecaCultivosPage'
 import CultivoBibliotecaDetallePage from './pages/AdminFinca/CultivoBibliotecaDetallePage'
 import GenerarPlanAccionPage from './pages/AdminFinca/GenerarPlanAccionPage'
+import FincasListadoPage from './pages/AdminCroply/FincasListadoPage'
+import FincaCrearPage from './pages/AdminCroply/FincaCrearPage'
+import FincaDetallePage from './pages/AdminCroply/FincaDetallePage'
+import ParcelaDetallePage from './pages/AdminFinca/ParcelaDetallePage'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { PerfilRoute } from './components/layout/PerfilRoute'
 
@@ -67,6 +71,7 @@ function App() {
             
             <Route element={<AdminFincaLayout />}>
               <Route path="/admin-finca/mi-finca" element={<DashboardAdminFincaPage />} />
+              <Route path="/admin-finca/parcelas/:id" element={<ParcelaDetallePage />} />
               <Route path="/admin-finca/biblioteca" element={<BibliotecaCultivosPage />} />
               <Route path="/admin-finca/biblioteca/:id/generar-plan" element={<GenerarPlanAccionPage />} />
               <Route path="/admin-finca/biblioteca/:id" element={<CultivoBibliotecaDetallePage />} />
@@ -81,6 +86,9 @@ function App() {
               <Route path="/admin-croply/gestion-usuarios" element={<GestionClientesPage />} />
               <Route path="/admin-croply/catalogos-base" element={<CatalogosBasePage />} />
               <Route path="/admin-croply/cultivos" element={<CultivosListadoPage />} />
+              <Route path="/admin-croply/fincas" element={<FincasListadoPage />} />
+              <Route path="/admin-croply/fincas/nueva" element={<FincaCrearPage />} />
+              <Route path="/admin-croply/fincas/:id" element={<FincaDetallePage />} />
               <Route path="/admin-croply/plantillas" element={<PlantillasListadoPage />} />
               <Route path="/admin-croply/plantillas/nueva" element={<PlantillaNuevaPage />} />
               <Route path="/admin-croply/plantillas/:id" element={<PlantillaDetallePage />} />

@@ -271,3 +271,70 @@ export const plantillaBaseSchema = z.object({
 
 export type PlantillaBaseFormValues = z.infer<typeof plantillaBaseSchema>;
 
+export const sensorSchema = z.object({
+  id_sensor: z.number().optional(),
+  id_tipo_sensor: z.coerce.number().min(1, 'Obligatorio'),
+  ip_sensor: z.string().min(1, 'Obligatorio').regex(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/, 'IP inválida'),
+});
+
+export const controladorSchema = z.object({
+  id_controlador_sensores: z.number().optional(),
+  nombre_controlador: z.string().min(1, 'Obligatorio'),
+  ip_controlador: z.string().min(1, 'Obligatorio').regex(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/, 'IP inválida'),
+  sensores: z.array(sensorSchema).min(1, 'Debe agregar al menos 1 sensor'),
+});
+
+export const parcelaSchema = z.object({
+  nombre_parcela: z.string().min(1, 'Obligatorio'),
+  superficie_parcela: z.coerce.number().min(0.01, 'Mayor a 0'),
+  controladores: z.array(controladorSchema).min(1, 'Debe agregar al menos 1 controlador'),
+});
+
+export type CrearEditarParcelaFormValues = z.infer<typeof parcelaSchema>;
+
+export const fincaCrearSchema = z.object({
+  nombre_finca: z.string().min(1, 'El nombre es obligatorio'),
+  provincia: z.string().min(1, 'La provincia es obligatoria'),
+  departamento: z.string().min(1, 'El departamento es obligatorio'),
+  latitud: z.string().min(1, 'La latitud es obligatoria'),
+  longitud: z.string().min(1, 'La longitud es obligatoria'),
+  superficie_finca: z.coerce.number().min(0.01, 'La superficie debe ser mayor a 0'),
+  descripcion_finca: z.string().optional(),
+  id_usuario_propietario: z.string().optional(),
+  parcelas: z.array(parcelaSchema).optional().default([]),
+}).superRefine((data, ctx) => {
+  if (data.parcelas && data.parcelas.length > 0) {
+    const totalParcelas = data.parcelas.reduce((acc, p) => acc + (p.superficie_parcela || 0), 0);
+    if (totalParcelas > data.superficie_finca) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `La superficie total de parcelas (${totalParcelas.toFixed(2)} ha) excede la superficie de la finca (${data.superficie_finca} ha)`,
+        path: ['parcelas'],
+      });
+      if (data.parcelas.length > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Excede total (${data.superficie_finca} ha)`,
+          path: ['parcelas', data.parcelas.length - 1, 'superficie_parcela'],
+        });
+      }
+    }
+  }
+});
+
+export type FincaCrearFormValues = z.infer<typeof fincaCrearSchema>;
+
+export const asignacionVariedadSchema = z.object({
+  id_variedad: z.coerce.number().min(1, 'Obligatorio'),
+  superficie_asignada: z.coerce.number().min(0.01, 'Debe ser mayor a 0'),
+});
+
+export const generarPlanAccionSchema = z.object({
+  id_finca: z.coerce.number().min(1, 'Obligatorio'),
+  id_parcela: z.coerce.number().min(1, 'Obligatorio'),
+  fecha_inicio: z.string().min(1, 'La fecha de inicio es obligatoria'),
+  asignaciones: z.array(asignacionVariedadSchema).min(1, 'Debe asignar al menos una variedad'),
+  superficie_disponible: z.number().optional(),
+});
+
+export type GenerarPlanAccionFormValues = z.infer<typeof generarPlanAccionSchema>;

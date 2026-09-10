@@ -76,7 +76,7 @@ function toDetalle(cultivo: CultivoMock): CultivoBaseDetalle {
   };
 }
 
-const mockCultivos: CultivoMock[] = [
+export const mockCultivos: CultivoMock[] = [
   {
     id_cultivo_base: 1,
     nombre_cultivo_base: 'Tomate',

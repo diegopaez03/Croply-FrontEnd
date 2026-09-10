@@ -47,10 +47,10 @@ export function NavbarAdminCroply({ mobile }: NavbarAdminCroplyProps) {
           <span className="font-sans font-semibold text-sm">Gestión de usuarios</span>
         </Link>
         
-        <div className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted opacity-50 cursor-not-allowed">
+        <Link to="/admin-croply/fincas" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${location.pathname.startsWith('/admin-croply/fincas') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
           <HugeiconsIcon icon={TractorIcon} className="shrink-0 size-5" />
           <span className="font-sans font-semibold text-sm">Fincas e Infraestructura</span>
-        </div>
+        </Link>
         
         <Link to="/admin-croply/catalogos-base" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive('/admin-croply/catalogos-base') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
           <HugeiconsIcon icon={Book02Icon} className="shrink-0 size-5" />
