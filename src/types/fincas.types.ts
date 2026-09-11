@@ -45,7 +45,7 @@ export interface SensorResumen {
 }
 
 export interface ControladorResumen {
-  id_controlador_sensores: number;
+  id_controlador_sensor: number;
   nombre_controlador: string;
   ip_controlador: string;
   estado_controlador: string;
@@ -130,7 +130,7 @@ export interface SensorPayload {
 }
 
 export interface ControladorPayload {
-  id_controlador_sensores?: number;
+  id_controlador_sensor?: number;
   nombre_controlador: string;
   ip_controlador: string;
   sensores: SensorPayload[];

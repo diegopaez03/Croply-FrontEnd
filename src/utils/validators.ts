@@ -276,7 +276,7 @@ export const sensorSchema = z.object({
 });
 
 export const controladorSchema = z.object({
-  id_controlador_sensores: z.number().optional(),
+  id_controlador_sensor: z.number().optional(),
   nombre_controlador: z.string().min(1, 'Obligatorio'),
   ip_controlador: z.string().min(1, 'Obligatorio').regex(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/, 'IP inválida'),
   sensores: z.array(sensorSchema).min(1, 'Debe agregar al menos 1 sensor'),

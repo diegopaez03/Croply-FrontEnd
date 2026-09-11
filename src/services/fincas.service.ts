@@ -53,7 +53,7 @@ export let mockFincas: FincaDetalle[] = [
         superficie_parcela: 50.5,
         controladores: [
           {
-            id_controlador_sensores: 7,
+            id_controlador_sensor: 7,
             nombre_controlador: 'Controlador Norte',
             ip_controlador: '192.168.1.10',
             estado_controlador: 'Transmitiendo',
@@ -77,7 +77,7 @@ export let mockFincas: FincaDetalle[] = [
         superficie_parcela: 100,
         controladores: [
           {
-            id_controlador_sensores: 8,
+            id_controlador_sensor: 8,
             nombre_controlador: 'Controlador Sur',
             ip_controlador: '192.168.1.11',
             estado_controlador: 'Sin_senal',
@@ -276,7 +276,7 @@ export const fincasService = {
             superficie_parcela: p.superficie_parcela,
             estado_parcela: 'Activa',
             controladores: (p.controladores || []).map((c, cIdx) => ({
-              id_controlador_sensores: Date.now() + 1000 + cIdx,
+              id_controlador_sensor: Date.now() + 1000 + cIdx,
               nombre_controlador: c.nombre_controlador,
               ip_controlador: c.ip_controlador,
               estado_controlador: 'Transmitiendo',
@@ -479,7 +479,7 @@ export const fincasService = {
             estado_parcela: 'Activo',
             superficie_parcela: data.superficie_parcela,
             controladores: (data.controladores || []).map(c => ({
-              id_controlador_sensores: Date.now() + Math.floor(Math.random() * 1000),
+              id_controlador_sensor: Date.now() + Math.floor(Math.random() * 1000),
               nombre_controlador: c.nombre_controlador,
               ip_controlador: c.ip_controlador,
               estado_controlador: 'Transmitiendo',
@@ -558,7 +558,7 @@ export const fincasService = {
             nombre_parcela: data.nombre_parcela,
             superficie_parcela: data.superficie_parcela,
             controladores: (data.controladores || []).map(c => ({
-              id_controlador_sensores: c.id_controlador_sensores || Date.now() + Math.floor(Math.random() * 1000),
+              id_controlador_sensor: c.id_controlador_sensor || Date.now() + Math.floor(Math.random() * 1000),
               nombre_controlador: c.nombre_controlador,
               ip_controlador: c.ip_controlador,
               estado_controlador: 'Transmitiendo',
