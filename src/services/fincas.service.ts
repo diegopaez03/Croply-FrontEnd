@@ -15,6 +15,8 @@ import {
   QRGenerarResponse,
   QRConsultarResponse
 } from '../types/fincas.types';
+import { MonitoreoSensoresResponse } from '../types/monitoreoSensores.types';
+import { ClimaResponse } from '../types/clima.types';
 import { mockUsuariosCroply } from './usuarios.service';
 import { mockTiposSensor } from './tiposSensor.service';
 
@@ -714,6 +716,143 @@ export const fincasService = {
       });
     }
     const response = await apiClient.get<QRConsultarResponse>(`/parcelas/${id_parcela}/codigo-qr`);
+    return response.data;
+  },
+
+  getMonitoreoSensoresParcela: async (id_parcela: number): Promise<MonitoreoSensoresResponse> => {
+    if (import.meta.env.VITE_USE_MOCKS === 'true') {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          let found = null;
+          for (const finca of mockFincas) {
+            const p = finca.parcelas.find((px: any) => px.id_parcela === id_parcela);
+            if (p) { 
+              found = p;
+              break;
+            }
+          }
+          if (found) {
+            const sensores: any[] = [];
+            found.controladores.forEach((c: any) => {
+              c.sensores.forEach((s: any) => {
+                sensores.push({
+                  id_sensor: s.id_sensor,
+                  nombre_tipo_sensor: s.nombre_tipo_sensor,
+                  unidad_medida_ts: s.codigo_tipo_sensor === 'PH' ? 'pH' : (s.codigo_tipo_sensor === 'HUM' ? '%' : ''),
+                  ultimo_valor: s.ultimo_valor,
+                  fecha_ultima_lectura: s.fecha_ultima_lectura,
+                  estado_senal: s.estado_senal
+                });
+              });
+            });
+
+            if (sensores.length === 0) {
+              return resolve({ estado_general: null, sensores: [] });
+            }
+
+            const todosSinSenal = sensores.every(s => s.estado_senal === 'Sin_senal');
+            resolve({
+              estado_general: todosSinSenal ? 'Sin_senal' : 'Transmitiendo',
+              sensores
+            });
+          } else {
+            const err = new AxiosError('Not found');
+            err.response = {
+              data: { statusCode: 404, errorCode: 'RESOURCE_NOT_FOUND', message: 'Parcela no encontrada' },
+              status: 404,
+              statusText: 'Not Found',
+              headers: {},
+              config: {} as any,
+            };
+            reject(err);
+          }
+        }, 500);
+      });
+    }
+    const response = await apiClient.get<MonitoreoSensoresResponse>(`/parcelas/${id_parcela}/monitoreo-sensores`);
+    return response.data;
+  },
+
+  getClimaFinca: async (id_finca: number): Promise<ClimaResponse> => {
+    if (import.meta.env.VITE_USE_MOCKS === 'true') {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          // Simulamos error 503 para la Finca 2
+          if (id_finca === 2) {
+            const err = new AxiosError('Service Unavailable');
+            err.response = {
+              data: { statusCode: 503, errorCode: 'WEATHER_SERVICE_UNAVAILABLE', message: 'Servicio meteorológico no disponible' },
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: {},
+              config: {} as any,
+            };
+            return reject(err);
+          }
+
+          const finca = mockFincas.find((f) => f.id_finca === id_finca);
+          if (!finca) {
+            const err = new AxiosError('Not found');
+            err.response = {
+              data: { statusCode: 404, errorCode: 'RESOURCE_NOT_FOUND', message: 'Finca no encontrada' },
+              status: 404,
+              statusText: 'Not Found',
+              headers: {},
+              config: {} as any,
+            };
+            return reject(err);
+          }
+
+          const hoy = new Date();
+          const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+          
+          const response: ClimaResponse = {
+            provincia: finca.provincia,
+            departamento: finca.departamento,
+            clima_actual: {
+              temperatura: 22,
+              condicion: 'Despejado'
+            },
+            pronostico: [
+              {
+                fecha: hoy.toISOString().split('T')[0],
+                dia_semana: 'Hoy',
+                es_hoy: true,
+                temperatura_max: 24,
+                temperatura_min: 15,
+                condicion: 'Despejado'
+              },
+              {
+                fecha: new Date(hoy.getTime() + 86400000).toISOString().split('T')[0],
+                dia_semana: dias[new Date(hoy.getTime() + 86400000).getDay()],
+                es_hoy: false,
+                temperatura_max: 19,
+                temperatura_min: 12,
+                condicion: 'Lluvia'
+              },
+              {
+                fecha: new Date(hoy.getTime() + 86400000 * 2).toISOString().split('T')[0],
+                dia_semana: dias[new Date(hoy.getTime() + 86400000 * 2).getDay()],
+                es_hoy: false,
+                temperatura_max: 22,
+                temperatura_min: 14,
+                condicion: 'Parcialmente nublado'
+              },
+              {
+                fecha: new Date(hoy.getTime() + 86400000 * 3).toISOString().split('T')[0],
+                dia_semana: dias[new Date(hoy.getTime() + 86400000 * 3).getDay()],
+                es_hoy: false,
+                temperatura_max: 21,
+                temperatura_min: 13,
+                condicion: 'Nublado'
+              }
+            ]
+          };
+          resolve(response);
+        }, 600);
+      });
+    }
+    const response = await apiClient.get<ClimaResponse>(`/fincas/${id_finca}/clima`);
     return response.data;
   }
 };

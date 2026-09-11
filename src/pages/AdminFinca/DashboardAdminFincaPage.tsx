@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useFincasQuery, useFincaQuery } from '../../hooks/useFincas';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowRight01Icon, Plant01Icon } from '@hugeicons/core-free-icons';
+import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
 
 export default function DashboardAdminFincaPage() {
   const navigate = useNavigate();
@@ -125,12 +126,8 @@ export default function DashboardAdminFincaPage() {
 
         {/* COLUMNA DERECHA */}
         <div className="lg:col-span-4 flex flex-col gap-6">
-          {/* Clima (Placeholder visual) */}
-          <Card className="bg-card border-dashed border-border shadow-none">
-            <CardContent className="p-6 flex flex-col items-center justify-center text-muted-foreground min-h-[100px]">
-              <span className="font-mono text-sm text-center">// TODO: EP-07 / HU-IoT-03 Clima real</span>
-            </CardContent>
-          </Card>
+          {/* Clima */}
+          <CardClimaFinca variant="compacta" idFinca={selectedFincaId} />
 
           {/* Detalle Parcela Activa */}
           <Card className="bg-card border-border shadow-sm flex flex-col flex-1">
