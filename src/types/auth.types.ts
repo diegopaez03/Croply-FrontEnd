@@ -134,4 +134,8 @@ export interface ContrasenaPrimerAccesoRequest {
 
 export interface ContrasenaPrimerAccesoResponse {
   message: string;
+  accessToken: string;
+  expiresIn: number;
+  debe_cambiar_contrasena: boolean;
+  usuario: UsuarioAuth;
 }
