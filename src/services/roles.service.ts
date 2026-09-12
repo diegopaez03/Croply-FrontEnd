@@ -12,25 +12,22 @@ import { usuariosService } from './usuarios.service';
 // ============================================================================
 
 const mockPermisosSistema: Permiso[] = [
-  { id_permiso: 1, nombre_permiso: "Gestión de finca y parcelas" },
-  { id_permiso: 2, nombre_permiso: "Planificación de cultivos" },
-  { id_permiso: 3, nombre_permiso: "Gestión de tareas de campo" },
-  { id_permiso: 4, nombre_permiso: "Registro de agroquímicos" },
-  { id_permiso: 5, nombre_permiso: "Monitoreo climático e IoT" },
-  { id_permiso: 6, nombre_permiso: "Control de costos" },
-  { id_permiso: 7, nombre_permiso: "Gestión de usuarios de finca" },
+  { id_permiso: 1, nombre_permiso: "Gestión de usuarios" },
+  { id_permiso: 2, nombre_permiso: "Fincas e Infraestructura" },
+  { id_permiso: 3, nombre_permiso: "Catálogos Base" },
+  { id_permiso: 4, nombre_permiso: "Solicitudes de digitalización" },
 ];
 
 const mockPermisosFinca: Permiso[] = [
-  { id_permiso: 4, nombre_permiso: "Registro de agroquímicos" },
-  { id_permiso: 6, nombre_permiso: "Control de costos" },
-  { id_permiso: 7, nombre_permiso: "Gestión de usuarios de finca" },
+  { id_permiso: 11, nombre_permiso: "Registro de agroquímicos" },
+  { id_permiso: 12, nombre_permiso: "Reportes" },
+  { id_permiso: 13, nombre_permiso: "Gestión de trabajadores" },
+  { id_permiso: 14, nombre_permiso: "Tareas de campo" },
 ];
 
 let mockRolesPermisos: Record<number, number[]> = {
-  // id_rol -> array of id_permiso
-  1: [1, 2, 3, 4, 5, 6, 7], // Admin de finca (sistema)
-  2: [7] // Agente soporte
+  1: [1, 2, 3, 4],
+  2: [1],
 };
 let mockRoles: RolSistema[] = [
   {

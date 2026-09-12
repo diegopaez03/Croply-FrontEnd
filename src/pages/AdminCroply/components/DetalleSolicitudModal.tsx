@@ -1,25 +1,35 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { solicitudesService } from "@/services/solicitudes.service";
+import { usuariosService } from "@/services/usuarios.service";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { handleFormError } from "@/utils/errorHandler";
+import { SolicitudDigitalizacionDetalle } from "@/types/solicitudes.types";
 
 interface DetalleSolicitudModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   idSolicitud: number | null;
+  onRegistrarCliente?: (solicitud: SolicitudDigitalizacionDetalle) => void;
 }
 
-export function DetalleSolicitudModal({ open, onOpenChange, idSolicitud }: DetalleSolicitudModalProps) {
+export function DetalleSolicitudModal({ open, onOpenChange, idSolicitud, onRegistrarCliente }: DetalleSolicitudModalProps) {
   const queryClient = useQueryClient();
 
   const { data: solicitud, isLoading, isError } = useQuery({
     queryKey: ['solicitud', idSolicitud],
     queryFn: () => solicitudesService.getSolicitud(idSolicitud!),
     enabled: !!idSolicitud && open,
+  });
+
+  const { data: usuarioYaRegistrado, isLoading: isCheckingUsuario } = useQuery({
+    queryKey: ['usuarioPorEmail', solicitud?.correo_electronico],
+    queryFn: () => usuariosService.existePorEmail(solicitud!.correo_electronico),
+    enabled: !!solicitud?.correo_electronico && open,
   });
 
   const updateEstadoMutation = useMutation({
@@ -129,6 +139,29 @@ export function DetalleSolicitudModal({ open, onOpenChange, idSolicitud }: Detal
                     disabled 
                     className="flex min-h-[80px] w-full rounded-md border border-input bg-muted px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
                   />
+                </div>
+              )}
+
+              {onRegistrarCliente && (
+                <div className="flex flex-col items-end gap-2 pt-2">
+                  {usuarioYaRegistrado && (
+                    <p className="text-sm text-muted-foreground text-right">
+                      Ya existe un usuario registrado con el correo de esta solicitud.
+                    </p>
+                  )}
+                  <Button
+                    type="button"
+                    disabled={isCheckingUsuario || usuarioYaRegistrado}
+                    onClick={() => {
+                      if (usuarioYaRegistrado) {
+                        toast.error('Ya existe un usuario registrado con el correo de esta solicitud.');
+                        return;
+                      }
+                      onRegistrarCliente(solicitud);
+                    }}
+                  >
+                    {isCheckingUsuario ? 'Verificando...' : 'Registrar cliente'}
+                  </Button>
                 </div>
               )}
             </div>

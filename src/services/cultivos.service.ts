@@ -57,6 +57,8 @@ function toListado(cultivo: CultivoMock) {
     ciclo_productivo_cb: cultivo.ciclo_productivo_cb,
     forma_siembra: cultivo.forma_siembra,
     cantidad_variedades: cultivo.variedades.length,
+    imagen_url: cultivo.imagen_url ?? null,
+    banner_url: cultivo.banner_url ?? null,
   };
 }
 
@@ -70,11 +72,13 @@ function toDetalle(cultivo: CultivoMock): CultivoBaseDetalle {
     ciclo_productivo_cb: cultivo.ciclo_productivo_cb,
     forma_siembra: cultivo.forma_siembra,
     id_plantilla_general: cultivo.id_plantilla_general,
+    imagen_url: cultivo.imagen_url ?? null,
+    banner_url: cultivo.banner_url ?? null,
     variedades: cultivo.variedades,
   };
 }
 
-const mockCultivos: CultivoMock[] = [
+export const mockCultivos: CultivoMock[] = [
   {
     id_cultivo_base: 1,
     nombre_cultivo_base: 'Tomate',
@@ -83,6 +87,8 @@ const mockCultivos: CultivoMock[] = [
     mes_siembra: 'Sep-Oct',
     ciclo_productivo_cb: '68-75 días',
     forma_siembra: 'Almacigo',
+    imagen_url: null,
+    banner_url: null,
     id_plantilla_general: 3,
     en_uso: true,
     variedades: [
@@ -95,6 +101,7 @@ const mockCultivos: CultivoMock[] = [
         fecha_alta: '2026-03-10',
         en_uso: true,
         id_plantilla_especifica: 8,
+        imagen_url: null,
       },
       {
         id_variedad: 13,
@@ -105,6 +112,7 @@ const mockCultivos: CultivoMock[] = [
         fecha_alta: '2026-03-10',
         en_uso: false,
         id_plantilla_especifica: null,
+        imagen_url: null,
       },
     ],
   },
@@ -116,6 +124,8 @@ const mockCultivos: CultivoMock[] = [
     mes_siembra: 'Mar-Abr',
     ciclo_productivo_cb: '180-210 días',
     forma_siembra: 'Directa',
+    imagen_url: null,
+    banner_url: null,
     id_plantilla_general: null,
     en_uso: false,
     variedades: [
@@ -128,6 +138,7 @@ const mockCultivos: CultivoMock[] = [
         fecha_alta: '2026-02-01',
         en_uso: false,
         id_plantilla_especifica: null,
+        imagen_url: null,
       },
     ],
   },
@@ -139,6 +150,8 @@ const mockCultivos: CultivoMock[] = [
     mes_siembra: 'Ene-Dic',
     ciclo_productivo_cb: '50-80 días',
     forma_siembra: 'Almacigo',
+    imagen_url: null,
+    banner_url: null,
     id_plantilla_general: null,
     en_uso: false,
     variedades: [],
@@ -223,6 +236,8 @@ export const cultivosService = {
         mes_siembra: data.mes_siembra,
         ciclo_productivo_cb: data.ciclo_productivo_cb,
         forma_siembra: data.forma_siembra,
+        imagen_url: data.imagen_url ?? null,
+        banner_url: data.banner_url ?? null,
         id_plantilla_general: null,
         en_uso: false,
         variedades: [],
@@ -277,6 +292,8 @@ export const cultivosService = {
       cultivo.epoca_cultivo = data.epoca_cultivo;
       cultivo.mes_siembra = data.mes_siembra;
       cultivo.forma_siembra = data.forma_siembra;
+      cultivo.imagen_url = data.imagen_url ?? null;
+      cultivo.banner_url = data.banner_url ?? null;
       if (cultivo.variedades.length === 0) {
         cultivo.ciclo_productivo_cb = data.ciclo_productivo_cb;
       }
@@ -367,6 +384,7 @@ export const cultivosService = {
         fecha_alta: hoyIso(),
         en_uso: false,
         id_plantilla_especifica: null,
+        imagen_url: data.imagen_url ?? null,
       };
       cultivo.variedades.push(nueva);
       const ciclo = recalcularCiclo(cultivo.variedades);
@@ -425,6 +443,7 @@ export const cultivosService = {
       variedad.distancia_plantacion = data.distancia_plantacion;
       variedad.observaciones = data.observaciones ?? null;
       variedad.dias_a_cosecha = data.dias_a_cosecha;
+      variedad.imagen_url = data.imagen_url ?? null;
       const ciclo = recalcularCiclo(cultivo.variedades);
       if (ciclo) cultivo.ciclo_productivo_cb = ciclo;
 

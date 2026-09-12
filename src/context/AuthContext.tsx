@@ -14,6 +14,7 @@ interface AuthContextType {
   completarPrimerAcceso: () => void;
   logoutState: () => void;
   updateUsuario: (datos: Partial<UsuarioAuth>) => void;
+  tienePermiso: (...permisos: string[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -88,6 +89,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const tienePermiso = (...permisos: string[]) => {
+    if (permisos.length === 0) return true;
+    const otorgados = new Set(usuario?.permisos ?? []);
+    return permisos.some((permiso) => otorgados.has(permiso));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -99,6 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         completarPrimerAcceso,
         logoutState,
         updateUsuario,
+        tienePermiso,
       }}
     >
       {children}

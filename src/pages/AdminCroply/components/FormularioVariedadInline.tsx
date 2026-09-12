@@ -7,6 +7,7 @@ import { showSuccessToast } from '@/utils/successHandler';
 import { formatDistanciaPlantacion, parseDistanciaPlantacion } from '@/utils/formatters';
 import { useActualizarVariedad, useAgregarVariedad } from '@/hooks/useCultivosBase';
 import { VariedadDetalle } from '@/types/cultivos.types';
+import { ImageUploadField } from '@/components/shared/ImageUploadField';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,6 +28,7 @@ function valoresIniciales(variedad?: VariedadDetalle | null): VariedadFormValues
       distancia_surcos: undefined as unknown as number,
       dias_a_cosecha: undefined as unknown as number,
       observaciones: '',
+      imagen_url: null,
     };
   }
 
@@ -37,6 +39,7 @@ function valoresIniciales(variedad?: VariedadDetalle | null): VariedadFormValues
     distancia_surcos: distancia.distancia_surcos || (undefined as unknown as number),
     dias_a_cosecha: variedad.dias_a_cosecha,
     observaciones: variedad.observaciones ?? '',
+    imagen_url: variedad.imagen_url ?? null,
   };
 }
 
@@ -70,6 +73,7 @@ export function FormularioVariedadInline({
       ),
       observaciones: values.observaciones?.trim() ? values.observaciones.trim() : null,
       dias_a_cosecha: Number(values.dias_a_cosecha),
+      imagen_url: values.imagen_url ?? null,
     };
 
     if (esEdicion && variedad) {
@@ -179,6 +183,24 @@ export function FormularioVariedadInline({
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name="imagen_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Imagen de la variedad</FormLabel>
+                <FormControl>
+                  <ImageUploadField
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isPending}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}

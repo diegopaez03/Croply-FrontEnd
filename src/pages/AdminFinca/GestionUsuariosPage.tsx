@@ -6,6 +6,7 @@ import { SeccionRolesFinca } from "./components/SeccionRolesFinca";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { TablaConPaginacion, ColumnDef } from "@/components/shared/TablaConPaginacion";
 import { EditarUsuarioModal } from "@/components/shared/EditarUsuarioModal";
+import { ConfirmarBajaUsuarioDialog } from "@/components/shared/ConfirmarBajaUsuarioDialog";
 import { InvitarUsuarioModal } from "./components/InvitarUsuarioModal";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -30,6 +31,7 @@ export default function GestionUsuariosPage() {
   const pageSize = 10;
   
   const [selectedUsuario, setSelectedUsuario] = useState<UsuarioListado | null>(null);
+  const [usuarioADarDeBaja, setUsuarioADarDeBaja] = useState<UsuarioListado | null>(null);
   const [isInvitarModalOpen, setIsInvitarModalOpen] = useState(false);
 
   // Queries
@@ -118,7 +120,18 @@ export default function GestionUsuariosPage() {
           >
             <HugeiconsIcon icon={PencilEdit02Icon} className="size-5" strokeWidth={1.5} />
           </button>
-          <button className="p-2 text-red-500 hover:bg-red-50 rounded-md opacity-50 cursor-not-allowed">
+          <button
+            onClick={() => setUsuarioADarDeBaja(u)}
+            disabled={u.estado === 'Inactivo' || u.id_usuario === usuario?.id_usuario}
+            className="p-2 text-red-500 hover:bg-red-50 rounded-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+            title={
+              u.id_usuario === usuario?.id_usuario
+                ? 'No podés darte de baja a vos mismo'
+                : u.estado === 'Inactivo'
+                  ? 'El usuario ya está inactivo'
+                  : 'Dar de baja'
+            }
+          >
             <HugeiconsIcon icon={Delete02Icon} className="size-5" strokeWidth={1.5} />
           </button>
         </div>
@@ -259,6 +272,12 @@ export default function GestionUsuariosPage() {
         usuario={selectedUsuario}
         context="finca"
         id_finca={idFinca}
+      />
+      <ConfirmarBajaUsuarioDialog
+        usuario={usuarioADarDeBaja}
+        open={!!usuarioADarDeBaja}
+        onOpenChange={(open) => !open && setUsuarioADarDeBaja(null)}
+        queryKeys={[['usuariosFinca', idFinca]]}
       />
       <InvitarUsuarioModal
         open={isInvitarModalOpen}

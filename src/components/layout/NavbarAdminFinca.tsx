@@ -9,6 +9,8 @@ import {
   UserGroupIcon,
   CustomerService01Icon 
 } from '@hugeicons/core-free-icons';
+import { useAuth } from '../../context/AuthContext';
+import { PERMISO_FINCA } from '../../constants/permisos';
 
 interface NavbarAdminFincaProps {
   mobile?: boolean;
@@ -16,6 +18,7 @@ interface NavbarAdminFincaProps {
 
 export function NavbarAdminFinca({ mobile }: NavbarAdminFincaProps) {
   const location = useLocation();
+  const { tienePermiso } = useAuth();
   const baseClasses = "flex flex-col w-64 bg-sidebar border-r border-border h-full shrink-0";
   const layoutClasses = mobile ? baseClasses : `hidden md:flex ${baseClasses}`;
 
@@ -38,25 +41,33 @@ export function NavbarAdminFinca({ mobile }: NavbarAdminFincaProps) {
           <span className="font-sans font-semibold text-sm">Mi finca</span>
         </Link>
         
-        <Link to="/admin-finca/biblioteca" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive('/admin-finca/biblioteca') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
-          <HugeiconsIcon icon={Book02Icon} className="shrink-0 size-5" />
-          <span className="font-sans font-semibold text-sm">Biblioteca de cultivos</span>
-        </Link>
+        {tienePermiso(PERMISO_FINCA.TAREAS_CAMPO) && (
+          <Link to="/admin-finca/biblioteca" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive('/admin-finca/biblioteca') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
+            <HugeiconsIcon icon={Book02Icon} className="shrink-0 size-5" />
+            <span className="font-sans font-semibold text-sm">Biblioteca de cultivos</span>
+          </Link>
+        )}
         
-        <Link to="/admin-finca/agroquimicos" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive('/admin-finca/agroquimicos') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
-          <HugeiconsIcon icon={Plant01Icon} className="shrink-0 size-5" />
-          <span className="font-sans font-semibold text-sm">Agroquímicos</span>
-        </Link>
+        {tienePermiso(PERMISO_FINCA.REGISTRO_AGROQUIMICOS) && (
+          <Link to="/admin-finca/agroquimicos" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive('/admin-finca/agroquimicos') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
+            <HugeiconsIcon icon={Plant01Icon} className="shrink-0 size-5" />
+            <span className="font-sans font-semibold text-sm">Agroquímicos</span>
+          </Link>
+        )}
         
-        <Link to="/admin-finca/costos" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive('/admin-finca/costos') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
-          <HugeiconsIcon icon={Coins02Icon} className="shrink-0 size-5" />
-           <span className="font-sans font-semibold text-sm">Costos</span>
-        </Link>
+        {tienePermiso(PERMISO_FINCA.REPORTES) && (
+          <Link to="/admin-finca/costos" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive('/admin-finca/costos') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
+            <HugeiconsIcon icon={Coins02Icon} className="shrink-0 size-5" />
+            <span className="font-sans font-semibold text-sm">Costos</span>
+          </Link>
+        )}
         
-        <Link to="/admin-finca/gestion-usuarios" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive('/admin-finca/gestion-usuarios') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
-          <HugeiconsIcon icon={UserGroupIcon} className="shrink-0 size-5" />
-          <span className="font-sans font-semibold text-sm">Gestión de usuarios</span>
-        </Link>
+        {tienePermiso(PERMISO_FINCA.GESTION_TRABAJADORES) && (
+          <Link to="/admin-finca/gestion-usuarios" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive('/admin-finca/gestion-usuarios') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
+            <HugeiconsIcon icon={UserGroupIcon} className="shrink-0 size-5" />
+            <span className="font-sans font-semibold text-sm">Gestión de usuarios</span>
+          </Link>
+        )}
       </div>
       
       {/* Footer support item */}

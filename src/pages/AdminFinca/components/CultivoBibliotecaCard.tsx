@@ -1,21 +1,29 @@
 import { Link } from 'react-router-dom';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Plant01Icon } from '@hugeicons/core-free-icons';
+import { CultivoImagen } from '@/components/shared/CultivoImagen';
 import { formatEpocaCultivo } from '@/utils/formatters';
+import { DEFAULT_IMAGEN_CULTIVO, urlImagenCultivo } from '@/utils/imagen-cultivo';
 import { CultivoBaseListado } from '@/types/cultivos.types';
 
 interface CultivoBibliotecaCardProps {
   cultivo: CultivoBaseListado;
+  searchString?: string;
 }
 
-export function CultivoBibliotecaCard({ cultivo }: CultivoBibliotecaCardProps) {
+export function CultivoBibliotecaCard({ cultivo, searchString = '' }: CultivoBibliotecaCardProps) {
+  const imagen = urlImagenCultivo(cultivo.imagen_url, cultivo.nombre_cultivo_base);
+
   return (
     <Link
-      to={`/admin-finca/biblioteca/${cultivo.id_cultivo_base}`}
+      to={`/admin-finca/biblioteca/${cultivo.id_cultivo_base}${searchString}`}
       className="bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-primary/30 transition-all flex flex-col"
     >
-      <div className="h-36 bg-[#EAF2ED] flex items-center justify-center">
-        <HugeiconsIcon icon={Plant01Icon} className="size-16 text-[#1A7B48]" />
+      <div className="h-40 bg-[#EAF2ED] overflow-hidden">
+        <CultivoImagen
+          src={imagen}
+          fallbackSrc={DEFAULT_IMAGEN_CULTIVO}
+          alt={cultivo.nombre_cultivo_base}
+          className="h-full w-full"
+        />
       </div>
       <div className="p-5 flex flex-col gap-3">
         <div className="flex items-start justify-between gap-2">

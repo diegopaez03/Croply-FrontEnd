@@ -34,6 +34,12 @@ function filtrarMockSolicitudes(params: GetSolicitudesRequest) {
     filtradas = filtradas.filter((x) => x.estado === params.estado);
   }
 
+  filtradas.sort((a, b) => {
+    const da = new Date(a.fecha_solicitud).getTime();
+    const db = new Date(b.fecha_solicitud).getTime();
+    return db - da;
+  });
+
   return filtradas;
 }
 

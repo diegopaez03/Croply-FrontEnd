@@ -7,6 +7,7 @@ export interface UsuarioListado {
   telefono?: string;
   rol: { id_rol: number; nombre_rol: string } | null;
   estado: "Pendiente" | "Activo" | "Inactivo" | "Aprobada" | "Rechazada";
+  fecha_baja?: string | null;
 }
 
 export interface GetUsuariosRequest {

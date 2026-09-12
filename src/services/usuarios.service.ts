@@ -11,7 +11,7 @@ import {
 // MOCKS
 // ============================================================================
 
-const mockUsuariosCroply: UsuarioListado[] = [
+export const mockUsuariosCroply: UsuarioListado[] = [
   { id_usuario: 1, nombre: "María Eugenia", apellido: "Lopez", email: "m.lopez@estancia-sol.cl", telefono: "+54 114555-0123", rol: { id_rol: 1, nombre_rol: "Administrador de Sistema" }, estado: "Activo" },
   { id_usuario: 2, nombre: "Roberto", apellido: "Sanchez", email: "rsanchez@campo-verde.ar", telefono: "+54 114555-0123", rol: { id_rol: 1, nombre_rol: "Administrador de Sistema" }, estado: "Inactivo" },
   { id_usuario: 3, nombre: "Lucía", apellido: "Fernández", email: "lfernandez@pampa.com.ar", telefono: "+54 119988-7766", rol: { id_rol: 1, nombre_rol: "Administrador de Sistema" }, estado: "Activo" },
@@ -23,7 +23,9 @@ const mockUsuariosCroply: UsuarioListado[] = [
   { id_usuario: 9, nombre: "Pedro", apellido: "Gomez", email: "pgomez@test.com", telefono: "+54 116677-8899", rol: { id_rol: 1, nombre_rol: "Administrador de Sistema" }, estado: "Activo" },
   { id_usuario: 10, nombre: "Laura", apellido: "Diaz", email: "ldiaz@test.com", telefono: "+54 117788-9900", rol: { id_rol: 1, nombre_rol: "Administrador de Sistema" }, estado: "Activo" },
   { id_usuario: 11, nombre: "Diego", apellido: "Alvarez", email: "dalvarez@test.com", telefono: "+54 118899-0011", rol: { id_rol: 2, nombre_rol: "Agente de Soporte" }, estado: "Inactivo" },
-  { id_usuario: 12, nombre: "Carmen", apellido: "Romero", email: "cromero@test.com", telefono: "+54 119900-1122", rol: { id_rol: 1, nombre_rol: "Administrador de Sistema" }, estado: "Activo" }
+  { id_usuario: 12, nombre: "Carmen", apellido: "Romero", email: "cromero@test.com", telefono: "+54 119900-1122", rol: { id_rol: 1, nombre_rol: "Administrador de Sistema" }, estado: "Activo" },
+  { id_usuario: 13, nombre: "Horacio", apellido: "Gimenez", email: "hgimenez@fincas.com", telefono: "+54 111122-3344", rol: { id_rol: 3, nombre_rol: "Administrador de Finca" }, estado: "Activo" },
+  { id_usuario: 14, nombre: "Silvia", apellido: "Ponce", email: "sponce@fincas.com", telefono: "+54 112233-4455", rol: { id_rol: 3, nombre_rol: "Administrador de Finca" }, estado: "Activo" }
 ];
 
 const mockUsuariosFincas: Record<number, UsuarioListado[]> = {
@@ -184,15 +186,39 @@ export const usuariosService = {
    * Helper exclusivo de testing para actualizar el estado de un usuario globalmente en los mocks.
    */
   _mockUpdateEstado: (id_usuario: number, estado: "Activo" | "Inactivo" | "Pendiente") => {
-    // Buscar en Croply
-    const userCroply = mockUsuariosCroply.find(u => u.id_usuario === id_usuario);
-    if (userCroply) userCroply.estado = estado;
+    const aplicarEstado = (user: UsuarioListado) => {
+      user.estado = estado;
+      if (estado === "Inactivo") {
+        user.fecha_baja = new Date().toISOString();
+      }
+      if (estado === "Activo") {
+        user.fecha_baja = null;
+      }
+    };
 
-    // Buscar en Fincas
+    const userCroply = mockUsuariosCroply.find(u => u.id_usuario === id_usuario);
+    if (userCroply) aplicarEstado(userCroply);
+
     Object.values(mockUsuariosFincas).forEach(fincaUsers => {
       const userFinca = fincaUsers.find(u => u.id_usuario === id_usuario);
-      if (userFinca) userFinca.estado = estado;
+      if (userFinca) aplicarEstado(userFinca);
     });
+  },
+
+  /**
+   * Indica si ya existe un usuario de ámbito Croply con ese correo exacto.
+   */
+  existePorEmail: async (email: string): Promise<boolean> => {
+    const correo = email.trim().toLowerCase();
+    if (!correo) return false;
+
+    const data = await usuariosService.getUsuariosCroply({
+      page: 1,
+      pageSize: 10,
+      search: correo,
+    });
+
+    return data.usuarios.some((u) => u.email.toLowerCase() === correo);
   },
 
   /**
