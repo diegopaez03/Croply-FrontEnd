@@ -58,6 +58,7 @@ function toListado(cultivo: CultivoMock) {
     forma_siembra: cultivo.forma_siembra,
     cantidad_variedades: cultivo.variedades.length,
     imagen_url: cultivo.imagen_url ?? null,
+    banner_url: cultivo.banner_url ?? null,
   };
 }
 
@@ -72,6 +73,7 @@ function toDetalle(cultivo: CultivoMock): CultivoBaseDetalle {
     forma_siembra: cultivo.forma_siembra,
     id_plantilla_general: cultivo.id_plantilla_general,
     imagen_url: cultivo.imagen_url ?? null,
+    banner_url: cultivo.banner_url ?? null,
     variedades: cultivo.variedades,
   };
 }
@@ -86,6 +88,7 @@ export const mockCultivos: CultivoMock[] = [
     ciclo_productivo_cb: '68-75 días',
     forma_siembra: 'Almacigo',
     imagen_url: null,
+    banner_url: null,
     id_plantilla_general: 3,
     en_uso: true,
     variedades: [
@@ -122,6 +125,7 @@ export const mockCultivos: CultivoMock[] = [
     ciclo_productivo_cb: '180-210 días',
     forma_siembra: 'Directa',
     imagen_url: null,
+    banner_url: null,
     id_plantilla_general: null,
     en_uso: false,
     variedades: [
@@ -147,6 +151,7 @@ export const mockCultivos: CultivoMock[] = [
     ciclo_productivo_cb: '50-80 días',
     forma_siembra: 'Almacigo',
     imagen_url: null,
+    banner_url: null,
     id_plantilla_general: null,
     en_uso: false,
     variedades: [],
@@ -232,6 +237,7 @@ export const cultivosService = {
         ciclo_productivo_cb: data.ciclo_productivo_cb,
         forma_siembra: data.forma_siembra,
         imagen_url: data.imagen_url ?? null,
+        banner_url: data.banner_url ?? null,
         id_plantilla_general: null,
         en_uso: false,
         variedades: [],
@@ -287,6 +293,7 @@ export const cultivosService = {
       cultivo.mes_siembra = data.mes_siembra;
       cultivo.forma_siembra = data.forma_siembra;
       cultivo.imagen_url = data.imagen_url ?? null;
+      cultivo.banner_url = data.banner_url ?? null;
       if (cultivo.variedades.length === 0) {
         cultivo.ciclo_productivo_cb = data.ciclo_productivo_cb;
       }

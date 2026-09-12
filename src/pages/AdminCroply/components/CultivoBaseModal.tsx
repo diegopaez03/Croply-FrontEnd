@@ -24,6 +24,13 @@ import {
 } from '@/hooks/useCultivosBase';
 import { CrearCultivoBaseRequest, CultivoBaseDetalle, VariedadDetalle } from '@/types/cultivos.types';
 import { ImageUploadField } from '@/components/shared/ImageUploadField';
+import { CultivoImagen } from '@/components/shared/CultivoImagen';
+import {
+  DEFAULT_BANNER_CULTIVO,
+  DEFAULT_IMAGEN_CULTIVO,
+  urlBannerCultivo,
+  urlImagenCultivo,
+} from '@/utils/imagen-cultivo';
 import { FormularioVariedadInline } from './FormularioVariedadInline';
 import {
   Dialog,
@@ -51,6 +58,7 @@ const FORM_DEFAULTS: CultivoBaseFormValues = {
   ciclo_desde: undefined as unknown as number,
   ciclo_hasta: undefined as unknown as number,
   imagen_url: null,
+  banner_url: null,
 };
 
 function mapDetalleAFormulario(detalle: CultivoBaseDetalle): CultivoBaseFormValues {
@@ -66,6 +74,7 @@ function mapDetalleAFormulario(detalle: CultivoBaseDetalle): CultivoBaseFormValu
     ciclo_desde: ciclo.ciclo_desde,
     ciclo_hasta: ciclo.ciclo_hasta,
     imagen_url: detalle.imagen_url ?? null,
+    banner_url: detalle.banner_url ?? null,
   };
 }
 
@@ -78,6 +87,7 @@ function mapFormularioARequest(values: CultivoBaseFormValues): CrearCultivoBaseR
     mes_siembra: formatMesSiembra(values.mes_desde, values.mes_hasta),
     ciclo_productivo_cb: formatCicloProductivo(Number(values.ciclo_desde), Number(values.ciclo_hasta)),
     imagen_url: values.imagen_url ?? null,
+    banner_url: values.banner_url ?? null,
   };
 }
 
@@ -275,23 +285,42 @@ export function CultivoBaseModal({ open, onOpenChange, idCultivoBase }: CultivoB
                           )}
                         />
 
-                        <FormField
-                          control={form.control}
-                          name="imagen_url"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Imagen del cultivo</FormLabel>
-                              <FormControl>
-                                <ImageUploadField
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                  disabled={isSavingFicha}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="imagen_url"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Imagen del cultivo</FormLabel>
+                                <FormControl>
+                                  <ImageUploadField
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    disabled={isSavingFicha}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="banner_url"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Banner</FormLabel>
+                                <FormControl>
+                                  <ImageUploadField
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    disabled={isSavingFicha}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <FormField
@@ -426,6 +455,36 @@ export function CultivoBaseModal({ open, onOpenChange, idCultivoBase }: CultivoB
                     </Form>
                   ) : (
                     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                      {detalle && (
+                        <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <dt className="text-muted-foreground mb-2">Imagen del cultivo</dt>
+                            <dd className="h-28 overflow-hidden rounded-xl bg-[#EAF2ED]">
+                              <CultivoImagen
+                                src={urlImagenCultivo(detalle.imagen_url, detalle.nombre_cultivo_base)}
+                                fallbackSrc={DEFAULT_IMAGEN_CULTIVO}
+                                alt={detalle.nombre_cultivo_base}
+                                className="h-full w-full"
+                              />
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-muted-foreground mb-2">Banner</dt>
+                            <dd className="h-28 overflow-hidden rounded-xl bg-[#EAF2ED]">
+                              <CultivoImagen
+                                src={urlBannerCultivo(
+                                  detalle.banner_url,
+                                  detalle.imagen_url,
+                                  detalle.nombre_cultivo_base,
+                                )}
+                                fallbackSrc={DEFAULT_BANNER_CULTIVO}
+                                alt={`Banner de ${detalle.nombre_cultivo_base}`}
+                                className="h-full w-full"
+                              />
+                            </dd>
+                          </div>
+                        </div>
+                      )}
                       <div>
                         <dt className="text-muted-foreground mb-1">Nombre del cultivo</dt>
                         <dd className="font-medium">{detalle?.nombre_cultivo_base}</dd>

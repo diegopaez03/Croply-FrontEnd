@@ -11,6 +11,7 @@ export interface CultivoBaseListado {
   forma_siembra: FormaSiembra;
   cantidad_variedades: number;
   imagen_url?: string | null;
+  banner_url?: string | null;
 }
 
 export interface ListarCultivosBaseQuery {
@@ -45,6 +46,7 @@ export interface CultivoBaseDetalle {
   forma_siembra: FormaSiembra;
   id_plantilla_general?: number | null;
   imagen_url?: string | null;
+  banner_url?: string | null;
   variedades: VariedadDetalle[];
 }
 
@@ -56,6 +58,7 @@ export interface CrearCultivoBaseRequest {
   ciclo_productivo_cb: string;
   forma_siembra: FormaSiembra;
   imagen_url?: string | null;
+  banner_url?: string | null;
 }
 
 export interface CrearCultivoBaseResponse extends CultivoBaseListado {

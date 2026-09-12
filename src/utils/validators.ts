@@ -174,6 +174,7 @@ export const cultivoBaseSchema = z
     ciclo_desde: numeroRequerido('Los días a cosecha son requeridos'),
     ciclo_hasta: numeroRequerido('Los días a cosecha son requeridos'),
     imagen_url: z.string().nullable().optional(),
+    banner_url: z.string().nullable().optional(),
   })
   .refine((data) => Number(data.ciclo_hasta) >= Number(data.ciclo_desde), {
     message: 'El máximo debe ser mayor o igual al mínimo',
