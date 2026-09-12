@@ -110,7 +110,7 @@ export function CardMonitoreoSensores({ idParcela }: CardMonitoreoSensoresProps)
             {/* Middle row: Value + Unit */}
             <div className="flex items-baseline gap-1 mb-3">
               <span className="text-2xl font-bold text-foreground">
-                {sensor.ultimo_valor != null ? sensor.ultimo_valor : '—'}
+                {sensor.ultimo_valor != null ? Number(sensor.ultimo_valor).toFixed(1) : '-'}
               </span>
               {sensor.ultimo_valor != null && sensor.unidad_medida_ts && (
                 <span className="text-sm font-semibold text-muted-foreground">

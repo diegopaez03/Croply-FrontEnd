@@ -69,9 +69,9 @@ export default function ParcelaDetallePage() {
     );
   }
 
-  const cultivosAsignados = parcela.cultivos_asignados || [];
+  const cultivosAsignados = parcela.cultivos || [];
   const hasCultivo = cultivosAsignados.length > 0;
-  const ocupada = cultivosAsignados.reduce((acc: number, curr: any) => acc + Number(curr.superficie_asignada || 0), 0);
+  const ocupada = cultivosAsignados.reduce((acc: number, curr: any) => acc + Number(curr.superficie_ocupada_pa || 0), 0);
   const superficieDisponible = parcela.superficie_parcela - ocupada; 
   const canAsociar = superficieDisponible > 0.001;
 
@@ -236,7 +236,7 @@ export default function ParcelaDetallePage() {
                   </p>
                 </div>
                 <Button
-                  disabled={parcela.estado_parcela === 'Inactiva'}
+                  disabled={parcela.estado_parcela === 'Inactiva' || !canAsociar}
                   onClick={() => navigate(`/admin-finca/biblioteca?id_finca=${fincaId}&id_parcela=${parcela.id_parcela}`)}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl px-6 text-sm mt-4"
                 >

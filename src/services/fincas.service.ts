@@ -49,7 +49,7 @@ export let mockFincas: FincaDetalle[] = [
       {
         id_parcela: 101,
         nombre_parcela: 'Lote Norte',
-        estado_parcela: 'Activa',
+        estado_parcela: 'Inactiva',
         superficie_parcela: 50.5,
         controladores: [
           {
@@ -281,9 +281,21 @@ export const fincasService = {
             const p = finca.parcelas.find((px) => px.id_parcela === id_parcela);
             if (p) {
               return resolve({ 
-                ...p, 
+                id_parcela: p.id_parcela,
                 id_finca: finca.id_finca,
-                cultivos_asignados: p.cultivos_asignados || []
+                nombre_parcela: p.nombre_parcela,
+                estado_parcela: p.estado_parcela,
+                superficie_parcela: p.superficie_parcela,
+                cultivos: (p.cultivos_asignados || []).map(c => ({
+                  id_plan_accion: 999,
+                  nombre_cultivo_base: c.nombre_cultivo_base,
+                  nombre_variedad: c.nombre_variedad,
+                  superficie_ocupada_pa: c.superficie_asignada,
+                  estado: 'Activo'
+                })),
+                sensores: [],
+                fecha_generacion_qr: null,
+                url_acceso_qr: null
               } as ParcelaByIdResponse);
             }
           }

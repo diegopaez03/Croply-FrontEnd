@@ -22,7 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useCultivoBase } from '@/hooks/useCultivosBase';
-import { useFincasQuery, useFincaQuery } from '@/hooks/useFincas';
+import { useMiFincaListQuery, useMiFincaResumenQuery } from '@/hooks/useFincas';
 import { usePlanPreview, useCrearPlanAccion } from '@/hooks/usePlanesAccion';
 import { handleFormError } from '@/utils/errorHandler';
 import { showSuccessToast } from '@/utils/successHandler';
@@ -59,9 +59,9 @@ export default function GenerarPlanAccionPage() {
     Number.isFinite(idCultivo) ? idCultivo : null,
   );
   
-  const { data: fincasRes, isLoading: loadingFincas } = useFincasQuery(1, 100);
+  const { data: fincasRes, isLoading: loadingFincas } = useMiFincaListQuery();
   
-  const { data: fincaDetalle, isLoading: loadingFincaDetalle } = useFincaQuery(idFinca || null);
+  const { data: fincaDetalle, isLoading: loadingFincaDetalle } = useMiFincaResumenQuery(idFinca || null);
 
   const { data: planPreview } = usePlanPreview(idCultivo, idParcela || null);
   const queryClient = useQueryClient();
@@ -325,6 +325,11 @@ export default function GenerarPlanAccionPage() {
                           <SelectTrigger className="bg-muted/30 border-border h-11 text-muted-foreground">
                             <SelectValue placeholder="Seleccionar..." />
                           </SelectTrigger>
+                          <SelectContent>
+                            {fincas.map((f: any) => (
+                              <SelectItem key={f.id_finca} value={String(f.id_finca)}>{f.nombre_finca}</SelectItem>
+                            ))}
+                          </SelectContent>
                         </Select>
                         <p className="text-[10px] text-muted-foreground/80 leading-tight mt-1">Coincide con variedad inicial</p>
                       </div>
@@ -334,6 +339,11 @@ export default function GenerarPlanAccionPage() {
                           <SelectTrigger className="bg-muted/30 border-border h-11 text-muted-foreground">
                             <SelectValue placeholder="Seleccionar..." />
                           </SelectTrigger>
+                          <SelectContent>
+                            {parcelas.map((p: any) => (
+                              <SelectItem key={p.id_parcela} value={String(p.id_parcela)}>{p.nombre_parcela}</SelectItem>
+                            ))}
+                          </SelectContent>
                         </Select>
                       </div>
                     </>
