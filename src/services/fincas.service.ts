@@ -120,6 +120,78 @@ let nextFincaId = 3;
 // ============================================================================
 
 export const fincasService = {
+
+  getMiFincaList: async () => {
+    if (import.meta.env.VITE_USE_MOCKS === 'true') {
+      return new Promise<{ fincas: { id_finca: number; nombre_finca: string }[] }>((resolve) => {
+        setTimeout(() => {
+          const activas = mockFincas
+            .filter(f => f.estado === 'Activo')
+            .map(f => ({ id_finca: f.id_finca, nombre_finca: f.nombre_finca }));
+          resolve({ fincas: activas });
+        }, 500);
+      });
+    }
+    const response = await apiClient.get('/mi-finca/fincas');
+    return response.data;
+  },
+
+  getMiFincaResumen: async (id_finca: number) => {
+    if (import.meta.env.VITE_USE_MOCKS === 'true') {
+      return new Promise<any>((resolve, reject) => {
+        setTimeout(() => {
+          const finca = mockFincas.find(f => f.id_finca === id_finca);
+          if (!finca || finca.estado !== 'Activo') {
+            return reject(new Error('FINCA_NOT_AVAILABLE'));
+          }
+          resolve({
+            id_finca: finca.id_finca,
+            nombre_finca: finca.nombre_finca,
+            parcelas: finca.parcelas.map(p => ({
+              id_parcela: p.id_parcela,
+              nombre_parcela: p.nombre_parcela,
+              estado_parcela: p.estado_parcela
+            }))
+          });
+        }, 500);
+      });
+    }
+    const response = await apiClient.get(`/fincas/${id_finca}/resumen`);
+    return response.data;
+  },
+
+  getParcelaResumenDynamic: async (id_parcela: number) => {
+    if (import.meta.env.VITE_USE_MOCKS === 'true') {
+      return new Promise<any>((resolve, reject) => {
+        setTimeout(() => {
+          let foundParcela: any = null;
+          for (const f of mockFincas) {
+            const p = f.parcelas.find(x => x.id_parcela === id_parcela);
+            if (p) { foundParcela = p; break; }
+          }
+          if (!foundParcela) return reject(new Error('Not found'));
+          
+          const hasCultivo = foundParcela.cultivos_asignados && foundParcela.cultivos_asignados.length > 0;
+          const cultivoActual = hasCultivo ? foundParcela.cultivos_asignados[0] : null;
+
+          resolve({
+            id_parcela: foundParcela.id_parcela,
+            nombre_parcela: foundParcela.nombre_parcela,
+            estado_parcela: foundParcela.estado_parcela,
+            cultivo: cultivoActual ? {
+              nombre_cultivo_base: cultivoActual.nombre_cultivo_base,
+              nombre_variedad: cultivoActual.nombre_variedad,
+              superficie_ocupada_pa: cultivoActual.superficie_asignada
+            } : null,
+            recomendacion_ia_resumen: null
+          });
+        }, 500);
+      });
+    }
+    const response = await apiClient.get(`/parcelas/${id_parcela}/resumen`);
+    return response.data;
+  },
+
   getFincas: async (page = 1, pageSize = 10, estado?: string, search?: string): Promise<FincasListResponse> => {
     if (import.meta.env.VITE_USE_MOCKS === 'true') {
       return new Promise((resolve) => {

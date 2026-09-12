@@ -243,3 +243,28 @@ export function useConsultarQRParcela(onSuccess?: (res: any) => void) {
     }
   });
 }
+
+
+export function useMiFincaListQuery() {
+  return useQuery({
+    queryKey: ['mi-finca-list'],
+    queryFn: () => fincasService.getMiFincaList(),
+  });
+}
+
+export function useMiFincaResumenQuery(id_finca: number | null) {
+  return useQuery({
+    queryKey: ['mi-finca-resumen', id_finca],
+    queryFn: () => fincasService.getMiFincaResumen(id_finca as number),
+    enabled: !!id_finca,
+    retry: false, // Don't retry on 403
+  });
+}
+
+export function useParcelaResumenDynamicQuery(id_parcela: number | null) {
+  return useQuery({
+    queryKey: ['parcela-resumen-dynamic', id_parcela],
+    queryFn: () => fincasService.getParcelaResumenDynamic(id_parcela as number),
+    enabled: !!id_parcela,
+  });
+}
