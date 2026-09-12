@@ -339,3 +339,48 @@ export const generarPlanAccionSchema = z.object({
 });
 
 export type GenerarPlanAccionFormValues = z.infer<typeof generarPlanAccionSchema>;
+
+const ID_TIPO_AGROQUIMICO = 5;
+
+export const tareaPlanSchema = z
+  .object({
+    nombre_tarea: z.string().min(1, 'El nombre es obligatorio').max(120),
+    descripcion_tarea: z.string().min(1, 'La descripción es obligatoria'),
+    fecha_planificada_tarea: z.string().min(1, 'La fecha planificada es obligatoria'),
+    id_tipo_tarea: z.coerce.number().min(1, 'El tipo de tarea es obligatorio'),
+    nombre_producto_aa: z.string().optional().nullable(),
+    dosis_aa: z.string().optional().nullable(),
+    fecha_hora_aplicacion_aa: z.string().optional().nullable(),
+    id_responsable: z.preprocess(
+      (val) => (val === '' || val === undefined || val === null ? null : Number(val)),
+      z.number().nullable().optional(),
+    ),
+  })
+  .superRefine((data, ctx) => {
+    if (Number(data.id_tipo_tarea) !== ID_TIPO_AGROQUIMICO) {
+      return;
+    }
+    if (!data.nombre_producto_aa?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'El producto es obligatorio',
+        path: ['nombre_producto_aa'],
+      });
+    }
+    if (!data.dosis_aa?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'La dosis es obligatoria',
+        path: ['dosis_aa'],
+      });
+    }
+    if (!data.fecha_hora_aplicacion_aa?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'La fecha y hora de aplicación es obligatoria',
+        path: ['fecha_hora_aplicacion_aa'],
+      });
+    }
+  });
+
+export type TareaPlanFormValues = z.infer<typeof tareaPlanSchema>;

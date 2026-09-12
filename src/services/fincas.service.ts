@@ -225,8 +225,10 @@ export const fincasService = {
         }, 500);
       });
     }
-    const response = await apiClient.get<ParcelaByIdResponse>(`/parcelas/${id_parcela}`);
-    return response.data;
+    const response = await apiClient.get<ParcelaByIdResponse & { cultivos?: unknown[] }>(
+      `/parcelas/${id_parcela}`,
+    );
+    return mapParcelaDetalle(response.data);
   },
 
   createFinca: async (data: FincaCreatePayload): Promise<FincaDetalle & { message: string }> => {
@@ -643,8 +645,8 @@ export const fincasService = {
                   nombre_variedad: 'Mantecosa',
                   superficie_ocupada_pa: 10,
                   fecha_inicio_pa: '2024-02-01',
-                  fecha_fin_pa: null,
-                  estado: 'Activo'
+                  fecha_fin_pa: '2024-03-15',
+                  estado: 'Cancelado'
                 }
               ]
             });
@@ -717,3 +719,24 @@ export const fincasService = {
     return response.data;
   }
 };
+
+function mapParcelaDetalle(
+  data: ParcelaByIdResponse & { cultivos?: any[] },
+): ParcelaByIdResponse {
+  const cultivosRaw = data.cultivos_asignados ?? data.cultivos ?? [];
+  return {
+    ...data,
+    cultivos_asignados: cultivosRaw.map((cultivo) => ({
+      id_plan_accion: cultivo.id_plan_accion,
+      id_cultivo_base: cultivo.id_cultivo_base,
+      nombre_cultivo_base: cultivo.nombre_cultivo_base,
+      id_variedad: cultivo.id_variedad,
+      nombre_variedad: cultivo.nombre_variedad,
+      superficie_asignada: Number(
+        cultivo.superficie_asignada ?? cultivo.superficie_ocupada_pa ?? 0,
+      ),
+      fecha_inicio: cultivo.fecha_inicio ?? cultivo.fecha_inicio_pa ?? '',
+      estado: cultivo.estado,
+    })),
+  };
+}

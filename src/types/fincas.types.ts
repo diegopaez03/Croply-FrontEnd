@@ -59,12 +59,14 @@ export interface ParcelaResumen {
   superficie_parcela: number;
   controladores: ControladorResumen[];
   cultivos_asignados?: {
-    id_cultivo_base: number;
+    id_plan_accion?: number;
+    id_cultivo_base?: number;
     nombre_cultivo_base: string;
-    id_variedad: number;
+    id_variedad?: number | null;
     nombre_variedad: string;
     superficie_asignada: number;
     fecha_inicio: string;
+    estado?: string;
   }[];
   fecha_generacion_qr?: string | null;
   url_acceso_qr?: string | null;
@@ -141,7 +143,12 @@ export interface CrearEditarParcelaPayload {
   superficie_parcela: number;
   controladores: ControladorPayload[];
 }
-export type EstadoPlanAccion = 'Activo' | 'Finalizado' | 'FinalizadoPorContingencia' | 'Inactivado';
+export type EstadoPlanAccion =
+  | 'Activo'
+  | 'Finalizado'
+  | 'Cancelado'
+  | 'FinalizadoPorContingencia'
+  | 'Inactivado';
 
 export interface CultivoHistorico {
   id_plan_accion: number;
