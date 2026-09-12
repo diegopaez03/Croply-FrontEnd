@@ -30,7 +30,7 @@ export function CultivoItemCard({ cultivo }: CultivoItemCardProps) {
             </div>
             <div>
               <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider mb-1">Superficie Utilizada</p>
-              <p className="font-semibold text-foreground">{cultivo.superficie_asignada} ha</p>
+              <p className="font-semibold text-foreground">{cultivo.superficie_ocupada_pa} ha</p>
             </div>
             <div>
               <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider mb-1">Cosecha Estimada</p>
