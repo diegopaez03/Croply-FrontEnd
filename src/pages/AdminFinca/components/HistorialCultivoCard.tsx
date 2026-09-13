@@ -12,6 +12,7 @@ export function HistorialCultivoCard({ cultivo }: HistorialCultivoCardProps) {
     switch (estado) {
       case 'Finalizado': return 'success';
       case 'FinalizadoPorContingencia': return 'warning';
+      case 'Cancelado': return 'neutral';
       case 'Inactivado': return 'neutral';
       case 'Activo': return 'info';
       default: return 'neutral';
@@ -22,6 +23,7 @@ export function HistorialCultivoCard({ cultivo }: HistorialCultivoCardProps) {
     switch (estado) {
       case 'Finalizado': return 'Finalizado correctamente';
       case 'FinalizadoPorContingencia': return 'Finalizado por contingencia';
+      case 'Cancelado': return 'Cancelado';
       case 'Inactivado': return 'Finalizado por baja de parcela';
       case 'Activo': return 'Activo';
       default: return estado;

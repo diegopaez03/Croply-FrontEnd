@@ -61,6 +61,19 @@ export const handleFormError = (
       return;
     }
 
+    if (data.errorCode === "TASK_NOT_EDITABLE") {
+      toast.error(data.message || "No se puede modificar una tarea que ya fue completada.");
+      return;
+    }
+
+    if (
+      data.errorCode === "INVALID_STATUS_TRANSITION" ||
+      data.errorCode === "TASKS_NOT_COMPLETED"
+    ) {
+      toast.error(data.message || "No se puede actualizar el estado.");
+      return;
+    }
+
     // ERR-04 — Recurso en uso (409)
     if (data.errorCode === "RESOURCE_IN_USE" || data.statusCode === 409) {
       toast.error(data.message || "No se puede eliminar el recurso porque está en uso.");

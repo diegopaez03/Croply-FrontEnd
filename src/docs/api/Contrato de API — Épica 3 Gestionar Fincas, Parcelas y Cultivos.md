@@ -11,7 +11,7 @@ Propietario: Paula Rodriguez
 
 **1. `motivo_finalizacion` en HU-FP-06 (historial de cultivos) no tiene respaldo en el DC.** El AC pide un indicador visual que distinga si un cultivo del historial finalizó naturalmente (cosecha) o fue inactivado por la baja de la parcela, pero `PlanAccion.estado` (`EstadoPlanAccion`: `Finalizado | Iniciado | Activo`) no tiene ningún valor que distinga esos dos casos — ambos probablemente terminan en `Finalizado`. Falta definir si se necesita un nuevo valor de enum, un campo booleano adicional, o algún otro mecanismo para poder mostrar esa distinción.
 
-**2. HU-BC-06 (Épica 4) sigue retirada de ese contrato hasta que Épica 3 esté cerrada** — se retoma desde cero cuando corresponda, no había versión previa escrita.
+**2. HU-BC-06 (Épica 4)** — implementada. El detalle de parcela lista solo planes `Activo` en `cultivos`; el historial excluye `Activo`. El cronograma y el ABM de tareas viven en `/planes-accion/:id_plan_accion`.
 
 **3. `recomendacion_ia_resumen` en HU-FP-08 depende del contrato de `HU-NA-03`, que todavía no existe.** El campo queda en la respuesta como `null` hasta que ese contrato se escriba y se pueda definir el shape real.
 

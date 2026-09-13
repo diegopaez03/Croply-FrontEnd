@@ -273,7 +273,11 @@ export default function ParcelaDetallePage() {
               <div className="space-y-8 divide-y divide-border/50">
                 {cultivosAsignados.map((cultivo: any, idx: number) => (
                   <div key={idx} className="pt-8 first:pt-0">
-                    <CultivoItemCard cultivo={cultivo} />
+                    <CultivoItemCard
+                      cultivo={cultivo}
+                      idFinca={parcela.id_finca}
+                      idParcela={parcela.id_parcela}
+                    />
                   </div>
                 ))}
               </div>
