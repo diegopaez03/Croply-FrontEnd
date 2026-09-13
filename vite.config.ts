@@ -20,12 +20,20 @@ export default defineConfig({
     },
   },
   server: {
-    host: '0.0.0.0',    // Required for Docker port forwarding
+    host: '0.0.0.0',
     port: 5173,
     strictPort: true,
+    watch: {
+      usePolling: process.env.CHOKIDAR_USEPOLLING === 'true',
+      interval: Number(process.env.CHOKIDAR_INTERVAL ?? 300),
+    },
+    hmr: {
+      host: 'localhost',
+      clientPort: 5173,
+    },
     proxy: {
       '/api': {
-        target: 'http://backend:3000',
+        target: process.env.VITE_PROXY_TARGET || 'http://localhost:3000',
         changeOrigin: true,
       },
     },

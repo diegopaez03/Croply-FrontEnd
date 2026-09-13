@@ -1,12 +1,21 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Plant01Icon } from '@hugeicons/core-free-icons';
-
+import { CronogramaPlanAccion } from './CronogramaPlanAccion';
 
 interface CultivoItemCardProps {
-  cultivo: any;
+  cultivo: {
+    id_plan_accion?: number;
+    nombre_cultivo_base?: string;
+    nombre_variedad?: string;
+    fecha_inicio?: string;
+    superficie_asignada?: number;
+    estado?: string;
+  };
+  idFinca?: number;
+  idParcela?: number;
 }
 
-export function CultivoItemCard({ cultivo }: CultivoItemCardProps) {
+export function CultivoItemCard({ cultivo, idFinca, idParcela }: CultivoItemCardProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-border/50">
@@ -39,7 +48,7 @@ export function CultivoItemCard({ cultivo }: CultivoItemCardProps) {
             <div>
               <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider mb-1">Estado Actual</p>
               <span className="inline-block bg-primary/10 text-primary font-bold px-2.5 py-0.5 rounded-full text-[11px]">
-                En curso
+                {cultivo.estado || 'Activo'}
               </span>
             </div>
           </div>
@@ -51,17 +60,17 @@ export function CultivoItemCard({ cultivo }: CultivoItemCardProps) {
         </div>
       </div>
 
-      <div className="bg-muted/10 border border-dashed border-border rounded-xl p-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="size-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
-            <HugeiconsIcon icon={Plant01Icon} className="size-5" />
-          </div>
-          <div>
-            <h4 className="font-bold text-xs text-foreground">Evolución del cultivo y tareas</h4>
-            <p className="text-[11px] text-muted-foreground">// TODO: HU-BC-06 — Cronograma y tareas del plan de acción</p>
-          </div>
-        </div>
-      </div>
+      {cultivo.id_plan_accion ? (
+        <CronogramaPlanAccion
+          idPlanAccion={cultivo.id_plan_accion}
+          idFinca={idFinca}
+          idParcela={idParcela}
+        />
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Este cultivo no tiene un plan de acción asociado.
+        </p>
+      )}
     </div>
   );
 }
