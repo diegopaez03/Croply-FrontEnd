@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { registerAdminFincaSchema, RegisterAdminFincaFormValues } from '../../../utils/validators';
 import { authService } from '../../../services/auth.service';
 import { rolesService } from '../../../services/roles.service';
+import { usuariosService } from '../../../services/usuarios.service';
+import { toast } from 'sonner';
 import { handleFormError } from '../../../utils/errorHandler';
 import { showSuccessToast } from '../../../utils/successHandler';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -32,25 +34,48 @@ import { Button } from '../../../components/ui/button';
 // Assuming we have to use standard native select for simplicity if Shadcn Select is missing or complex without it.
 // Actually, I'll use standard select styled like Shadcn Input to be safe.
 
+export interface ValoresInicialesCliente {
+  nombre?: string;
+  apellido?: string;
+  email?: string;
+  telefono?: string;
+  id_solicitud_df?: number;
+}
+
 interface RegistrarClienteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  valoresIniciales?: ValoresInicialesCliente;
 }
 
-export function RegistrarClienteModal({ open, onOpenChange }: RegistrarClienteModalProps) {
+const valoresVaciosCliente: RegisterAdminFincaFormValues = {
+  nombre: '',
+  apellido: '',
+  email: '',
+  telefono: '',
+  contrasena_temporal: '',
+  estado: 'Pendiente',
+};
+
+export function RegistrarClienteModal({ open, onOpenChange, valoresIniciales }: RegistrarClienteModalProps) {
   const [showPassword, setShowPassword] = useState(false);
   
   const form = useForm<RegisterAdminFincaFormValues>({
     resolver: zodResolver(registerAdminFincaSchema),
-    defaultValues: {
-      nombre: '',
-      apellido: '',
-      email: '',
-      telefono: '',
-      contrasena_temporal: '',
-      estado: 'Pendiente',
-    },
+    defaultValues: valoresVaciosCliente,
   });
+
+  useEffect(() => {
+    if (!open) return;
+    form.reset({
+      ...valoresVaciosCliente,
+      nombre: valoresIniciales?.nombre ?? '',
+      apellido: valoresIniciales?.apellido ?? '',
+      email: valoresIniciales?.email ?? '',
+      telefono: valoresIniciales?.telefono ?? '',
+    });
+    setShowPassword(false);
+  }, [open, valoresIniciales, form]);
 
   const queryClient = useQueryClient();
 
@@ -60,11 +85,16 @@ export function RegistrarClienteModal({ open, onOpenChange }: RegistrarClienteMo
     enabled: open,
   });
 
+  const vieneDeSolicitud = Boolean(valoresIniciales?.id_solicitud_df);
+
   const mutation = useMutation({
     mutationFn: authService.registrarAdminFinca,
     onSuccess: (data) => {
       showSuccessToast(data);
       queryClient.invalidateQueries({ queryKey: ['usuariosCroply'] });
+      if (valoresIniciales?.email) {
+        queryClient.invalidateQueries({ queryKey: ['usuarioPorEmail', valoresIniciales.email] });
+      }
       form.reset();
       onOpenChange(false);
     },
@@ -73,7 +103,18 @@ export function RegistrarClienteModal({ open, onOpenChange }: RegistrarClienteMo
     },
   });
 
-  const onSubmit = (data: RegisterAdminFincaFormValues) => {
+  const onSubmit = async (data: RegisterAdminFincaFormValues) => {
+    if (vieneDeSolicitud) {
+      const existe = await usuariosService.existePorEmail(data.email);
+      if (existe) {
+        form.setError('email', {
+          type: 'server',
+          message: 'Ya existe un usuario registrado con este correo.',
+        });
+        toast.error('Ya existe un usuario registrado con el correo de esta solicitud.');
+        return;
+      }
+    }
     mutation.mutate(data);
   };
 
@@ -132,7 +173,13 @@ export function RegistrarClienteModal({ open, onOpenChange }: RegistrarClienteMo
                 <FormItem>
                   <FormLabel>Correo electrónico *</FormLabel>
                   <FormControl>
-                    <Input placeholder="ejemplo@finca.com" type="email" {...field} />
+                    <Input
+                      placeholder="ejemplo@finca.com"
+                      type="email"
+                      disabled={vieneDeSolicitud}
+                      className={vieneDeSolicitud ? 'bg-muted' : undefined}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -201,7 +248,7 @@ export function RegistrarClienteModal({ open, onOpenChange }: RegistrarClienteMo
                         value={field.value || ''}
                         disabled={isLoadingRoles}
                       >
-                        <option value="">Sin rol asignado (Opcional)</option>
+                        <option value="">Sin rol</option>
                         {rolesData?.roles?.map((rol: any) => (
                           <option key={rol.id_rol} value={rol.id_rol}>
                             {rol.nombre_rol}

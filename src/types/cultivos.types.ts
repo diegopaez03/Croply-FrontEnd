@@ -10,6 +10,8 @@ export interface CultivoBaseListado {
   ciclo_productivo_cb: string;
   forma_siembra: FormaSiembra;
   cantidad_variedades: number;
+  imagen_url?: string | null;
+  banner_url?: string | null;
 }
 
 export interface ListarCultivosBaseQuery {
@@ -31,6 +33,7 @@ export interface VariedadDetalle {
   fecha_alta: string;
   en_uso: boolean;
   id_plantilla_especifica?: number | null;
+  imagen_url?: string | null;
 }
 
 export interface CultivoBaseDetalle {
@@ -42,6 +45,8 @@ export interface CultivoBaseDetalle {
   ciclo_productivo_cb: string;
   forma_siembra: FormaSiembra;
   id_plantilla_general?: number | null;
+  imagen_url?: string | null;
+  banner_url?: string | null;
   variedades: VariedadDetalle[];
 }
 
@@ -52,6 +57,8 @@ export interface CrearCultivoBaseRequest {
   mes_siembra: string;
   ciclo_productivo_cb: string;
   forma_siembra: FormaSiembra;
+  imagen_url?: string | null;
+  banner_url?: string | null;
 }
 
 export interface CrearCultivoBaseResponse extends CultivoBaseListado {
@@ -63,6 +70,7 @@ export interface CrearVariedadRequest {
   distancia_plantacion: string;
   observaciones?: string | null;
   dias_a_cosecha: number;
+  imagen_url?: string | null;
 }
 
 export interface VariedadMutacionResponse {
@@ -75,6 +83,7 @@ export interface VariedadMutacionResponse {
   fecha_alta: string;
   en_uso: boolean;
   ciclo_productivo_cb: string;
+  imagen_url?: string | null;
 }
 
 export interface MensajeCultivoResponse {

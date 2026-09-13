@@ -23,6 +23,8 @@ export interface TablaConPaginacionProps<T> {
   emptyStateTitle?: string;
   emptyStateMessage?: string;
   keyExtractor?: (item: T, index: number) => string | number;
+  onRowClick?: (item: T) => void;
+  getRowAriaLabel?: (item: T) => string;
 }
 
 export function TablaConPaginacion<T>({
@@ -38,7 +40,9 @@ export function TablaConPaginacion<T>({
   onPageChange,
   emptyStateTitle = "No se encontraron resultados",
   emptyStateMessage = "No hay registros para mostrar.",
-  keyExtractor
+  keyExtractor,
+  onRowClick,
+  getRowAriaLabel,
 }: TablaConPaginacionProps<T>) {
   
   const generatePageNumbers = () => {
@@ -108,7 +112,24 @@ export function TablaConPaginacion<T>({
               </tr>
             ) : (
               data.map((row, idx) => (
-                <tr key={getRowKey(row, idx)} className="bg-white hover:bg-muted/30 transition-colors">
+                <tr
+                  key={getRowKey(row, idx)}
+                  className={`bg-white transition-colors ${onRowClick ? 'cursor-pointer hover:bg-primary/5 focus-visible:outline-none focus-visible:bg-primary/5' : 'hover:bg-muted/30'}`}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  onKeyDown={
+                    onRowClick
+                      ? (e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            onRowClick(row);
+                          }
+                        }
+                      : undefined
+                  }
+                  role={onRowClick ? 'button' : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  aria-label={getRowAriaLabel?.(row)}
+                >
                   {columns.map((col) => (
                     <td 
                       key={`${getRowKey(row, idx)}-${col.key}`} 

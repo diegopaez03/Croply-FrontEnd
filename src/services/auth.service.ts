@@ -82,6 +82,7 @@ export const authService = {
           fecha_alta: '2026-03-15T10:00:00Z',
           rol_sistema: 'ADMIN_CROPLY',
           fincas: [],
+          permisos: [],
         };
       } else {
         mockUsuario = {
@@ -95,6 +96,7 @@ export const authService = {
           fincas: [
             { id_finca: 12, nombre_finca: 'La Esperanza', rol_finca: 'ADMIN_FINCA' },
           ],
+          permisos: [],
         };
       }
 
@@ -392,6 +394,7 @@ export const authService = {
         fincas: [
           { id_finca: 12, nombre_finca: 'La Esperanza', rol_finca: 'ADMIN_FINCA' },
         ],
+        permisos: [],
       };
 
       const mockPayload = {

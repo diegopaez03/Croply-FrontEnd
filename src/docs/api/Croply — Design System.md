@@ -288,6 +288,14 @@ Usar componentes `Input`, `Select`, `Textarea` de shadcn/ui.
 
 **Label:** `text-sm` Medium (500), color `#0A0A0A`, `mb-1.5` sobre el input.
 
+**Subida de imagen (`ImageUploadField`):** componente controlado en `src/components/shared/ImageUploadField.tsx`. Se usa dentro de `FormField` / `FormControl` como un input más.
+
+- Vacío: zona `border-dashed` clickeable (y drop), texto “Subir imagen”, hint JPEG/PNG/WebP · máx. 5 MB.
+- Subiendo: preview local + spinner; el control queda deshabilitado.
+- Con imagen: thumbnail + botón “Quitar” (`onChange(null)`).
+- Validación de tipo/tamaño en cliente (toast); el archivo se envía a `POST /uploads/imagenes` vía `uploads.service.ts`.
+- Reutilizable: no conoce cultivo ni variedad, solo `value` / `onChange` / `disabled`.
+
 ---
 
 ### 7.6 Tablas de datos

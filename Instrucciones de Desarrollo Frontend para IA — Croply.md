@@ -38,8 +38,8 @@ src/
 ├── components/
 │   ├── ui/                 # Shadcn/ui — piezas base editadas con estilo Croply (Button, Input, Card, etc.)
 │   ├── layout/              # Navbar, Sidebar, AuthLayout, Footer
-│   └── shared/              # Componentes de dominio reutilizables entre pantallas (ej: WeatherCard, TablaConPaginacion)
-├── services/                # Un archivo por recurso de API (auth.service.ts, usuarios.service.ts, api.ts con la instancia de Axios)
+│   └── shared/              # Componentes de dominio reutilizables (SearchBar, ImageUploadField, TablaConPaginacion)
+├── services/                # Un archivo por recurso de API (auth.service.ts, cultivos.service.ts, uploads.service.ts, api.ts)
 ├── types/                   # Interfaces de TypeScript, un archivo por entidad de dominio (usuario.types.ts, finca.types.ts, api.types.ts)
 ├── hooks/                   # Hooks custom, planos, prefijo "use" (useAuth.ts, useFarms.ts, useDebounce.ts)
 ├── context/                 # Contextos globales de React (AuthContext.tsx)
