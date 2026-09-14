@@ -5,7 +5,8 @@ import {
   Note01Icon,
   PencilEdit02Icon,
   PlusSignIcon,
-  CheckmarkCircle01Icon,
+  Tick02Icon,
+  Plant01Icon,
 } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import {
@@ -144,7 +145,7 @@ export function CronogramaPlanAccion({
         )}
       </div>
 
-      <div className="flex overflow-x-auto pb-8 pt-2 gap-0 custom-scrollbar w-full mb-2 snap-x">
+      <div className="flex overflow-x-auto pb-8 pt-2 gap-0 custom-scrollbar w-full mb-2 items-start">
         {hitos.map((hito, i) => {
           const isComplete = hito.tareas.length > 0 && hito.tareas.every(t => t.estado === 'Completado');
           const isActual = hito.id_hito_real === defaultExpandedId;
@@ -153,24 +154,24 @@ export function CronogramaPlanAccion({
           return (
             <div 
               key={hito.id_hito_real} 
-              className="flex-1 min-w-[120px] flex flex-col items-center relative cursor-pointer group snap-center"
+              className="w-32 shrink-0 flex flex-col items-center relative cursor-pointer group"
               onClick={() => setExpandedHitoId(hito.id_hito_real)}
             >
               {i !== hitos.length - 1 && (
-                <div className={`absolute top-[1.35rem] left-[50%] right-[-50%] w-full h-[2px] -z-10 transition-colors duration-300 ${isComplete ? 'bg-primary' : 'bg-border'}`} />
+                <div className={`absolute top-[1.375rem] left-[50%] w-full h-[2px] -z-10 transition-colors duration-300 ${isComplete ? 'bg-primary' : 'bg-border'}`} />
               )}
               
               <div className={`flex items-center justify-center w-11 h-11 rounded-full border-[3px] border-card transition-all duration-300 mb-2 ${
                 isComplete 
                   ? 'bg-primary text-primary-foreground shadow-sm' 
                   : isActual 
-                    ? 'bg-primary/10 border-primary text-primary ring-4 ring-primary/10' 
+                    ? 'bg-primary text-primary-foreground ring-4 ring-primary/20' 
                     : 'bg-muted text-muted-foreground'
               }`}>
                 {isComplete ? (
-                  <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-5" strokeWidth={2} />
+                  <HugeiconsIcon icon={Tick02Icon} className="size-6" strokeWidth={2.5} />
                 ) : (
-                  <span className="text-sm font-bold">{hito.orden_hito}</span>
+                  <HugeiconsIcon icon={Plant01Icon} className="size-5" strokeWidth={1.5} />
                 )}
               </div>
               
