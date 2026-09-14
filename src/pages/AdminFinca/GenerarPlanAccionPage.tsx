@@ -192,7 +192,7 @@ export default function GenerarPlanAccionPage() {
   }
 
   const plantillaAsociada = planPreview?.plantillas[0];
-  const variedadesDisponibles = plantillaAsociada?.variedades ?? detalle.variedades ?? [];
+  const variedadesDisponibles = detalle.variedades ?? [];
 
   const addVariety = () => {
     if (variedadesDisponibles.length > 0) {
