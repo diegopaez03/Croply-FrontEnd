@@ -84,10 +84,8 @@ export function CalendarioPlanMensual({ mesVisible, onCambiarMes, eventos }: Cal
                 {eventosDia.slice(0, 2).map((evento) => (
                   <span
                     key={`${evento.clave}-${evento.titulo}`}
-                    className={`block truncate rounded px-1 py-0.5 text-[10px] font-semibold ${
-                      evento.dia_relativo === 0
-                        ? 'bg-[#EAF2ED] text-[#1A7B48]'
-                        : 'bg-[#EAEAEA] text-[#555]'
+                    className={`block truncate rounded px-1.5 py-0.5 border text-[10px] font-semibold ${
+                      evento.color || 'bg-muted text-muted-foreground'
                     }`}
                     title={evento.titulo}
                   >

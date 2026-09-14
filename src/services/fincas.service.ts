@@ -49,7 +49,7 @@ export let mockFincas: FincaDetalle[] = [
       {
         id_parcela: 101,
         nombre_parcela: 'Lote Norte',
-        estado_parcela: 'Inactiva',
+        estado_parcela: 'Activa',
         superficie_parcela: 50.5,
         controladores: [
           {
@@ -171,8 +171,9 @@ export const fincasService = {
           }
           if (!foundParcela) return reject(new Error('Not found'));
           
-          const hasCultivo = foundParcela.cultivos_asignados && foundParcela.cultivos_asignados.length > 0;
-          const cultivoActual = hasCultivo ? foundParcela.cultivos_asignados[0] : null;
+          const cultivosActivos = foundParcela.cultivos_asignados ? foundParcela.cultivos_asignados.filter((c: any) => c.estado === 'Activo' || !c.estado) : [];
+          const hasCultivo = cultivosActivos.length > 0;
+          const cultivoActual = hasCultivo ? cultivosActivos[0] : null;
 
           resolve({
             id_parcela: foundParcela.id_parcela,
@@ -286,13 +287,16 @@ export const fincasService = {
                 nombre_parcela: p.nombre_parcela,
                 estado_parcela: p.estado_parcela,
                 superficie_parcela: p.superficie_parcela,
-                cultivos: (p.cultivos_asignados || []).map(c => ({
-                  id_plan_accion: 999,
+                cultivos: (p.cultivos_asignados || []).map((c: any) => ({
+                  id_plan_accion: c.id_plan_accion || 999,
+                  id_cultivo_base: c.id_cultivo_base || 1,
                   nombre_cultivo_base: c.nombre_cultivo_base,
+                  id_variedad: c.id_variedad || null,
                   nombre_variedad: c.nombre_variedad,
                   superficie_ocupada_pa: c.superficie_asignada,
-                  estado: 'Activo'
-                })),
+                  fecha_inicio_pa: c.fecha_inicio || '2026-09-15',
+                  estado: c.estado || 'Activo'
+                })).filter((c: any) => c.estado === 'Activo'),
                 sensores: [],
                 fecha_generacion_qr: null,
                 url_acceso_qr: null
@@ -695,50 +699,47 @@ export const fincasService = {
     if (import.meta.env.VITE_USE_MOCKS === 'true') {
       return new Promise((resolve) => {
         setTimeout(() => {
-          if (id_parcela === 101) {
-            resolve({
-              historial: [
-                {
-                  id_plan_accion: 10,
-                  nombre_cultivo_base: 'Tomate',
-                  nombre_variedad: 'Perita',
-                  superficie_ocupada_pa: 20,
-                  fecha_inicio_pa: '2023-08-01',
-                  fecha_fin_pa: '2023-12-15',
-                  estado: 'Finalizado'
-                },
-                {
-                  id_plan_accion: 11,
-                  nombre_cultivo_base: 'Zanahoria',
-                  nombre_variedad: 'Criolla',
-                  superficie_ocupada_pa: 15,
-                  fecha_inicio_pa: '2023-01-10',
-                  fecha_fin_pa: '2023-04-20',
-                  estado: 'FinalizadoPorContingencia'
-                },
-                {
-                  id_plan_accion: 12,
-                  nombre_cultivo_base: 'Papa',
-                  nombre_variedad: 'Spunta',
-                  superficie_ocupada_pa: 25,
-                  fecha_inicio_pa: '2022-09-01',
-                  fecha_fin_pa: '2022-12-10',
-                  estado: 'Inactivado'
-                },
-                {
-                  id_plan_accion: 13,
-                  nombre_cultivo_base: 'Lechuga',
-                  nombre_variedad: 'Mantecosa',
-                  superficie_ocupada_pa: 10,
-                  fecha_inicio_pa: '2024-02-01',
-                  fecha_fin_pa: '2024-03-15',
-                  estado: 'Cancelado'
-                }
-              ]
-            });
-          } else {
-            resolve({ historial: [] });
+          let historial: any[] = [];
+          for (const f of mockFincas) {
+            const p = f.parcelas.find(px => px.id_parcela === id_parcela);
+            if (p && p.cultivos_asignados) {
+              historial = p.cultivos_asignados
+                .filter(c => ['Finalizado', 'Cancelado', 'FinalizadoPorContingencia', 'Inactivado'].includes(c.estado || ''))
+                .map(c => ({
+                  id_plan_accion: c.id_plan_accion || 999,
+                  nombre_cultivo_base: c.nombre_cultivo_base,
+                  nombre_variedad: c.nombre_variedad,
+                  superficie_ocupada_pa: c.superficie_asignada,
+                  fecha_inicio_pa: c.fecha_inicio || '2023-01-01',
+                  fecha_fin_pa: new Date().toISOString().slice(0, 10),
+                  estado: c.estado
+                }));
+            }
           }
+          // Si no hay nada dinámico y es la 101, devolvemos el mock estático
+          if (historial.length === 0 && id_parcela === 101) {
+            historial = [
+              {
+                id_plan_accion: 10,
+                nombre_cultivo_base: 'Tomate',
+                nombre_variedad: 'Perita',
+                superficie_ocupada_pa: 20,
+                fecha_inicio_pa: '2023-08-01',
+                fecha_fin_pa: '2023-12-15',
+                estado: 'Finalizado'
+              },
+              {
+                id_plan_accion: 11,
+                nombre_cultivo_base: 'Zanahoria',
+                nombre_variedad: 'Criolla',
+                superficie_ocupada_pa: 15,
+                fecha_inicio_pa: '2023-01-10',
+                fecha_fin_pa: '2023-04-20',
+                estado: 'FinalizadoPorContingencia'
+              }
+            ];
+          }
+          resolve({ historial });
         }, 500);
       });
     }
@@ -951,11 +952,14 @@ function mapParcelaDetalle(
     ...data,
     cultivos: cultivosRaw.map((cultivo: any) => ({
       id_plan_accion: cultivo.id_plan_accion,
+      id_cultivo_base: cultivo.id_cultivo_base,
       nombre_cultivo_base: cultivo.nombre_cultivo_base,
-      nombre_variedad: cultivo.nombre_variedad,
+      id_variedad: cultivo.id_variedad ?? null,
+      nombre_variedad: cultivo.nombre_variedad ?? null,
       superficie_ocupada_pa: Number(
         cultivo.superficie_ocupada_pa ?? cultivo.superficie_asignada ?? 0,
       ),
+      fecha_inicio_pa: cultivo.fecha_inicio_pa ?? cultivo.fecha_inicio ?? '',
       estado: cultivo.estado,
     })),
   };

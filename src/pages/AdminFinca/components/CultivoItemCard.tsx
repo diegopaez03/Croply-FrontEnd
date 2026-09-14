@@ -1,22 +1,39 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Plant01Icon } from '@hugeicons/core-free-icons';
 import { CronogramaPlanAccion } from './CronogramaPlanAccion';
-import { usePlanAccionQuery } from '../../../hooks/usePlanesAccion';
+import { useCultivoBase } from '../../../hooks/useCultivosBase';
+import { addDays, parseISO, format } from 'date-fns';
 
 interface CultivoItemCardProps {
   cultivo: {
-    id_plan_accion?: number;
-    nombre_cultivo_base?: string;
-    nombre_variedad?: string;
-    superficie_ocupada_pa?: number;
-    estado?: string;
+    id_plan_accion: number;
+    id_cultivo_base: number;
+    nombre_cultivo_base: string;
+    id_variedad: number | null;
+    nombre_variedad: string | null;
+    superficie_ocupada_pa: number;
+    fecha_inicio_pa: string;
+    estado: string;
   };
   idFinca?: number;
   idParcela?: number;
 }
 
 export function CultivoItemCard({ cultivo, idFinca, idParcela }: CultivoItemCardProps) {
-  const { data: plan } = usePlanAccionQuery(cultivo.id_plan_accion ?? null);
+  const { data: cultivoBase, isLoading } = useCultivoBase(cultivo.id_variedad ? cultivo.id_cultivo_base : null);
+
+  let cosechaEstimada = '---';
+  if (cultivo.id_variedad && !isLoading && cultivoBase) {
+    const variedad = cultivoBase.variedades?.find((v: any) => v.id_variedad === cultivo.id_variedad);
+    if (variedad?.dias_a_cosecha != null && cultivo.fecha_inicio_pa) {
+      try {
+        const fechaEstimada = addDays(parseISO(cultivo.fecha_inicio_pa), variedad.dias_a_cosecha);
+        cosechaEstimada = format(fechaEstimada, 'yyyy-MM-dd');
+      } catch (error) {
+        // Fallback a '---' en caso de error al parsear
+      }
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -37,7 +54,7 @@ export function CultivoItemCard({ cultivo, idFinca, idParcela }: CultivoItemCard
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
             <div>
               <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider mb-1">Fecha de Siembra</p>
-              <p className="font-semibold text-foreground">{plan?.fecha_inicio_pa || '---'}</p>
+              <p className="font-semibold text-foreground">{cultivo.fecha_inicio_pa || '---'}</p>
             </div>
             <div>
               <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider mb-1">Superficie Utilizada</p>
@@ -45,7 +62,7 @@ export function CultivoItemCard({ cultivo, idFinca, idParcela }: CultivoItemCard
             </div>
             <div>
               <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider mb-1">Cosecha Estimada</p>
-              <p className="font-semibold text-foreground">A calcular</p>
+              <p className="font-semibold text-foreground">{cosechaEstimada}</p>
             </div>
             <div>
               <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider mb-1">Estado Actual</p>
@@ -58,7 +75,7 @@ export function CultivoItemCard({ cultivo, idFinca, idParcela }: CultivoItemCard
 
         <div className="border border-border/60 rounded-xl p-3 bg-muted/10 text-center max-w-[200px] shrink-0 self-start lg:self-auto min-w-[150px]">
           <p className="text-[11px] font-bold text-muted-foreground uppercase">Ciclo de Siembra</p>
-          <p className="text-xs font-semibold text-foreground mt-1">{plan?.fecha_inicio_pa || 'Inicio activo'}</p>
+          <p className="text-xs font-semibold text-foreground mt-1">{cultivo.fecha_inicio_pa || 'Inicio activo'}</p>
         </div>
       </div>
 

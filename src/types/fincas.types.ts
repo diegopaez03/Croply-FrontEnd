@@ -80,9 +80,12 @@ export interface ParcelaByIdResponse {
   superficie_parcela: number;
   cultivos: {
     id_plan_accion: number;
+    id_cultivo_base: number;
     nombre_cultivo_base: string;
-    nombre_variedad: string;
+    id_variedad: number | null;
+    nombre_variedad: string | null;
     superficie_ocupada_pa: number;
+    fecha_inicio_pa: string;
     estado: string;
   }[];
   sensores: {

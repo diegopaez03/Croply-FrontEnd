@@ -46,6 +46,7 @@ function invalidatePlan(queryClient: ReturnType<typeof useQueryClient>, id_plan_
   if (id_parcela != null) {
     queryClient.invalidateQueries({ queryKey: ['parcela', id_parcela] });
     queryClient.invalidateQueries({ queryKey: ['historialCultivos', id_parcela] });
+    queryClient.invalidateQueries({ queryKey: ['parcela-resumen-dynamic', id_parcela] });
   }
 }
 

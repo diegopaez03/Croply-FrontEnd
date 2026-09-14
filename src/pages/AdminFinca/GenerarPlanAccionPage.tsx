@@ -119,18 +119,7 @@ export default function GenerarPlanAccionPage() {
     }
   }, [error, navigate]);
 
-  const [tareasActivas, setTareasActivas] = useState<Set<number>>(new Set());
   const [mesVisible, setMesVisible] = useState(() => new Date());
-
-  useEffect(() => {
-    if (planPreview && planPreview.plantillas.length > 0) {
-      const ids = new Set<number>();
-      planPreview.plantillas[0].hitos.forEach((hito: any) => {
-        hito.tareas.forEach((tarea: any) => ids.add(tarea.id_tarea_plantilla));
-      });
-      setTareasActivas(ids);
-    }
-  }, [planPreview]);
 
   useEffect(() => {
     if (fechaInicioStr) {
@@ -141,28 +130,43 @@ export default function GenerarPlanAccionPage() {
     }
   }, [fechaInicioStr]);
 
+  const CALENDAR_COLORS = [
+    { event: 'border-l-[3px] border-l-chart-1 bg-muted/30 text-foreground', legend: 'bg-chart-1' },
+    { event: 'border-l-[3px] border-l-chart-2 bg-muted/30 text-foreground', legend: 'bg-chart-2' },
+    { event: 'border-l-[3px] border-l-chart-3 bg-muted/30 text-foreground', legend: 'bg-chart-3' },
+    { event: 'border-l-[3px] border-l-chart-4 bg-muted/30 text-foreground', legend: 'bg-chart-4' },
+    { event: 'border-l-[3px] border-l-chart-5 bg-muted/30 text-foreground', legend: 'bg-chart-5' },
+  ];
+
+  const resolverPlantillaParaVariedad = (id_variedad: number, plantillas: any[]) => {
+    return plantillas.find(p => p.variedades.some((v: any) => v.id_variedad === id_variedad)) || plantillas[0];
+  };
+
   const eventos = useMemo(() => {
     if (!planPreview || planPreview.plantillas.length === 0 || !fechaInicioStr) return [];
-    const hitosFiltrados = planPreview.plantillas[0].hitos.map((hito: any) => ({
-      ...hito,
-      tareas: hito.tareas.filter((tarea: any) => tareasActivas.has(tarea.id_tarea_plantilla)),
-    }));
     const d = new Date(`${fechaInicioStr}T00:00:00`);
     if (isNaN(d.getTime())) return [];
-    return eventosDesdeHitos(hitosFiltrados, d);
-  }, [planPreview, fechaInicioStr, tareasActivas]);
+    
+    const variedadesBase = planPreview.plantillas.flatMap(p => p.variedades);
+    
+    const fuentes = asignaciones.map((a, idx) => {
+      const variedad = variedadesBase.find(v => v.id_variedad === a.id_variedad);
+      const plantilla = resolverPlantillaParaVariedad(a.id_variedad, planPreview.plantillas);
+      return {
+        hitos: plantilla ? plantilla.hitos : [],
+        color: CALENDAR_COLORS[idx % CALENDAR_COLORS.length].event,
+        idVariedad: a.id_variedad,
+        label: variedad?.nombre_variedad || 'Desconocida'
+      };
+    }).filter(f => f.hitos.length > 0);
+
+    return eventosDesdeHitos(fuentes, d);
+  }, [planPreview, fechaInicioStr, asignaciones]);
 
   const fincas = fincasRes?.fincas ?? [];
   const parcelas = fincaDetalle?.parcelas ?? [];
 
-  const toggleTarea = (id_tarea_plantilla: number) => {
-    setTareasActivas((prev) => {
-      const next = new Set(prev);
-      if (next.has(id_tarea_plantilla)) next.delete(id_tarea_plantilla);
-      else next.add(id_tarea_plantilla);
-      return next;
-    });
-  };
+  // toggleTarea removed
 
   const onSubmit = (data: GenerarPlanAccionFormValues) => {
     crearPlan({
@@ -406,64 +410,63 @@ export default function GenerarPlanAccionPage() {
             </div>
           </section>
 
-          {plantillaAsociada && (
-            <section className="bg-card border border-border rounded-2xl p-6 shadow-sm overflow-hidden">
-              <div className="flex items-center gap-2 mb-2 text-primary">
-                <HugeiconsIcon icon={FlowSquareIcon} className="size-5" strokeWidth={2} />
-                <h2 className="text-lg font-bold">Hitos del Cultivo</h2>
-              </div>
-              <p className="text-sm text-muted-foreground mb-8">
-                Este es el cronograma base sugerido para el cultivo. Una vez que lo asignes a tu parcela, vas a poder modificar, borrar o agregar nuevas tareas y personalizar cada hito cuando quieras.
-              </p>
-              
-              <div className="flex overflow-x-auto pb-4 gap-8 custom-scrollbar">
-                {plantillaAsociada.hitos.map((hito: any, i: number) => {
-                  const tag = i === 0 ? "INICIO" : `+${hito.tareas[0]?.dia_relativo_tp || 0} Días`;
-                  const tagBg = i === 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground border border-border/50";
-                  
-                  return (
-                    <div key={hito.id_hito_plantilla} className="min-w-[280px] flex flex-col relative">
-                      {i !== plantillaAsociada.hitos.length - 1 && (
-                        <div className="absolute top-[1.35rem] left-[4rem] right-[-2rem] h-[2px] bg-border -z-10" />
-                      )}
-                      
-                      <div className="flex flex-col items-center self-start mb-4">
-                        <div className="flex items-center justify-center w-11 h-11 rounded-full bg-muted border-[3px] border-card text-primary/70 mb-2">
-                          <HugeiconsIcon icon={Plant01Icon} className="size-5" strokeWidth={1.5} /> 
+          {asignaciones.map((asignacion, aIdx) => {
+            const variedadObj = variedadesDisponibles.find(v => v.id_variedad === asignacion.id_variedad);
+            const plantillaResuelta = resolverPlantillaParaVariedad(asignacion.id_variedad, planPreview?.plantillas || []);
+
+            if (!plantillaResuelta) return null;
+
+            return (
+              <section key={aIdx} className="bg-card border border-border rounded-2xl p-6 shadow-sm overflow-hidden">
+                <div className="flex items-center gap-2 mb-2 text-primary">
+                  <HugeiconsIcon icon={FlowSquareIcon} className="size-5" strokeWidth={2} />
+                  <h2 className="text-lg font-bold">Cronograma — {variedadObj?.nombre_variedad || 'Desconocida'}</h2>
+                </div>
+                <p className="text-sm text-muted-foreground mb-8">
+                  Este es el cronograma base sugerido para esta variedad.
+                </p>
+                
+                <div className="flex overflow-x-auto pb-4 gap-8 custom-scrollbar">
+                  {plantillaResuelta.hitos.map((hito: any, i: number) => {
+                    const tag = i === 0 ? "INICIO" : `+${hito.tareas[0]?.dia_relativo_tp || 0} Días`;
+                    const tagBg = i === 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground border border-border/50";
+                    
+                    return (
+                      <div key={hito.id_hito_plantilla} className="min-w-[280px] flex flex-col relative">
+                        {i !== plantillaResuelta.hitos.length - 1 && (
+                          <div className="absolute top-[1.35rem] left-[4rem] right-[-2rem] h-[2px] bg-border -z-10" />
+                        )}
+                        
+                        <div className="flex flex-col items-center self-start mb-4">
+                          <div className="flex items-center justify-center w-11 h-11 rounded-full bg-muted border-[3px] border-card text-primary/70 mb-2">
+                            <HugeiconsIcon icon={Plant01Icon} className="size-5" strokeWidth={1.5} /> 
+                          </div>
+                          <div className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${tagBg}`}>
+                            {tag}
+                          </div>
                         </div>
-                        <div className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${tagBg}`}>
-                          {tag}
-                        </div>
-                      </div>
-                      
-                      <h3 className="font-bold text-base mb-1">{hito.nombre_hpb}</h3>
-                      <p className="text-xs text-muted-foreground mb-4 line-clamp-1">{hito.tareas[0]?.descripcion_tp || 'Actividades de campo'}</p>
-                      
-                      <div className="space-y-2">
-                        {hito.tareas.map((tarea: any) => {
-                          const isActive = tareasActivas.has(tarea.id_tarea_plantilla);
-                          return (
+                        
+                        <h3 className="font-bold text-base mb-1">{hito.nombre_hpb}</h3>
+                        <p className="text-xs text-muted-foreground mb-4 line-clamp-1">{hito.tareas[0]?.descripcion_tp || 'Actividades de campo'}</p>
+                        
+                        <div className="space-y-2">
+                          {hito.tareas.map((tarea: any) => (
                             <div 
                               key={tarea.id_tarea_plantilla} 
-                              className="flex items-start gap-2 cursor-pointer group"
-                              onClick={() => toggleTarea(tarea.id_tarea_plantilla)}
+                              className="flex items-start gap-2"
                             >
-                              <div className={`mt-[2px] w-4 h-4 rounded border flex items-center justify-center transition-colors ${isActive ? 'bg-primary border-primary text-primary-foreground' : 'border-input bg-background group-hover:border-primary/50'}`}>
-                                {isActive && <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-3" strokeWidth={2.5} />}
-                              </div>
-                              <span className={`text-sm ${isActive ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                                {tarea.nombre_tipo_tarea}
-                              </span>
+                              <div className="w-1.5 h-1.5 rounded-full bg-primary/40 mt-1.5 shrink-0" />
+                              <p className="text-[13px] text-muted-foreground leading-snug">{tarea.descripcion_tp || tarea.nombre_tp}</p>
                             </div>
-                          );
-                        })}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
 
           {plantillaAsociada && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -504,8 +507,20 @@ export default function GenerarPlanAccionPage() {
           </div>
           )}
 
-          {plantillaAsociada && (
+          {asignaciones.length > 0 && (
             <section className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+              <div className="flex flex-wrap gap-4 mb-4">
+                {asignaciones.map((a, idx) => {
+                  const variedadObj = variedadesDisponibles.find(v => v.id_variedad === a.id_variedad);
+                  const colorClass = CALENDAR_COLORS[idx % CALENDAR_COLORS.length].legend;
+                  return (
+                    <div key={idx} className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${colorClass}`} />
+                      <span className="text-xs font-semibold text-muted-foreground">{variedadObj?.nombre_variedad || 'Desconocida'}</span>
+                    </div>
+                  );
+                })}
+              </div>
               <CalendarioPlanMensual
                 mesVisible={mesVisible}
                 onCambiarMes={setMesVisible}

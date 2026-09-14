@@ -57,7 +57,8 @@ export function CronogramaPlanAccion({
   const [hitoDestino, setHitoDestino] = useState<HitoPlanAccion | null>(null);
   const [tareaEdicion, setTareaEdicion] = useState<TareaPlanAccion | null>(null);
   const [tareaAEliminar, setTareaAEliminar] = useState<TareaPlanAccion | null>(null);
-  const [modalCierre, setModalCierre] = useState(false);
+  const [tareaAConfirmar, setTareaAConfirmar] = useState<TareaPlanAccion | null>(null);
+  const [isCerrandoPlan, setIsCerrandoPlan] = useState(false);
   const [confirmacionPlan, setConfirmacionPlan] = useState<EstadoPlanAccionManual | null>(null);
 
   const crearTarea = useCrearTareaPlan(idPlanAccion, idParcela, () => setHitoDestino(null));
@@ -86,10 +87,24 @@ export function CronogramaPlanAccion({
   const planActivo = plan.estado === 'Activo';
   const hitos = [...plan.hitos].sort((a, b) => a.orden_hito - b.orden_hito);
 
+  const esLaUltimaPendiente = (tareaActual: TareaPlanAccion) => {
+    if (!plan) return false;
+    let pendientes = 0;
+    plan.hitos.forEach(h => {
+      h.tareas.forEach(t => {
+        if (t.id_tarea !== tareaActual.id_tarea && t.estado !== 'Completado') {
+          pendientes++;
+        }
+      });
+    });
+    return pendientes === 0;
+  };
+
   const handleCambioEstado = async (tarea: TareaPlanAccion, estado: EstadoTareaPlan) => {
-    const result = await cambiarEstadoTarea.mutateAsync({ id_tarea: tarea.id_tarea, estado });
-    if (result.todas_tareas_completadas) {
-      setModalCierre(true);
+    if (estado === 'Completado' && esLaUltimaPendiente(tarea)) {
+      setTareaAConfirmar(tarea);
+    } else {
+      await cambiarEstadoTarea.mutateAsync({ id_tarea: tarea.id_tarea, estado });
     }
   };
 
@@ -292,21 +307,42 @@ export function CronogramaPlanAccion({
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={modalCierre} onOpenChange={setModalCierre}>
+      <AlertDialog 
+        open={tareaAConfirmar != null} 
+        onOpenChange={(open) => {
+          if (!open && !isCerrandoPlan) setTareaAConfirmar(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Has finalizado correctamente este cultivo</AlertDialogTitle>
+            <AlertDialogTitle>¿Confirmás que completaste la última tarea de este cultivo?</AlertDialogTitle>
             <AlertDialogDescription>
-              Todas las tareas del plan quedaron completadas. Al aceptar, el cultivo pasa al historial.
+              Al aceptar, esta tarea pasará a completada y el cultivo finalizará, pasando al historial.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Seguir revisando</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => cambiarEstadoPlan.mutate('Finalizado')}
+            <AlertDialogCancel disabled={isCerrandoPlan}>Seguir revisando</AlertDialogCancel>
+            <Button
+              disabled={isCerrandoPlan}
+              onClick={async () => {
+                if (!tareaAConfirmar) return;
+                setIsCerrandoPlan(true);
+                try {
+                  await cambiarEstadoTarea.mutateAsync({ 
+                    id_tarea: tareaAConfirmar.id_tarea, 
+                    estado: 'Completado' 
+                  });
+                  await cambiarEstadoPlan.mutateAsync('Finalizado');
+                  setTareaAConfirmar(null);
+                } catch (error) {
+                  // Manejado por hooks
+                } finally {
+                  setIsCerrandoPlan(false);
+                }
+              }}
             >
-              Finalizar cultivo
-            </AlertDialogAction>
+              {isCerrandoPlan ? 'Finalizando...' : 'Sí, finalizar'}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
