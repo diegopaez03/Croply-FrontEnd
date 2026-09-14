@@ -7,11 +7,11 @@ export interface EventoPlanCalendario {
   titulo: string;
   dia_relativo: number;
   color?: string;
-  idVariedad?: number;
+  idVariedad?: number | null;
 }
 
 export function eventosDesdeHitos(
-  fuentes: { hitos: HitoPlantillaDetalle[], color: string, idVariedad: number, label: string }[],
+  fuentes: { hitos: HitoPlantillaDetalle[], color: string, idVariedad: number | null, label: string }[],
   fechaSiembra: Date,
 ): EventoPlanCalendario[] {
   const origen = startOfDay(fechaSiembra);

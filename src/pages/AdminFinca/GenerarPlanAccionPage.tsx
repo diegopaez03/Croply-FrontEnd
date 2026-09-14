@@ -111,6 +111,8 @@ export default function GenerarPlanAccionPage() {
         replace([{ id_variedad: initVariedad, superficie_asignada: 0 }]);
       } else if (detalle.variedades.length > 0) {
         replace([{ id_variedad: detalle.variedades[0].id_variedad, superficie_asignada: 0 }]);
+      } else {
+        replace([{ id_variedad: null, superficie_asignada: 0 }]);
       }
     }
   }, [detalle, replace, asignacionFields.length, searchParams]);
@@ -142,7 +144,8 @@ export default function GenerarPlanAccionPage() {
     { event: 'border-l-[3px] border-l-chart-5 bg-muted/30 text-foreground', legend: 'bg-chart-5' },
   ];
 
-  const resolverPlantillaParaVariedad = (id_variedad: number, plantillas: any[]) => {
+  const resolverPlantillaParaVariedad = (id_variedad: number | null, plantillas: any[]) => {
+    if (id_variedad == null) return plantillas[0];
     return plantillas.find(p => p.variedades.some((v: any) => v.id_variedad === id_variedad)) || plantillas[0];
   };
 
@@ -247,21 +250,27 @@ export default function GenerarPlanAccionPage() {
                     render={({ field: selectField }) => (
                       <FormItem>
                         <FormLabel className="text-muted-foreground font-medium text-xs">Variedad</FormLabel>
-                        <Select 
-                          onValueChange={(val) => selectField.onChange(Number(val))} 
-                          value={selectField.value ? String(selectField.value) : undefined}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="bg-background border-border h-11">
-                              <SelectValue placeholder="Seleccionar..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {variedadesDisponibles.map((v: any) => (
-                              <SelectItem key={v.id_variedad} value={String(v.id_variedad)}>{v.nombre_variedad}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {variedadesDisponibles.length === 0 ? (
+                          <div className="bg-muted border border-border h-11 px-3 rounded-md flex items-center text-sm text-foreground font-medium">
+                            {detalle.nombre_cultivo_base}
+                          </div>
+                        ) : (
+                          <Select 
+                            onValueChange={(val) => selectField.onChange(Number(val))} 
+                            value={selectField.value ? String(selectField.value) : undefined}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="bg-background border-border h-11">
+                                <SelectValue placeholder="Seleccionar..." />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {variedadesDisponibles.map((v: any) => (
+                                <SelectItem key={v.id_variedad} value={String(v.id_variedad)}>{v.nombre_variedad}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}

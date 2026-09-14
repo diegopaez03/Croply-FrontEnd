@@ -326,7 +326,10 @@ export const fincaCrearSchema = z.object({
 export type FincaCrearFormValues = z.infer<typeof fincaCrearSchema>;
 
 export const asignacionVariedadSchema = z.object({
-  id_variedad: z.coerce.number().min(1, 'Obligatorio'),
+  id_variedad: z.preprocess(
+    (val) => (val === null || val === undefined || val === '' ? null : Number(val)),
+    z.number().nullable()
+  ),
   superficie_asignada: z.coerce.number().min(0.01, 'Debe ser mayor a 0'),
 });
 
