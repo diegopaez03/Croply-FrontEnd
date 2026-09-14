@@ -179,7 +179,7 @@ export default function DashboardAdminFincaPage() {
             </CardHeader>
 
             {parcelaResumen && !loadingParcela && (
-              <CardContent className="flex flex-col gap-6 flex-1">
+              <CardContent className="flex flex-col gap-4 flex-1">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
                     <span className="text-xs text-muted-foreground flex items-center">
@@ -203,7 +203,7 @@ export default function DashboardAdminFincaPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 mt-auto">
+                <div className="flex flex-col gap-2 mt-auto">
                   <div className="bg-primary/5 border border-primary/20 border-dashed rounded-lg p-4 flex flex-col items-center justify-center min-h-[70px]">
                     <span className="text-sm font-semibold text-foreground text-center">---</span>
                     <span className="font-mono text-[10px] text-primary/80 text-center mt-1">// TODO: EP-07 / HU-NA-03 Recomendación IA</span>

@@ -154,7 +154,7 @@ export function CronogramaPlanAccion({
           return (
             <div 
               key={hito.id_hito_real} 
-              className="w-32 shrink-0 flex flex-col items-center relative cursor-pointer group"
+              className="w-48 shrink-0 flex flex-col items-center relative cursor-pointer group"
               onClick={() => setExpandedHitoId(hito.id_hito_real)}
             >
               {i !== hitos.length - 1 && (

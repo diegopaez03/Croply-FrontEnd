@@ -101,15 +101,19 @@ export default function GenerarPlanAccionPage() {
     }
   }, [planPreview?.superficie_disponible_parcela, form]);
 
-  // Si no había asignaciones y el preview carga las variedades de la plantilla, agregar la primera
+  // Si no había asignaciones, agregar la primera basada en la URL o la primera disponible del catálogo
   useEffect(() => {
-    if (planPreview && planPreview.plantillas.length > 0 && asignacionFields.length === 0) {
-      const p = planPreview.plantillas[0];
-      if (p.variedades.length > 0) {
-        replace([{ id_variedad: p.variedades[0].id_variedad, superficie_asignada: 0 }]);
+    if (detalle?.variedades && asignacionFields.length === 0) {
+      const initVariedad = searchParams.get('variedad') ? Number(searchParams.get('variedad')) : undefined;
+      const isValidInit = initVariedad != null && detalle.variedades.some((v: any) => v.id_variedad === initVariedad);
+
+      if (isValidInit) {
+        replace([{ id_variedad: initVariedad, superficie_asignada: 0 }]);
+      } else if (detalle.variedades.length > 0) {
+        replace([{ id_variedad: detalle.variedades[0].id_variedad, superficie_asignada: 0 }]);
       }
     }
-  }, [planPreview, replace, asignacionFields.length]);
+  }, [detalle, replace, asignacionFields.length, searchParams]);
 
   useEffect(() => {
     if (error) {
