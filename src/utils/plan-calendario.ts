@@ -6,24 +6,30 @@ export interface EventoPlanCalendario {
   clave: string;
   titulo: string;
   dia_relativo: number;
+  color?: string;
+  idVariedad?: number | null;
 }
 
 export function eventosDesdeHitos(
-  hitos: HitoPlantillaDetalle[],
+  fuentes: { hitos: HitoPlantillaDetalle[], color: string, idVariedad: number | null, label: string }[],
   fechaSiembra: Date,
 ): EventoPlanCalendario[] {
   const origen = startOfDay(fechaSiembra);
   const eventos: EventoPlanCalendario[] = [];
 
-  for (const hito of hitos) {
-    for (const tarea of hito.tareas) {
-      const fecha = addDays(origen, tarea.dia_relativo_tp);
-      eventos.push({
-        fecha,
-        clave: format(fecha, 'yyyy-MM-dd'),
-        titulo: tarea.descripcion_tp || hito.nombre_hpb,
-        dia_relativo: tarea.dia_relativo_tp,
-      });
+  for (const fuente of fuentes) {
+    for (const hito of fuente.hitos) {
+      for (const tarea of hito.tareas) {
+        const fecha = addDays(origen, tarea.dia_relativo_tp);
+        eventos.push({
+          fecha,
+          clave: format(fecha, 'yyyy-MM-dd'),
+          titulo: tarea.descripcion_tp || hito.nombre_hpb,
+          dia_relativo: tarea.dia_relativo_tp,
+          color: fuente.color,
+          idVariedad: fuente.idVariedad,
+        });
+      }
     }
   }
 

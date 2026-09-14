@@ -3,17 +3,15 @@ import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ArrowLeft01Icon,
-  Calendar01Icon,
-  Clock01Icon,
   File01Icon,
   InformationCircleIcon,
   Note01Icon,
   Plant01Icon,
-  SparklesIcon,
+  Rocket01Icon,
 } from '@hugeicons/core-free-icons';
 import { useCultivoBase } from '@/hooks/useCultivosBase';
 import { usePlantillaBase } from '@/hooks/usePlantillasBase';
-import { formatEpocaCultivo, formatFormaSiembra } from '@/utils/formatters';
+import { formatFormaSiembra } from '@/utils/formatters';
 import { handleFormError } from '@/utils/errorHandler';
 import { idPlantillaParaVariedad } from '@/utils/resolver-plantilla';
 import { CultivoImagen } from '@/components/shared/CultivoImagen';
@@ -92,26 +90,20 @@ export default function CultivoBibliotecaDetallePage() {
     );
   }
 
+  const variedadSeleccionada = detalle.variedades.find((v) => v.id_variedad === idVariedad) || detalle.variedades[0];
+
   const datosBase = [
     {
-      icon: Calendar01Icon,
-      label: 'Temporada',
-      value: formatEpocaCultivo(detalle.epoca_cultivo),
+      icon: Note01Icon,
+      label: 'Distancia Recomendada',
+      value: variedadSeleccionada?.distancia_plantacion || 'No especificada',
+      subtext: 'Marco de plantación óptimo',
     },
     {
       icon: Plant01Icon,
-      label: 'Forma de siembra',
+      label: 'Método de Siembra',
       value: formatFormaSiembra(detalle.forma_siembra),
-    },
-    {
-      icon: Calendar01Icon,
-      label: 'Meses de siembra',
-      value: detalle.mes_siembra,
-    },
-    {
-      icon: Clock01Icon,
-      label: 'Ciclo productivo',
-      value: detalle.ciclo_productivo_cb,
+      subtext: 'Práctica sugerida',
     },
   ];
 
@@ -148,23 +140,29 @@ export default function CultivoBibliotecaDetallePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_17rem] gap-6 mb-6">
         <section className="bg-card border border-border rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <HugeiconsIcon icon={Note01Icon} className="size-5 text-primary" />
-            <h2 className="text-lg font-semibold">Ficha técnica</h2>
+          <div className="flex items-center justify-between gap-2 mb-5">
+            <div className="flex items-center gap-2">
+              <HugeiconsIcon icon={Note01Icon} className="size-5 text-primary" />
+              <h2 className="text-lg font-semibold">Ficha técnica</h2>
+            </div>
+            <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-[11px] font-bold tracking-wide">
+              Datos INTA
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             {datosBase.map((dato) => (
               <div
                 key={dato.label}
-                className="flex items-start gap-3 rounded-xl border border-border/70 bg-[#FBF9F5] px-4 py-3"
+                className="flex items-start gap-4 rounded-xl border border-border/70 bg-[#FBF9F5] px-4 py-4"
               >
-                <div className="size-9 rounded-lg bg-white border border-border/60 flex items-center justify-center text-primary shrink-0">
+                <div className="size-10 rounded-lg bg-white border border-border/60 flex items-center justify-center text-primary shrink-0">
                   <HugeiconsIcon icon={dato.icon} className="size-5" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">{dato.label}</p>
-                  <p className="font-semibold text-foreground">{dato.value}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{dato.label}</p>
+                  <p className="font-bold text-foreground text-sm mt-0.5">{dato.value}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{dato.subtext}</p>
                 </div>
               </div>
             ))}
@@ -191,22 +189,24 @@ export default function CultivoBibliotecaDetallePage() {
           )}
         </section>
 
-        <aside className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center text-center">
-          <div className="size-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4">
-            <HugeiconsIcon icon={Plant01Icon} className="size-7" />
+        <aside className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center text-center justify-between">
+          <div className="flex flex-col items-center">
+            <div className="size-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-6 mt-4">
+              <HugeiconsIcon icon={Plant01Icon} className="size-7" />
+            </div>
+            <h2 className="text-lg font-bold mb-3">Plan de Trabajo del Cultivo</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Vinculá este cultivo a un plan de trabajo. Al hacerlo, se programarán automáticamente las
+              tareas sugeridas para su cuidado en el calendario.
+            </p>
           </div>
-          <h2 className="text-lg font-semibold mb-2">Plan de trabajo del cultivo</h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            Vinculá este cultivo a un plan de trabajo. Al hacerlo, se programarán automáticamente las
-            tareas sugeridas para su cuidado en el calendario.
-          </p>
           <button
             type="button"
             disabled={idPlantilla == null}
             onClick={irAGenerarPlan}
-            className="mt-auto w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground font-semibold text-sm px-4 py-3 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground font-bold text-sm px-4 py-3.5 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed mt-8"
           >
-            <HugeiconsIcon icon={SparklesIcon} className="size-4" />
+            <HugeiconsIcon icon={Rocket01Icon} className="size-5" />
             Asociar cultivo y Plan de acción
           </button>
         </aside>
@@ -296,8 +296,8 @@ function FilaVariedad({
           </p>
         </div>
         <div className="text-right shrink-0">
-          <p className="font-semibold text-foreground">{variedad.dias_a_cosecha} días</p>
-          <p className="text-xs text-muted-foreground">A cosecha</p>
+          <p className="text-lg font-bold text-primary">{variedad.dias_a_cosecha} días</p>
+          <p className="text-[11px] text-muted-foreground font-medium">A cosecha</p>
         </div>
       </button>
     </li>

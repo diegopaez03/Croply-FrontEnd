@@ -15,6 +15,8 @@ import {
   QRGenerarResponse,
   QRConsultarResponse
 } from '../types/fincas.types';
+import { MonitoreoSensoresResponse } from '../types/monitoreoSensores.types';
+import { ClimaResponse } from '../types/clima.types';
 import { mockUsuariosCroply } from './usuarios.service';
 import { mockTiposSensor } from './tiposSensor.service';
 
@@ -51,7 +53,7 @@ export let mockFincas: FincaDetalle[] = [
         superficie_parcela: 50.5,
         controladores: [
           {
-            id_controlador_sensores: 7,
+            id_controlador_sensor: 7,
             nombre_controlador: 'Controlador Norte',
             ip_controlador: '192.168.1.10',
             estado_controlador: 'Transmitiendo',
@@ -75,7 +77,7 @@ export let mockFincas: FincaDetalle[] = [
         superficie_parcela: 100,
         controladores: [
           {
-            id_controlador_sensores: 8,
+            id_controlador_sensor: 8,
             nombre_controlador: 'Controlador Sur',
             ip_controlador: '192.168.1.11',
             estado_controlador: 'Sin_senal',
@@ -118,6 +120,79 @@ let nextFincaId = 3;
 // ============================================================================
 
 export const fincasService = {
+
+  getMiFincaList: async () => {
+    if (import.meta.env.VITE_USE_MOCKS === 'true') {
+      return new Promise<{ fincas: { id_finca: number; nombre_finca: string }[] }>((resolve) => {
+        setTimeout(() => {
+          const activas = mockFincas
+            .filter(f => f.estado === 'Activo')
+            .map(f => ({ id_finca: f.id_finca, nombre_finca: f.nombre_finca }));
+          resolve({ fincas: activas });
+        }, 500);
+      });
+    }
+    const response = await apiClient.get('/mi-finca/fincas');
+    return response.data;
+  },
+
+  getMiFincaResumen: async (id_finca: number) => {
+    if (import.meta.env.VITE_USE_MOCKS === 'true') {
+      return new Promise<any>((resolve, reject) => {
+        setTimeout(() => {
+          const finca = mockFincas.find(f => f.id_finca === id_finca);
+          if (!finca || finca.estado !== 'Activo') {
+            return reject(new Error('FINCA_NOT_AVAILABLE'));
+          }
+          resolve({
+            id_finca: finca.id_finca,
+            nombre_finca: finca.nombre_finca,
+            parcelas: finca.parcelas.map(p => ({
+              id_parcela: p.id_parcela,
+              nombre_parcela: p.nombre_parcela,
+              estado_parcela: p.estado_parcela
+            }))
+          });
+        }, 500);
+      });
+    }
+    const response = await apiClient.get(`/fincas/${id_finca}/resumen`);
+    return response.data;
+  },
+
+  getParcelaResumenDynamic: async (id_parcela: number) => {
+    if (import.meta.env.VITE_USE_MOCKS === 'true') {
+      return new Promise<any>((resolve, reject) => {
+        setTimeout(() => {
+          let foundParcela: any = null;
+          for (const f of mockFincas) {
+            const p = f.parcelas.find(x => x.id_parcela === id_parcela);
+            if (p) { foundParcela = p; break; }
+          }
+          if (!foundParcela) return reject(new Error('Not found'));
+          
+          const cultivosActivos = foundParcela.cultivos_asignados ? foundParcela.cultivos_asignados.filter((c: any) => c.estado === 'Activo' || !c.estado) : [];
+          const hasCultivo = cultivosActivos.length > 0;
+          const cultivoActual = hasCultivo ? cultivosActivos[0] : null;
+
+          resolve({
+            id_parcela: foundParcela.id_parcela,
+            nombre_parcela: foundParcela.nombre_parcela,
+            estado_parcela: foundParcela.estado_parcela,
+            cultivo: cultivoActual ? {
+              nombre_cultivo_base: cultivoActual.nombre_cultivo_base,
+              nombre_variedad: cultivoActual.nombre_variedad,
+              superficie_ocupada_pa: cultivoActual.superficie_asignada
+            } : null,
+            recomendacion_ia_resumen: null
+          });
+        }, 500);
+      });
+    }
+    const response = await apiClient.get(`/parcelas/${id_parcela}/resumen`);
+    return response.data;
+  },
+
   getFincas: async (page = 1, pageSize = 10, estado?: string, search?: string): Promise<FincasListResponse> => {
     if (import.meta.env.VITE_USE_MOCKS === 'true') {
       return new Promise((resolve) => {
@@ -207,9 +282,24 @@ export const fincasService = {
             const p = finca.parcelas.find((px) => px.id_parcela === id_parcela);
             if (p) {
               return resolve({ 
-                ...p, 
+                id_parcela: p.id_parcela,
                 id_finca: finca.id_finca,
-                cultivos_asignados: p.cultivos_asignados || []
+                nombre_parcela: p.nombre_parcela,
+                estado_parcela: p.estado_parcela,
+                superficie_parcela: p.superficie_parcela,
+                cultivos: (p.cultivos_asignados || []).map((c: any) => ({
+                  id_plan_accion: c.id_plan_accion || 999,
+                  id_cultivo_base: c.id_cultivo_base || 1,
+                  nombre_cultivo_base: c.nombre_cultivo_base,
+                  id_variedad: c.id_variedad || null,
+                  nombre_variedad: c.nombre_variedad,
+                  superficie_ocupada_pa: c.superficie_asignada,
+                  fecha_inicio_pa: c.fecha_inicio || '2026-09-15',
+                  estado: c.estado || 'Activo'
+                })).filter((c: any) => c.estado === 'Activo'),
+                sensores: [],
+                fecha_generacion_qr: null,
+                url_acceso_qr: null
               } as ParcelaByIdResponse);
             }
           }
@@ -276,7 +366,7 @@ export const fincasService = {
             superficie_parcela: p.superficie_parcela,
             estado_parcela: 'Activa',
             controladores: (p.controladores || []).map((c, cIdx) => ({
-              id_controlador_sensores: Date.now() + 1000 + cIdx,
+              id_controlador_sensor: Date.now() + 1000 + cIdx,
               nombre_controlador: c.nombre_controlador,
               ip_controlador: c.ip_controlador,
               estado_controlador: 'Transmitiendo',
@@ -479,7 +569,7 @@ export const fincasService = {
             estado_parcela: 'Activo',
             superficie_parcela: data.superficie_parcela,
             controladores: (data.controladores || []).map(c => ({
-              id_controlador_sensores: Date.now() + Math.floor(Math.random() * 1000),
+              id_controlador_sensor: Date.now() + Math.floor(Math.random() * 1000),
               nombre_controlador: c.nombre_controlador,
               ip_controlador: c.ip_controlador,
               estado_controlador: 'Transmitiendo',
@@ -558,7 +648,7 @@ export const fincasService = {
             nombre_parcela: data.nombre_parcela,
             superficie_parcela: data.superficie_parcela,
             controladores: (data.controladores || []).map(c => ({
-              id_controlador_sensores: c.id_controlador_sensores || Date.now() + Math.floor(Math.random() * 1000),
+              id_controlador_sensor: c.id_controlador_sensor || Date.now() + Math.floor(Math.random() * 1000),
               nombre_controlador: c.nombre_controlador,
               ip_controlador: c.ip_controlador,
               estado_controlador: 'Transmitiendo',
@@ -609,50 +699,47 @@ export const fincasService = {
     if (import.meta.env.VITE_USE_MOCKS === 'true') {
       return new Promise((resolve) => {
         setTimeout(() => {
-          if (id_parcela === 101) {
-            resolve({
-              historial: [
-                {
-                  id_plan_accion: 10,
-                  nombre_cultivo_base: 'Tomate',
-                  nombre_variedad: 'Perita',
-                  superficie_ocupada_pa: 20,
-                  fecha_inicio_pa: '2023-08-01',
-                  fecha_fin_pa: '2023-12-15',
-                  estado: 'Finalizado'
-                },
-                {
-                  id_plan_accion: 11,
-                  nombre_cultivo_base: 'Zanahoria',
-                  nombre_variedad: 'Criolla',
-                  superficie_ocupada_pa: 15,
-                  fecha_inicio_pa: '2023-01-10',
-                  fecha_fin_pa: '2023-04-20',
-                  estado: 'FinalizadoPorContingencia'
-                },
-                {
-                  id_plan_accion: 12,
-                  nombre_cultivo_base: 'Papa',
-                  nombre_variedad: 'Spunta',
-                  superficie_ocupada_pa: 25,
-                  fecha_inicio_pa: '2022-09-01',
-                  fecha_fin_pa: '2022-12-10',
-                  estado: 'Inactivado'
-                },
-                {
-                  id_plan_accion: 13,
-                  nombre_cultivo_base: 'Lechuga',
-                  nombre_variedad: 'Mantecosa',
-                  superficie_ocupada_pa: 10,
-                  fecha_inicio_pa: '2024-02-01',
-                  fecha_fin_pa: '2024-03-15',
-                  estado: 'Cancelado'
-                }
-              ]
-            });
-          } else {
-            resolve({ historial: [] });
+          let historial: any[] = [];
+          for (const f of mockFincas) {
+            const p = f.parcelas.find(px => px.id_parcela === id_parcela);
+            if (p && p.cultivos_asignados) {
+              historial = p.cultivos_asignados
+                .filter(c => ['Finalizado', 'Cancelado', 'FinalizadoPorContingencia', 'Inactivado'].includes(c.estado || ''))
+                .map(c => ({
+                  id_plan_accion: c.id_plan_accion || 999,
+                  nombre_cultivo_base: c.nombre_cultivo_base,
+                  nombre_variedad: c.nombre_variedad,
+                  superficie_ocupada_pa: c.superficie_asignada,
+                  fecha_inicio_pa: c.fecha_inicio || '2023-01-01',
+                  fecha_fin_pa: new Date().toISOString().slice(0, 10),
+                  estado: c.estado
+                }));
+            }
           }
+          // Si no hay nada dinámico y es la 101, devolvemos el mock estático
+          if (historial.length === 0 && id_parcela === 101) {
+            historial = [
+              {
+                id_plan_accion: 10,
+                nombre_cultivo_base: 'Tomate',
+                nombre_variedad: 'Perita',
+                superficie_ocupada_pa: 20,
+                fecha_inicio_pa: '2023-08-01',
+                fecha_fin_pa: '2023-12-15',
+                estado: 'Finalizado'
+              },
+              {
+                id_plan_accion: 11,
+                nombre_cultivo_base: 'Zanahoria',
+                nombre_variedad: 'Criolla',
+                superficie_ocupada_pa: 15,
+                fecha_inicio_pa: '2023-01-10',
+                fecha_fin_pa: '2023-04-20',
+                estado: 'FinalizadoPorContingencia'
+              }
+            ];
+          }
+          resolve({ historial });
         }, 500);
       });
     }
@@ -717,25 +804,162 @@ export const fincasService = {
     }
     const response = await apiClient.get<QRConsultarResponse>(`/parcelas/${id_parcela}/codigo-qr`);
     return response.data;
+  },
+
+  getMonitoreoSensoresParcela: async (id_parcela: number): Promise<MonitoreoSensoresResponse> => {
+    if (import.meta.env.VITE_USE_MOCKS === 'true') {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          let found = null;
+          for (const finca of mockFincas) {
+            const p = finca.parcelas.find((px: any) => px.id_parcela === id_parcela);
+            if (p) { 
+              found = p;
+              break;
+            }
+          }
+          if (found) {
+            const sensores: any[] = [];
+            found.controladores.forEach((c: any) => {
+              c.sensores.forEach((s: any) => {
+                sensores.push({
+                  id_sensor: s.id_sensor,
+                  nombre_tipo_sensor: s.nombre_tipo_sensor,
+                  unidad_medida_ts: s.codigo_tipo_sensor === 'PH' ? 'pH' : (s.codigo_tipo_sensor === 'HUM' ? '%' : ''),
+                  ultimo_valor: s.ultimo_valor,
+                  fecha_ultima_lectura: s.fecha_ultima_lectura,
+                  estado_senal: s.estado_senal
+                });
+              });
+            });
+
+            if (sensores.length === 0) {
+              return resolve({ estado_general: null, sensores: [] });
+            }
+
+            const todosSinSenal = sensores.every(s => s.estado_senal === 'Sin_senal');
+            resolve({
+              estado_general: todosSinSenal ? 'Sin_senal' : 'Transmitiendo',
+              sensores
+            });
+          } else {
+            const err = new AxiosError('Not found');
+            err.response = {
+              data: { statusCode: 404, errorCode: 'RESOURCE_NOT_FOUND', message: 'Parcela no encontrada' },
+              status: 404,
+              statusText: 'Not Found',
+              headers: {},
+              config: {} as any,
+            };
+            reject(err);
+          }
+        }, 500);
+      });
+    }
+    const response = await apiClient.get<MonitoreoSensoresResponse>(`/parcelas/${id_parcela}/monitoreo-sensores`);
+    return response.data;
+  },
+
+  getClimaFinca: async (id_finca: number): Promise<ClimaResponse> => {
+    if (import.meta.env.VITE_USE_MOCKS === 'true') {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          // Simulamos error 503 para la Finca 2
+          if (id_finca === 2) {
+            const err = new AxiosError('Service Unavailable');
+            err.response = {
+              data: { statusCode: 503, errorCode: 'WEATHER_SERVICE_UNAVAILABLE', message: 'Servicio meteorológico no disponible' },
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: {},
+              config: {} as any,
+            };
+            return reject(err);
+          }
+
+          const finca = mockFincas.find((f) => f.id_finca === id_finca);
+          if (!finca) {
+            const err = new AxiosError('Not found');
+            err.response = {
+              data: { statusCode: 404, errorCode: 'RESOURCE_NOT_FOUND', message: 'Finca no encontrada' },
+              status: 404,
+              statusText: 'Not Found',
+              headers: {},
+              config: {} as any,
+            };
+            return reject(err);
+          }
+
+          const hoy = new Date();
+          const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+          
+          const response: ClimaResponse = {
+            provincia: finca.provincia,
+            departamento: finca.departamento,
+            clima_actual: {
+              temperatura: 22,
+              condicion: 'Despejado'
+            },
+            pronostico: [
+              {
+                fecha: hoy.toISOString().split('T')[0],
+                dia_semana: 'Hoy',
+                es_hoy: true,
+                temperatura_max: 24,
+                temperatura_min: 15,
+                condicion: 'Despejado'
+              },
+              {
+                fecha: new Date(hoy.getTime() + 86400000).toISOString().split('T')[0],
+                dia_semana: dias[new Date(hoy.getTime() + 86400000).getDay()],
+                es_hoy: false,
+                temperatura_max: 19,
+                temperatura_min: 12,
+                condicion: 'Lluvia'
+              },
+              {
+                fecha: new Date(hoy.getTime() + 86400000 * 2).toISOString().split('T')[0],
+                dia_semana: dias[new Date(hoy.getTime() + 86400000 * 2).getDay()],
+                es_hoy: false,
+                temperatura_max: 22,
+                temperatura_min: 14,
+                condicion: 'Parcialmente nublado'
+              },
+              {
+                fecha: new Date(hoy.getTime() + 86400000 * 3).toISOString().split('T')[0],
+                dia_semana: dias[new Date(hoy.getTime() + 86400000 * 3).getDay()],
+                es_hoy: false,
+                temperatura_max: 21,
+                temperatura_min: 13,
+                condicion: 'Nublado'
+              }
+            ]
+          };
+          resolve(response);
+        }, 600);
+      });
+    }
+    const response = await apiClient.get<ClimaResponse>(`/fincas/${id_finca}/clima`);
+    return response.data;
   }
 };
 
 function mapParcelaDetalle(
-  data: ParcelaByIdResponse & { cultivos?: any[] },
+  data: any,
 ): ParcelaByIdResponse {
-  const cultivosRaw = data.cultivos_asignados ?? data.cultivos ?? [];
+  const cultivosRaw = data.cultivos ?? data.cultivos_asignados ?? [];
   return {
     ...data,
-    cultivos_asignados: cultivosRaw.map((cultivo) => ({
+    cultivos: cultivosRaw.map((cultivo: any) => ({
       id_plan_accion: cultivo.id_plan_accion,
       id_cultivo_base: cultivo.id_cultivo_base,
       nombre_cultivo_base: cultivo.nombre_cultivo_base,
-      id_variedad: cultivo.id_variedad,
-      nombre_variedad: cultivo.nombre_variedad,
-      superficie_asignada: Number(
-        cultivo.superficie_asignada ?? cultivo.superficie_ocupada_pa ?? 0,
+      id_variedad: cultivo.id_variedad ?? null,
+      nombre_variedad: cultivo.nombre_variedad ?? null,
+      superficie_ocupada_pa: Number(
+        cultivo.superficie_ocupada_pa ?? cultivo.superficie_asignada ?? 0,
       ),
-      fecha_inicio: cultivo.fecha_inicio ?? cultivo.fecha_inicio_pa ?? '',
+      fecha_inicio_pa: cultivo.fecha_inicio_pa ?? cultivo.fecha_inicio ?? '',
       estado: cultivo.estado,
     })),
   };

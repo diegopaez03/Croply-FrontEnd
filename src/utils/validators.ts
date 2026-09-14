@@ -279,7 +279,7 @@ export const sensorSchema = z.object({
 });
 
 export const controladorSchema = z.object({
-  id_controlador_sensores: z.number().optional(),
+  id_controlador_sensor: z.number().optional(),
   nombre_controlador: z.string().min(1, 'Obligatorio'),
   ip_controlador: z.string().min(1, 'Obligatorio').regex(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/, 'IP inválida'),
   sensores: z.array(sensorSchema).min(1, 'Debe agregar al menos 1 sensor'),
@@ -326,7 +326,10 @@ export const fincaCrearSchema = z.object({
 export type FincaCrearFormValues = z.infer<typeof fincaCrearSchema>;
 
 export const asignacionVariedadSchema = z.object({
-  id_variedad: z.coerce.number().min(1, 'Obligatorio'),
+  id_variedad: z.preprocess(
+    (val) => (val === null || val === undefined || val === '' ? null : Number(val)),
+    z.number().nullable()
+  ),
   superficie_asignada: z.coerce.number().min(0.01, 'Debe ser mayor a 0'),
 });
 

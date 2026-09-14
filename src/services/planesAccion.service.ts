@@ -240,6 +240,26 @@ export const planesAccionService = {
       }
       plan.estado = estado;
       plan.fecha_fin_pa = new Date().toISOString().slice(0, 10);
+
+      // Sincronizar mockFincas para que desaparezca de cultivos activos
+      if (['Finalizado', 'Cancelado', 'FinalizadoPorContingencia'].includes(estado)) {
+        for (const f of mockFincas) {
+          for (const p of f.parcelas) {
+            if (p.cultivos_asignados) {
+              const asigIndex = p.cultivos_asignados.findIndex((c: any) => c.id_plan_accion === id_plan_accion);
+              if (asigIndex !== -1) {
+                // Lo marcamos como inactivo o lo removemos según cómo lo lea useParcelaQuery
+                // Como mapParcelaDetalle lee todo cultivos_asignados, y la vista usa estado='Activo',
+                // simplemente le cambiamos el estado al cultivo dentro de mockFincas,
+                // o lo removemos de cultivos_asignados y lo mandamos a un mock_historial (si existiera).
+                // Para que desaparezca de la vista de "Cultivos", le seteamos el nuevo estado:
+                p.cultivos_asignados[asigIndex].estado = estado;
+              }
+            }
+          }
+        }
+      }
+
       return { message: 'Estado del plan de acción actualizado correctamente' };
     }
     const response = await apiClient.put<{ message: string }>(

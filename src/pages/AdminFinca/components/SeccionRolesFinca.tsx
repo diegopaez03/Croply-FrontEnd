@@ -58,31 +58,25 @@ export function SeccionRolesFinca({ idFinca }: { idFinca: number }) {
   // ==========================================================================
   const saveRolMutation = useMutation({
     mutationFn: async (values: RolFincaFormValues) => {
+      // Dejamos la validación en el frontend como check inmediato
       if (values.permisos.length === 0) {
         throw new Error("ERR_NO_PERMISSIONS");
       }
 
-      let idRolToUse: number;
-
       if (selectedRole) {
         await rolesFincaService.updateRol(idFinca, selectedRole.id_rol, {
           nombre_rol: values.nombre_rol,
-          descripcion: values.descripcion
+          descripcion: values.descripcion,
+          permisos: values.permisos,
         });
-        idRolToUse = selectedRole.id_rol;
       } else {
-        const res = await rolesFincaService.createRol(idFinca, {
+        await rolesFincaService.createRol(idFinca, {
           nombre_rol: values.nombre_rol,
-          descripcion: values.descripcion
-        }) as any;
-        idRolToUse = res.id_rol;
+          descripcion: values.descripcion,
+          permisos: values.permisos,
+        });
       }
-
-      try {
-        await rolesFincaService.asignarPermisosFinca(idFinca, idRolToUse, { permisos: values.permisos });
-      } catch (err) {
-        throw new Error("ERR_PERMISSIONS_UPDATE_FAILED");
-      }
+      
       return "Rol guardado y configurado correctamente.";
     },
     onSuccess: (message) => {
@@ -94,12 +88,10 @@ export function SeccionRolesFinca({ idFinca }: { idFinca: number }) {
       if (error?.message === "ERR_NO_PERMISSIONS") {
         toast.error("Un rol debe contener al menos un permiso habilitado.", { duration: 4000 });
         form.setError("permisos", { message: "Un rol debe contener al menos un permiso habilitado." });
-      } else if (error?.message === "ERR_PERMISSIONS_UPDATE_FAILED") {
-        toast.error("El rol se guardó pero los permisos no pudieron actualizarse, reintentá.", { duration: 5000 });
-        queryClient.invalidateQueries({ queryKey: ['rolesFinca', idFinca] });
-      } else if (error?.response?.data?.errorCode === 'ERR-01') {
-        toast.error(error.response.data.message);
-        form.setError("permisos", { message: error.response.data.message });
+      } else if (error?.response?.data?.errorCode === 'NO_PERMISSIONS_SELECTED' || error?.response?.data?.errorCode === 'ERR-01') {
+        // Manejo del error desde el backend
+        toast.error(error.response.data.message || "Un rol debe contener al menos un permiso habilitado.");
+        form.setError("permisos", { message: error.response.data.message || "Un rol debe contener al menos un permiso habilitado." });
       } else {
         handleFormError(error, form.setError);
       }

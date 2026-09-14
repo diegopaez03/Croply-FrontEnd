@@ -28,7 +28,7 @@ export interface PlanPreviewResponse {
 }
 
 export interface AsignacionVariedadRequest {
-  id_variedad: number;
+  id_variedad: number | null;
   superficie_asignada: number;
   fecha_inicio: string;
 }

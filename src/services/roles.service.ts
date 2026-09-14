@@ -458,36 +458,7 @@ export const rolesFincaService = {
     return response.data;
   },
 
-  /**
-   * Asigna permisos a un rol de finca.
-   */
-  asignarPermisosFinca: async (id_finca: number, id_rol: number, data: GuardarPermisosRequest): Promise<GuardarPermisosResponse> => {
-    if (import.meta.env.VITE_USE_MOCKS === 'true') {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (data.permisos.length === 0) {
-            const err = new AxiosError("Sin permisos seleccionados");
-            err.response = {
-              data: {
-                statusCode: 400,
-                errorCode: "ERR-01",
-                message: "Un rol debe contener al menos un permiso habilitado."
-              },
-              status: 400,
-              statusText: "Bad Request",
-              headers: {},
-              config: {} as any
-            };
-            return reject(err);
-          }
-          mockRolesPermisos[id_rol] = [...data.permisos];
-          resolve({ message: "Rol actualizado correctamente." });
-        }, 500);
-      });
-    }
-    const response = await apiClient.put<GuardarPermisosResponse>(`/fincas/${id_finca}/roles/${id_rol}/permisos`, data);
-    return response.data;
-  },
+
 
   deleteRol: async (id_finca: number, id_rol: number) => {
     if (import.meta.env.VITE_USE_MOCKS === 'true') {

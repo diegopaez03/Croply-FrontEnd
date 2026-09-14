@@ -202,3 +202,129 @@ Se ejecuta una **baja lógica**, asignando la fecha actual a `fecha_baja`
 
 > **Regla de validación para la baja:** El error `RESOURCE_IN_USE` se dispara únicamente si existe al menos un **sensor físico activo** asociado a este tipo de sensor. Si los sensores físicos vinculados fueron previamente dados de baja, se permite dar de baja el tipo de sensor sin inconvenientes.
 >
+
+## HU-IoT-02. Visualizar datos de sensores en tiempo real por parcela
+
+- **Autenticación:** Requerida — cualquier usuario con un `UsuarioFinca` activo vinculado a la finca de esa parcela (Administrador de Finca o usuario invitado con acceso). Mismo guard que el resto de los endpoints scoped a finca.
+
+> Los valores no se consultan en vivo contra el simulador en cada request — Croply
+los sincroniza en segundo plano de forma periódica y los deja persistidos. El
+frontend simplemente lee el último dato que Croply ya tiene guardado.
+> 
+
+### Consultar monitoreo de sensores de una parcela
+
+`GET /api/v1/parcelas/:id_parcela/monitoreo-sensores`
+
+```json
+{
+  "estado_general": "Transmitiendo",
+  "sensores": [
+    {
+      "id_sensor": 501,
+      "nombre_tipo_sensor": "Sensor de pH",
+      "unidad_medida_ts": "pH",
+      "ultimo_valor": 6.45,
+      "fecha_ultima_lectura": "2026-09-07T20:31:08.461603Z",
+      "estado_senal": "Transmitiendo"
+    },
+    {
+      "id_sensor": 502,
+      "nombre_tipo_sensor": "Sensor de humedad del suelo",
+      "unidad_medida_ts": "%",
+      "ultimo_valor": 38.2,
+      "fecha_ultima_lectura": "2026-09-07T19:05:11.000000Z",
+      "estado_senal": "Sin_senal"
+    }
+  ]
+}
+```
+
+> `estado_general`: `"Transmitiendo"` si **al menos uno** de los sensores de la
+parcela tiene `estado_senal: "Transmitiendo"`; `"Sin_senal"` si todos están sin
+señal. El frontend usa este campo para el badge superior de la card; los
+`estado_senal` individuales de cada sensor son para el badge de cada fila.
+`ultimo_valor` y `fecha_ultima_lectura` **se conservan** aunque el sensor esté en
+`Sin_senal` — nunca se limpian a `null` una vez que hubo una lectura real (ver
+ejemplo del sensor 502 arriba: sigue en `Sin_senal` pero mantiene su último dato).
+> 
+
+Si la parcela no tiene ningún sensor asociado:
+
+```json
+{
+  "estado_general": null,
+  "sensores": []
+}
+```
+
+> **Comportamiento Frontend:** mostrar el estado vacío definido por la HU:
+*"Esta parcela no tiene sensores asociados."*
+> 
+
+### Errores
+
+- `RESOURCE_NOT_FOUND` (`404`): **ERR-05 transversal** si `id_parcela` no existe o está dada de baja.
+
+> No hay un error específico de "simulador no disponible" en este endpoint. Si la
+sincronización en segundo plano no pudo contactar al simulador, eso ya se ve
+reflejado en `estado_senal: "Sin_senal"` de los sensores afectados — el
+frontend detecta la falla mirando ese campo, no un código de error HTTP.
+El mensaje *"No se pudo actualizar la información de los sensores. Mostrando
+los últimos datos disponibles."* que pide la HU es responsabilidad del
+frontend: se muestra cuando detecta uno o más sensores en `Sin_senal`.
+> 
+
+**La ruta** `GET /api/v1/parcelas/:id_parcela/monitoreo-sensores`  **es independiente de `GET /fincas/:id_finca`** (que sigue existiendo, de Épica 3, para la pantalla de Croply) — son dos rutas distintas, para dos pantallas distintas, aunque por debajo lean los mismos campos de `Sensor`. Así evitan que alguno de los dos asuma que son la misma cosa.
+
+## HU-IoT-03. Seleccionar finca para visualizar pronóstico meteorológico
+
+- **Autenticación:** Requerida — cualquier usuario con un `UsuarioFinca` activo vinculado a esa finca (Administrador de Finca o usuario invitado con acceso). Mismo guard que el resto de los endpoints scoped a finca. Sin permiso de catálogo nuevo.
+
+> Clima en vivo contra Open-Meteo, sin caché ni persistencia — cada llamada consulta el servicio externo con `latitud`/`longitud` de la finca. El `weather_code` de Open-Meteo se traduce a `condicion` mediante un mapeo estático dentro del módulo backend (no tabla de BD, no se expone el código crudo al frontend).
+> 
+
+### Consultar clima de una finca (actual + pronóstico de 4 días)
+
+`GET /api/v1/fincas/:id_finca/clima`
+
+json
+
+```json
+{
+  "provincia": "Mendoza",
+  "departamento": "Capital",
+  "clima_actual": {
+    "temperatura": 24.5,
+    "condicion": "Parcialmente nublado"
+  },
+  "pronostico": [
+    { "fecha": "2026-08-27", "dia_semana": "Jueves", "es_hoy": true, "temperatura_max": 24, "temperatura_min": 14, "condicion": "Parcialmente nublado" },
+    { "fecha": "2026-08-28", "dia_semana": "Viernes", "es_hoy": false, "temperatura_max": 19, "temperatura_min": 11, "condicion": "Lluvia" },
+    { "fecha": "2026-08-29", "dia_semana": "Sábado", "es_hoy": false, "temperatura_max": 21, "temperatura_min": 12, "condicion": "Nublado" },
+    { "fecha": "2026-08-30", "dia_semana": "Domingo", "es_hoy": false, "temperatura_max": 23, "temperatura_min": 13, "condicion": "Despejado" }
+  ]
+}
+```
+
+> `pronostico`: **4 entradas siempre** — hoy (`es_hoy: true`) + los 3 días posteriores. El frontend resalta el día actual usando `es_hoy`, no la posición en el array.
+`condicion`: uno de estos 11 valores cerrados, sin excepciones — `Despejado | Parcialmente nublado | Nublado | Niebla | Lluvia | Nieve | Tormenta | Tormenta eléctrica | Helada | Granizo | Temperatura elevada`. `Helada` y `Temperatura elevada` no se derivan únicamente del `weather_code` de Open-Meteo — el mapeo del backend también tiene que considerar la temperatura (ej. `temperatura <= 0` → `Helada`) como parte de la misma lógica de traducción.
+**Sin caché.** **Polling cada 30 minutos:** responsabilidad exclusiva del frontend (`refetchInterval`).
+> 
+
+### Errores
+
+**`503 Service Unavailable` — Open-Meteo no responde o devuelve error:**
+
+json
+
+```json
+{  
+"statusCode": 503,  
+"errorCode": "WEATHER_SERVICE_UNAVAILABLE",  
+"message": "No se pudo obtener la información climática en este momento."
+}
+```
+
+> El frontend muestra este mensaje de forma no bloqueante, sin ocultar el resto de la pantalla. Sin reintento automático del lado backend.
+>

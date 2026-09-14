@@ -3,20 +3,21 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { 
   ArrowLeft01Icon, 
   QrCodeIcon, 
-  Sun01Icon, 
-  DashboardSpeed01Icon, 
   AiBrain01Icon,
   NoteEditIcon,
   PlusSignIcon,
   Plant01Icon
 } from '@hugeicons/core-free-icons';
 import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
 import { useParcelaQuery, useFincaQuery, useHistorialCultivosQuery } from '../../hooks/useFincas';
 import { CultivoItemCard } from './components/CultivoItemCard';
 import { HistorialCultivoCard } from './components/HistorialCultivoCard';
 import { useState } from 'react';
 import { useGenerarQRParcela, useConsultarQRParcela } from '../../hooks/useFincas';
 import { QRModal } from './components/QRModal';
+import { CardMonitoreoSensores } from './components/CardMonitoreoSensores';
+import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
 
 export default function ParcelaDetallePage() {
   const [activeTab, setActiveTab] = useState<'cultivo' | 'historial'>('cultivo');
@@ -68,9 +69,9 @@ export default function ParcelaDetallePage() {
     );
   }
 
-  const cultivosAsignados = parcela.cultivos_asignados || [];
+  const cultivosAsignados = parcela.cultivos || [];
   const hasCultivo = cultivosAsignados.length > 0;
-  const ocupada = cultivosAsignados.reduce((acc: number, curr: any) => acc + Number(curr.superficie_asignada || 0), 0);
+  const ocupada = cultivosAsignados.reduce((acc: number, curr: any) => acc + Number(curr.superficie_ocupada_pa || 0), 0);
   const superficieDisponible = parcela.superficie_parcela - ocupada; 
   const canAsociar = superficieDisponible > 0.001;
 
@@ -114,9 +115,9 @@ export default function ParcelaDetallePage() {
               <h1 className="text-2xl font-bold text-foreground">{parcela.nombre_parcela}</h1>
               <p className="text-xs text-muted-foreground mt-0.5">Detalles en tiempo real de la parcela seleccionada</p>
             </div>
-            <span className="bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-full">
-              Activa
-            </span>
+            <Badge variant={parcela.estado_parcela === 'Inactiva' ? 'neutral' : 'success'} className="text-xs font-semibold px-3 py-1 rounded-full">
+              {parcela.estado_parcela}
+            </Badge>
           </div>
 
           <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
@@ -139,42 +140,15 @@ export default function ParcelaDetallePage() {
           </div>
         </div>
 
-        {/* Card Clima Placeholder */}
-        <div className="bg-card border border-dashed border-border rounded-2xl p-6 flex flex-col justify-between space-y-4">
-          <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <HugeiconsIcon icon={Sun01Icon} className="size-4" />
-              Pronóstico del Clima
-            </span>
-            <span className="text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground font-mono">// TODO</span>
-          </div>
-          <div className="text-center py-4 space-y-1">
-            <p className="text-xs text-muted-foreground font-medium">// TODO: HU-IoT-03 / Épica 7</p>
-            <p className="text-[11px] text-muted-foreground/70">Conexión con pronóstico meteorológico</p>
-          </div>
-          <div className="border-t border-border/50 pt-2 text-center text-[10px] text-muted-foreground">
-            Pronóstico de 3 días pendiente de integración
-          </div>
-        </div>
+        {/* Card Clima */}
+        <CardClimaFinca variant="extendida" idFinca={fincaId ?? null} />
       </div>
 
       {/* Grid media: Sensores IoT Placeholder + Recomendación IA Placeholder */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Card Sensores IoT Placeholder */}
-        <div className="lg:col-span-2 bg-card border border-dashed border-border rounded-2xl p-6 flex flex-col justify-between space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={DashboardSpeed01Icon} className="size-4 text-muted-foreground" />
-              <h3 className="font-bold text-sm text-foreground">Sensores IoT</h3>
-            </div>
-            <span className="text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground font-mono">// TODO: HU-FP-04 / HU-IoT-02</span>
-          </div>
-          <div className="py-6 text-center text-muted-foreground space-y-1">
-            <p className="text-xs font-medium">// TODO: Telemetría ambiental en tiempo real</p>
-            <p className="text-[11px] text-muted-foreground/70">Temperatura, Humedad de suelo, Radiación, Pluviómetro y pH</p>
-          </div>
-        </div>
+        {/* Card Sensores IoT */}
+        <CardMonitoreoSensores idParcela={parcela.id_parcela} />
 
         {/* Card Recomendación IA Placeholder */}
         <div className="bg-card border border-dashed border-border rounded-2xl p-6 flex flex-col justify-between space-y-4">
@@ -226,7 +200,7 @@ export default function ParcelaDetallePage() {
           <div className="flex items-center gap-3 pb-3">
             <Button
               onClick={() => navigate(`/admin-finca/biblioteca?id_finca=${fincaId}&id_parcela=${parcela.id_parcela}`)}
-              disabled={activeTab === 'historial' || !canAsociar}
+              disabled={activeTab === 'historial' || !canAsociar || parcela.estado_parcela === 'Inactiva'}
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl text-xs h-9"
             >
               <HugeiconsIcon icon={PlusSignIcon} className="size-4 mr-1.5" />
@@ -262,6 +236,7 @@ export default function ParcelaDetallePage() {
                   </p>
                 </div>
                 <Button
+                  disabled={parcela.estado_parcela === 'Inactiva' || !canAsociar}
                   onClick={() => navigate(`/admin-finca/biblioteca?id_finca=${fincaId}&id_parcela=${parcela.id_parcela}`)}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl px-6 text-sm mt-4"
                 >

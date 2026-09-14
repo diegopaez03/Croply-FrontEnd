@@ -528,7 +528,7 @@ export default function FincaDetallePage() {
 
                         {/* Controladores y sensores */}
                         {p.controladores.map((c) => (
-                          <div key={c.id_controlador_sensores} className="px-5 py-4">
+                          <div key={c.id_controlador_sensor} className="px-5 py-4">
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-semibold text-foreground">{c.nombre_controlador}</span>

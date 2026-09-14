@@ -52,11 +52,13 @@ export interface RolesFincaResponse {
 export interface CreateRolFincaRequest {
   nombre_rol: string;
   descripcion?: string;
+  permisos: number[];
 }
 
 export interface UpdateRolFincaRequest {
   nombre_rol: string;
   descripcion?: string;
+  permisos: number[];
 }
 
 export interface AsignarRolFincaRequest {

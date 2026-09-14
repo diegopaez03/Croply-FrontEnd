@@ -41,7 +41,7 @@ export function CrearEditarParcelaForm({ initialData, fincaUbicacion, onSave, on
         nombre_parcela: initialData.nombre_parcela,
         superficie_parcela: initialData.superficie_parcela || 0,
         controladores: initialData.controladores.map(c => ({
-          id_controlador_sensores: c.id_controlador_sensores,
+          id_controlador_sensor: c.id_controlador_sensor,
           nombre_controlador: c.nombre_controlador,
           ip_controlador: c.ip_controlador,
           sensores: c.sensores.map(s => {

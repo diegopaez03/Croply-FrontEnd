@@ -31,7 +31,7 @@ import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 
 const editarUsuarioSchema = z.object({
-  id_rol: z.string().min(1, 'Debe seleccionar un rol'),
+  id_rol: z.string().optional().default(''),
   estado: z.enum(['Activo', 'Inactivo', 'Pendiente'], { required_error: 'Debe seleccionar un estado' }),
 });
 
@@ -248,7 +248,7 @@ export function EditarUsuarioModal({ open, onOpenChange, usuario, context, id_fi
                       {...field}
                       disabled={isLoadingRoles || mutation.isPending}
                     >
-                      <option value="" disabled>Seleccione un rol</option>
+                      <option value="">Sin rol asignado</option>
                       {rolesData?.roles?.map((rol: any) => (
                         <option key={rol.id_rol} value={rol.id_rol}>
                           {rol.nombre_rol}

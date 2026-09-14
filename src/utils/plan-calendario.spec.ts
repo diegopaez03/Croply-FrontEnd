@@ -35,7 +35,8 @@ const hitos: HitoPlantillaDetalle[] = [
 
 describe('eventosDesdeHitos', () => {
   it('calcula fechas a partir del día de siembra', () => {
-    const eventos = eventosDesdeHitos(hitos, new Date(2026, 9, 3));
+    const fuentes = [{ hitos, color: 'bg-chart-1', idVariedad: 1, label: 'Tomate' }];
+    const eventos = eventosDesdeHitos(fuentes, new Date(2026, 9, 3));
     expect(eventos[0].clave).toBe('2026-10-03');
     expect(eventos[1].clave).toBe('2026-10-10');
     expect(eventos[1].titulo).toBe('Riego inicial');

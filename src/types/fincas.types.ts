@@ -45,7 +45,7 @@ export interface SensorResumen {
 }
 
 export interface ControladorResumen {
-  id_controlador_sensores: number;
+  id_controlador_sensor: number;
   nombre_controlador: string;
   ip_controlador: string;
   estado_controlador: string;
@@ -72,8 +72,30 @@ export interface ParcelaResumen {
   url_acceso_qr?: string | null;
 }
 
-export interface ParcelaByIdResponse extends ParcelaResumen {
+export interface ParcelaByIdResponse {
+  id_parcela: number;
   id_finca: number;
+  nombre_parcela: string;
+  estado_parcela: string;
+  superficie_parcela: number;
+  cultivos: {
+    id_plan_accion: number;
+    id_cultivo_base: number;
+    nombre_cultivo_base: string;
+    id_variedad: number | null;
+    nombre_variedad: string | null;
+    superficie_ocupada_pa: number;
+    fecha_inicio_pa: string;
+    estado: string;
+  }[];
+  sensores: {
+    id_sensor: number;
+    codigo_tipo_sensor: string;
+    nombre_tipo_sensor: string;
+    estado_senal: string;
+  }[];
+  fecha_generacion_qr?: string | null;
+  url_acceso_qr?: string | null;
 }
 
 export interface FincaDetalle {
@@ -132,7 +154,7 @@ export interface SensorPayload {
 }
 
 export interface ControladorPayload {
-  id_controlador_sensores?: number;
+  id_controlador_sensor?: number;
   nombre_controlador: string;
   ip_controlador: string;
   sensores: SensorPayload[];

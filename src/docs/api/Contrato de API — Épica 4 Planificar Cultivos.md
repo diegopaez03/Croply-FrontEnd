@@ -572,36 +572,99 @@ Ninguno específico.
 ## HU-BC-06. ABM de hitos y tareas del plan de acción de un cultivo
 
 > `AplicacionAgroquimico` sigue dependiendo del contrato de Épica 6 — ver Pendiente al final de esta sección.
->
-- **Autenticación:** Requerida (Administrador de Finca o usuario con permiso `Tareas de campo` habilitado sobre la finca)
+> 
+- **Autenticación:** Requerida (Administrador de Finca o usuario con permiso habilitado sobre la finca)
 
-### Restricción de alcance
+### ⚠️ Restricción importante de alcance
 
-Los usuarios de finca **NO** pueden crear, editar ni eliminar hitos de un plan ya generado — los hitos quedan fijos tal como los copió la plantilla (HU-FP-04). Solo pueden crear, editar y eliminar **tareas** dentro de esos hitos, y cambiar el estado de una tarea o del plan completo. Este contrato no incluye `POST`/`PUT`/`DELETE` de hitos.
+Los usuarios de finca **NO** pueden crear, editar ni eliminar hitos de un plan de acción ya generado — los hitos quedan fijos tal como los copió la plantilla de origen al generarse el plan (HU-FP-04, Épica 3 — el `POST /parcelas/:id_parcela/planes-accion`). Lo único que pueden hacer sobre ese plan es crear, editar y eliminar tareas dentro de los hitos ya existentes, y cambiar el estado de una tarea o del plan completo. Por eso este contrato no incluye endpoints de `POST`/`PUT`/`DELETE` de hitos.
 
-### Ver cronograma
+---
+
+### Ver cronograma del plan de acción real
 
 `GET /api/v1/planes-accion/:id_plan_accion`
 
-Respuesta: `id_plan_accion`, `fecha_inicio_pa`, `fecha_fin_pa`, `superficie_ocupada_pa`, `estado`, `hitos[]` (`id_hito_real`, `nombre_hito`, `orden_hito`, `tareas[]`).
+```json
+{
+  "id_plan_accion": 77,
+  "fecha_inicio_pa": "2026-09-15",
+  "fecha_fin_pa": "2026-12-20",
+  "superficie_ocupada_pa": 12.5,
+  "estado": "Activo",
+  "hitos": [
+    {
+      "id_hito_real": 201,
+      "nombre_hito": "Siembra",
+      "orden_hito": 1,
+      "tareas": [
+        {
+          "id_tarea": 501,
+          "nombre_tarea": "Preparación de almácigo",
+          "descripcion_tarea": "Preparación de almácigo en sector norte",
+          "fecha_planificada_tarea": "2026-09-15",
+          "fecha_ejecucion_tarea": null,
+          "fecha_creacion_tarea": "2026-09-10T10:00:00Z",
+          "id_tipo_tarea": 5,
+          "nombre_tipo_tarea": "Siembra",
+          "estado": "Planificado",
+          "nombre_producto_aa": null,
+          "dosis_aa": null,
+          "id_responsable": null,
+          "nombre_responsable": null,
+          "fecha_hora_aplicacion_aa": null
+        }
+      ]
+    }
+  ]
+}
+```
 
-Cada tarea: `id_tarea`, `nombre_tarea`, `descripcion_tarea`, `fecha_planificada_tarea` (`YYYY-MM-DD`), `fecha_ejecucion_tarea`, `fecha_creacion_tarea`, `id_tipo_tarea`, `nombre_tipo_tarea`, `estado` (`Planificado | En Progreso | Completado`), `nombre_producto_aa`, `dosis_aa`, `fecha_hora_aplicacion_aa`, `id_responsable` (`id_usuario_finca`), `nombre_responsable`.
+> **Mapeo estricto contra el DC — sin inventar campos:**
+> 
+> - `fecha_inicio_pa` / `fecha_fin_pa` / `superficie_ocupada_pa` / `estado`: atributos reales de `PlanAccion`.
+> - `id_hito_real` / `nombre_hito` / `orden_hito`
+> - `fecha_planificada_tarea`: fecha calendario (`YYYY-MM-DD`) de la tarea — si se reprograma, se edita este valor directamente (no existe ningún `dia_relativo` a nivel de plan real, ese concepto es exclusivo de `TareaPlantilla`/HU-BC-02, acá ya no aplica).
+> - `fecha_ejecucion_tarea`: `null` por defecto, el backend la completa automáticamente al pasar la tarea a `Completado`.
+> - `fecha_creacion_tarea`: timestamp de auditoría, generado solo.
+> - `id_responsable` / `nombre_responsable`: respaldados por la relación real `Tarea → UsuarioFinca` del DC. `id_responsable` es un `id_usuario_finca` (no `id_usuario` directo) — mismo criterio que ya usamos en Épica 2/3 para identificar la membresía usuario-finca, no la cuenta en abstracto.
+> - `nombre_producto_aa` / `dosis_aa` / `fecha_hora_aplicacion_aa`: solo tienen valor si `id_tipo_tarea` es "Aplicación de agroquímico" — respaldados por `AplicacionAgroquimico` (`nombre_productoAA`, `dosis_AA`, `fecha_hora_aplicacionAA` del DC).
+> - `estado` de `Tarea`: el DC modela esto como una entidad de catálogo propia (`EstadoTarea`, gestionada por Admin Croply vía ABM), pero esa administración corresponde a HU-TC-02 (Épica 5), que todavía no está desarrollada. Hasta que exista, este contrato trata `estado` como un conjunto cerrado de valores de texto — `Planificado | En Progreso | Completado` — alineados a los mismos 3 valores que ya van a sembrarse como catálogo real, para que la migración futura sea únicamente un cambio de origen del dato (de string cerrado a relación con la entidad `EstadoTarea`), sin tener que tocar la lógica ni la UI que ya se construya sobre HU-BC-06.
 
-Los 3 campos `_aa` solo tienen valor si `id_tipo_tarea` es “Aplicación de agroquímico”. `fecha_ejecucion_tarea` la completa el backend al pasar a `Completado`.
+---
 
-### Agregar tarea
+### Agregar tarea a un hito existente
 
 `POST /api/v1/planes-accion/:id_plan_accion/hitos/:id_hito_real/tareas`
 
-Body: `nombre_tarea`, `descripcion_tarea`, `fecha_planificada_tarea`, `id_tipo_tarea`; `nombre_producto_aa`, `dosis_aa` y `fecha_hora_aplicacion_aa` obligatorios solo si el tipo es agroquímico; `id_responsable` siempre opcional.
+```json
+{
+  "nombre_tarea": "Aplicación de fungicida preventivo",
+  "descripcion_tarea": "Aplicación en pulverización foliar",
+  "fecha_planificada_tarea": "2026-09-20",
+  "id_tipo_tarea": 1,
+  "nombre_producto_aa": "Fungicida XYZ",
+  "dosis_aa": "2 L/ha",
+  "id_responsable": 88,
+  "fecha_hora_aplicacion_aa": "2026-09-20T09:00:00Z"
+}
+```
 
-`201 Created` con `message: "Tarea agregada correctamente"` y el objeto `Tarea` completo.
+> Los 4 últimos campos son obligatorios **SOLO** si `id_tipo_tarea` es "Aplicación de agroquímico". `id_responsable` es opcional siempre.
+> 
+
+`201 Created` con `message: "Tarea agregada correctamente"` y el objeto `Tarea` completo creado (mismo shape que en el listado de arriba).
+
+---
 
 ### Editar tarea (datos, no estado)
 
 `PUT /api/v1/planes-accion/:id_plan_accion/tareas/:id_tarea`
 
-Mismo body que la creación. Se rechaza con `TASK_NOT_EDITABLE` (ERR-08) si la tarea está `Completado`.
+> Mismo body que la creación. Permite reprogramar `fecha_planificada_tarea` o corregir cualquier otro dato. Se rechaza con `TASK_NOT_EDITABLE` (ERR-08) si la tarea está en estado `Completado`
+> 
+
+---
 
 ### Cambiar estado de una tarea
 
@@ -611,15 +674,38 @@ Mismo body que la creación. Se rechaza con `TASK_NOT_EDITABLE` (ERR-08) si la t
 { "estado": "Completado" }
 ```
 
-`200 OK` con `message`, `id_tarea`, `estado`, `fecha_ejecucion_tarea` y `todas_tareas_completadas`. El frontend usa ese flag para el modal de cierre del cultivo. Se rechaza con `TASK_NOT_EDITABLE` si ya estaba `Completado`.
+`200 OK`:
+
+```json
+{
+  "message": "Estado de la tarea actualizado correctamente",
+  "id_tarea": 501,
+  "estado": "Completado",
+  "fecha_ejecucion_tarea": "2026-09-20T14:32:00Z",
+  "todas_tareas_completadas": true
+}
+```
+
+> Endpoint separado de "editar datos" porque marcar una tarea `Completado` dispara un efecto colateral propio (`fecha_ejecucion_tarea` automática) y es el disparador del modal de cierre de cultivo del frontend.
+> 
+> 
+> `todas_tareas_completadas: true` si, tras este cambio, todas las tareas de todos los hitos del plan quedaron en `Completado`. El frontend usa este flag para mostrar el modal *"Has finalizado correctamente este cultivo"* sin tener que recorrer el árbol completo de hitos/tareas por su cuenta. Al aceptar ese modal, el frontend llama al endpoint de cambio de estado del plan (abajo) con `estado: "Finalizado"`.
+> 
+> Se rechaza con `TASK_NOT_EDITABLE` (ERR-08) si la tarea ya está en `Completado`.
+> 
+
+---
 
 ### Eliminar tarea
 
 `DELETE /api/v1/planes-accion/:id_plan_accion/tareas/:id_tarea`
 
-Se rechaza con `TASK_NOT_EDITABLE` si está `Completado`.
+> Se rechaza con `TASK_NOT_EDITABLE` (ERR-08) si la tarea está en `Completado`
+> 
 
-### Cambiar estado del plan
+---
+
+### Cambiar estado del plan de acción completo
 
 `PUT /api/v1/planes-accion/:id_plan_accion/estado`
 
@@ -627,14 +713,31 @@ Se rechaza con `TASK_NOT_EDITABLE` si está `Completado`.
 { "estado": "Finalizado" }
 ```
 
-Acepta únicamente `Finalizado | Cancelado | FinalizadoPorContingencia`. `Inactivado` se rechaza con `INVALID_STATUS_TRANSITION`. `Finalizado` exige todas las tareas `Completado` (`TASKS_NOT_COMPLETED` si no). `Cancelado` y `FinalizadoPorContingencia` se pueden setear en cualquier momento sobre un plan `Activo`.
+> `estado` acepta únicamente `Finalizado | Cancelado | FinalizadoPorContingencia` desde este endpoint — `Inactivado` nunca se puede setear manualmente acá, solo lo pone el backend automáticamente vía la cascada de baja de parcela (HU-FP-03, Épica 3). Si se intenta mandar `Inactivado` por acá, rechazar con `400 INVALID_STATUS_TRANSITION`.
+> 
+> 
+> `Cancelado` y `FinalizadoPorContingencia` son estados que el Admin de Finca puede setear a mano en cualquier momento (ej. decide abandonar el cultivo antes de terminar el cronograma) — no requieren que todas las tareas estén completadas.
+> 
+> `Finalizado` sí requiere que todas las tareas estén completadas — si se intenta setear sin cumplir esa condición, rechazar con `400 TASKS_NOT_COMPLETED`. En el flujo normal, el frontend solo llama a esto con `Finalizado` cuando ya recibió `todas_tareas_completadas: true` del endpoint anterior, así que este error es una red de seguridad, no el camino esperado.
+> 
 
-Un plan en estado final deja de listarse en “Cultivos” (HU-FP-05) y pasa a “Historial de cultivos” (HU-FP-06).
+`200 OK` con `message: "Estado del plan de acción actualizado correctamente"`.
+
+> Un plan en cualquier estado final (`Finalizado | Cancelado | FinalizadoPorContingencia | Inactivado`) deja de aparecer en la pestaña "Cultivos" de la parcela (HU-FP-05) y pasa a listarse en "Historial de cultivos" (HU-FP-06, Épica 3) — responsabilidad del backend filtrar por estado en cada uno de esos dos endpoints, el frontend no filtra nada de su lado.
+> 
+
+---
+
+### Errores
+
+- `TASK_NOT_EDITABLE` (409) → **ERR-08**, al editar/cambiar estado/eliminar una tarea que ya está `Completado`
+- `REQUIRED_FIELD` → **ERR-01**, para cualquier campo obligatorio vacío (incluyendo condicionales de agroquímico).
+- `INVALID_STATUS_TRANSITION` (400) → intento de setear `Inactivado` manualmente en el plan.
+- `TASKS_NOT_COMPLETED` (400) → intento de setear `Finalizado` sin que todas las tareas estén completadas.
 
 ### Pendiente
 
-`AplicacionAgroquimico` como registro propio (más allá de los 3 campos embebidos en `Tarea`) sigue dependiendo de Épica 6.
-
+`AplicacionAgroquimico` como registro propio (más allá de los 3 campos que ya viajan embebidos en `Tarea`) sigue dependiendo del contrato de Épica 6 — si esa épica define un shape más rico para la aplicación de agroquímico en sí (no solo lo que necesita mostrarse en la tarea), este contrato deberá revisarse para agregar la nota cruzada correspondiente.
 ---
 
 ## Convención de naming
