@@ -1,14 +1,14 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Plant01Icon } from '@hugeicons/core-free-icons';
 import { CronogramaPlanAccion } from './CronogramaPlanAccion';
+import { usePlanAccionQuery } from '../../../hooks/usePlanesAccion';
 
 interface CultivoItemCardProps {
   cultivo: {
     id_plan_accion?: number;
     nombre_cultivo_base?: string;
     nombre_variedad?: string;
-    fecha_inicio?: string;
-    superficie_asignada?: number;
+    superficie_ocupada_pa?: number;
     estado?: string;
   };
   idFinca?: number;
@@ -16,6 +16,8 @@ interface CultivoItemCardProps {
 }
 
 export function CultivoItemCard({ cultivo, idFinca, idParcela }: CultivoItemCardProps) {
+  const { data: plan } = usePlanAccionQuery(cultivo.id_plan_accion ?? null);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-border/50">
@@ -35,7 +37,7 @@ export function CultivoItemCard({ cultivo, idFinca, idParcela }: CultivoItemCard
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
             <div>
               <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider mb-1">Fecha de Siembra</p>
-              <p className="font-semibold text-foreground">{cultivo.fecha_inicio || '---'}</p>
+              <p className="font-semibold text-foreground">{plan?.fecha_inicio_pa || '---'}</p>
             </div>
             <div>
               <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-wider mb-1">Superficie Utilizada</p>
@@ -56,7 +58,7 @@ export function CultivoItemCard({ cultivo, idFinca, idParcela }: CultivoItemCard
 
         <div className="border border-border/60 rounded-xl p-3 bg-muted/10 text-center max-w-[200px] shrink-0 self-start lg:self-auto min-w-[150px]">
           <p className="text-[11px] font-bold text-muted-foreground uppercase">Ciclo de Siembra</p>
-          <p className="text-xs font-semibold text-foreground mt-1">{cultivo.fecha_inicio || 'Inicio activo'}</p>
+          <p className="text-xs font-semibold text-foreground mt-1">{plan?.fecha_inicio_pa || 'Inicio activo'}</p>
         </div>
       </div>
 

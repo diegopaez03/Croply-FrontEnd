@@ -944,21 +944,18 @@ export const fincasService = {
 };
 
 function mapParcelaDetalle(
-  data: ParcelaByIdResponse & { cultivos?: any[] },
+  data: any,
 ): ParcelaByIdResponse {
-  const cultivosRaw = data.cultivos_asignados ?? data.cultivos ?? [];
+  const cultivosRaw = data.cultivos ?? data.cultivos_asignados ?? [];
   return {
     ...data,
-    cultivos_asignados: cultivosRaw.map((cultivo) => ({
+    cultivos: cultivosRaw.map((cultivo: any) => ({
       id_plan_accion: cultivo.id_plan_accion,
-      id_cultivo_base: cultivo.id_cultivo_base,
       nombre_cultivo_base: cultivo.nombre_cultivo_base,
-      id_variedad: cultivo.id_variedad,
       nombre_variedad: cultivo.nombre_variedad,
-      superficie_asignada: Number(
-        cultivo.superficie_asignada ?? cultivo.superficie_ocupada_pa ?? 0,
+      superficie_ocupada_pa: Number(
+        cultivo.superficie_ocupada_pa ?? cultivo.superficie_asignada ?? 0,
       ),
-      fecha_inicio: cultivo.fecha_inicio ?? cultivo.fecha_inicio_pa ?? '',
       estado: cultivo.estado,
     })),
   };
