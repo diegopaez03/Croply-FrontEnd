@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 const SELECT_CLASS =
   'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
 
@@ -49,6 +49,7 @@ export function PlantillaFormulario({
   textoSubmit = 'Guardar',
 }: PlantillaFormularioProps) {
   const [variedadConflictiva, setVariedadConflictiva] = useState<number | null>(null);
+  
   const { data: cultivosData } = useCultivosBase();
   const cultivosDisponibles = cultivosData?.cultivos ?? [];
 
@@ -56,6 +57,16 @@ export function PlantillaFormulario({
     resolver: zodResolver(plantillaBaseSchema),
     defaultValues: defaultValues ?? FORM_VACIO,
   });
+
+  const { fields: cultivosFields, append: appendCultivo, remove: removeCultivo, update: updateCultivo } = useFieldArray({
+    control: form.control,
+    name: 'cultivos',
+  });
+
+  // Si no hay defaultValues.cultivos ni cultivosFields (recién abre vacío), arranca con 1 slot
+  const [emptySlots, setEmptySlots] = useState<string[]>(
+    defaultValues?.cultivos && defaultValues.cultivos.length > 0 ? [] : [Math.random().toString()]
+  );
 
   const { fields: hitosFields, append: appendHito, remove: removeHito } = useFieldArray({
     control: form.control,
@@ -71,20 +82,33 @@ export function PlantillaFormulario({
     })),
   });
 
-  const toggleCultivo = (id_cultivo_base: number, checked: boolean) => {
-    const actuales = form.getValues('cultivos') ?? [];
-    if (checked) {
-      form.setValue(
-        'cultivos',
-        [...actuales, { id_cultivo_base, modo_variedades: 'todas', ids_variedades: [] }],
-        { shouldDirty: true, shouldValidate: true },
-      );
-    } else {
-      form.setValue(
-        'cultivos',
-        actuales.filter((c) => c.id_cultivo_base !== id_cultivo_base),
-        { shouldDirty: true, shouldValidate: true },
-      );
+  const handleSelectEmptySlot = (slotId: string, idCultivo: number) => {
+    // 1. Lo quitamos de emptySlots
+    setEmptySlots(prev => prev.filter(id => id !== slotId));
+    // 2. Lo agregamos al array real validado de RHF
+    appendCultivo({ id_cultivo_base: idCultivo, modo_variedades: 'todas', ids_variedades: [] });
+  };
+
+  const handleAddEmptySlot = () => {
+    setEmptySlots(prev => [...prev, Math.random().toString()]);
+  };
+
+  const handleDeleteEmptySlot = (slotId: string) => {
+    setEmptySlots(prev => {
+      const remaining = prev.filter(id => id !== slotId);
+      // Nunca dejamos todo vacío: si borramos el último slot y no hay validos, creamos uno nuevo
+      if (remaining.length === 0 && cultivosFields.length === 0) {
+        return [Math.random().toString()];
+      }
+      return remaining;
+    });
+  };
+
+  const handleDeleteCultivo = (index: number) => {
+    removeCultivo(index);
+    // Si al borrar el último RHF queda vacío y no hay slots vacíos, creamos uno
+    if (cultivosFields.length === 1 && emptySlots.length === 0) {
+      setEmptySlots([Math.random().toString()]);
     }
   };
 
@@ -103,133 +127,201 @@ export function PlantillaFormulario({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(submit)} className="flex flex-col gap-8">
-        <FormField
-          control={form.control}
-          name="nombre_pb"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nombre de la plantilla *</FormLabel>
-              <FormControl>
-                <Input placeholder="Ej. Plan de Cultivo de Tomate" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <form onSubmit={form.handleSubmit(submit)} className="flex flex-col gap-4">
+        <section className="bg-card border border-border rounded-2xl p-6">
+          <div className="mb-6">
+            <h3 className="text-base font-semibold mb-1">Nombre de la plantilla *</h3>
+            <p className="text-sm text-muted-foreground">
+              Ingresá un nombre descriptivo para identificar esta plantilla de trabajo.
+            </p>
+          </div>
+          <FormField
+            control={form.control}
+            name="nombre_pb"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input placeholder="Ej. Plan de Cultivo de Tomate" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </section>
 
-        <section>
-          <h3 className="text-base font-semibold mb-2">Cultivos *</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Seleccioná uno o más cultivos. Para cada uno podés dejar &quot;Todas las variedades&quot; o elegir variedades específicas.
-          </p>
-          {cultivosDisponibles.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Todavía no hay cultivos en la biblioteca.</p>
-          ) : (
-            <div className="flex flex-col gap-4">
-              {cultivosDisponibles.map((cultivo) => {
-                const seleccionado = cultivosSeleccionados.find(
-                  (c) => c.id_cultivo_base === cultivo.id_cultivo_base,
-                );
-                const indexForm = cultivosSeleccionados.findIndex(
-                  (c) => c.id_cultivo_base === cultivo.id_cultivo_base,
-                );
-                const detalle = detallesQueries.find(
-                  (_, i) => cultivosSeleccionados[i]?.id_cultivo_base === cultivo.id_cultivo_base,
-                )?.data;
+        <section className="bg-card border border-border rounded-2xl p-6">
+          <div className="mb-6">
+            <h3 className="text-base font-semibold mb-1">Cultivos *</h3>
+            <p className="text-sm text-muted-foreground">
+              Seleccioná uno o más cultivos y definí sus variedades.
+            </p>
+          </div>
 
-                return (
-                  <div key={cultivo.id_cultivo_base} className="border border-border rounded-xl p-4 bg-card">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <Checkbox
-                        checked={Boolean(seleccionado)}
-                        onCheckedChange={(checked) => toggleCultivo(cultivo.id_cultivo_base, checked === true)}
-                      />
-                      <span className="font-medium">{cultivo.nombre_cultivo_base}</span>
-                    </label>
+          <div className="flex flex-col gap-4">
+            {/* Filas válidas (React Hook Form) */}
+            {cultivosSeleccionados.map((seleccionado, indexForm) => {
+              const cultivo = cultivosDisponibles.find(c => c.id_cultivo_base === seleccionado.id_cultivo_base);
+              if (!cultivo) return null;
+              
+              const detalle = detallesQueries.find(
+                (_, i) => cultivosSeleccionados[i]?.id_cultivo_base === cultivo.id_cultivo_base,
+              )?.data;
 
-                    {seleccionado && indexForm >= 0 && (
-                      <div className="mt-4 pl-7 flex flex-col gap-3">
-                        <p className="text-xs font-semibold text-muted-foreground tracking-wide">VARIEDADES</p>
-                        <div className="flex flex-col gap-2">
-                          <label className="flex items-center gap-2 text-sm cursor-pointer">
-                            <input
-                              type="radio"
-                              name={`variedades-${cultivo.id_cultivo_base}`}
-                              className="accent-primary"
-                              checked={seleccionado.modo_variedades === 'todas'}
-                              onChange={() => {
-                                form.setValue(`cultivos.${indexForm}.modo_variedades`, 'todas', {
-                                  shouldDirty: true,
-                                });
-                                form.setValue(`cultivos.${indexForm}.ids_variedades`, [], {
-                                  shouldDirty: true,
-                                });
-                              }}
-                            />
-                            Todas las variedades
-                          </label>
-                          <label className="flex items-center gap-2 text-sm cursor-pointer">
-                            <input
-                              type="radio"
-                              name={`variedades-${cultivo.id_cultivo_base}`}
-                              className="accent-primary"
-                              checked={seleccionado.modo_variedades === 'especificas'}
-                              onChange={() =>
-                                form.setValue(`cultivos.${indexForm}.modo_variedades`, 'especificas', {
-                                  shouldDirty: true,
-                                })
-                              }
-                            />
-                            Variedades específicas
-                          </label>
-                        </div>
+              return (
+                <div key={`rhf-${seleccionado.id_cultivo_base}-${indexForm}`} className="flex flex-col sm:flex-row items-start gap-4 sm:gap-8 border border-border rounded-xl p-4 bg-muted/20 relative">
+                  {/* Select del Cultivo */}
+                  <div className="w-full sm:w-[250px] shrink-0 flex flex-col gap-1">
+                    <Select 
+                      value={String(cultivo.id_cultivo_base)}
+                      onValueChange={(val) => {
+                        const newId = Number(val);
+                        updateCultivo(indexForm, { id_cultivo_base: newId, modo_variedades: 'todas', ids_variedades: [] });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar cultivo..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={String(cultivo.id_cultivo_base)}>
+                          {cultivo.nombre_cultivo_base}
+                        </SelectItem>
+                        {cultivosDisponibles
+                          .filter(c => !cultivosSeleccionados.some(sel => sel.id_cultivo_base === c.id_cultivo_base))
+                          .map(c => (
+                            <SelectItem key={c.id_cultivo_base} value={String(c.id_cultivo_base)}>
+                              {c.nombre_cultivo_base}
+                            </SelectItem>
+                          ))
+                        }
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                        {seleccionado.modo_variedades === 'especificas' && (
-                          <div className="flex flex-col gap-2">
-                            {(detalle?.variedades ?? []).length === 0 ? (
-                              <p className="text-xs text-muted-foreground">
-                                Este cultivo no tiene variedades cargadas.
-                              </p>
-                            ) : (
-                              detalle?.variedades.map((variedad) => {
-                                const checked = seleccionado.ids_variedades.includes(variedad.id_variedad);
-                                const conflicto = variedadConflictiva === variedad.id_variedad;
-                                return (
-                                  <label
-                                    key={variedad.id_variedad}
-                                    className={`flex items-center gap-2 text-sm cursor-pointer rounded-md px-2 py-1 ${
-                                      conflicto ? 'bg-destructive/10 ring-1 ring-destructive' : ''
-                                    }`}
-                                  >
-                                    <Checkbox
-                                      checked={checked}
-                                      onCheckedChange={(value) => {
-                                        const actuales =
-                                          form.getValues(`cultivos.${indexForm}.ids_variedades`) ?? [];
-                                        form.setValue(
-                                          `cultivos.${indexForm}.ids_variedades`,
-                                          value === true
-                                            ? [...actuales, variedad.id_variedad]
-                                            : actuales.filter((id) => id !== variedad.id_variedad),
-                                          { shouldDirty: true },
-                                        );
-                                      }}
-                                    />
-                                    {variedad.nombre_variedad}
-                                  </label>
-                                );
-                              })
-                            )}
-                          </div>
+                  {/* Lado derecho: Variedades */}
+                  <div className="flex-1 flex flex-col gap-3 min-w-0 pr-8 sm:pr-4 mt-2 sm:mt-0">
+                    <div className="w-full sm:w-[250px]">
+                      <Select
+                        value={seleccionado.modo_variedades}
+                        onValueChange={(val: 'todas' | 'especificas') => {
+                          form.setValue(`cultivos.${indexForm}.modo_variedades`, val, {
+                            shouldDirty: true,
+                          });
+                          if (val === 'todas') {
+                            form.setValue(`cultivos.${indexForm}.ids_variedades`, [], {
+                              shouldDirty: true,
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Variedades..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="todas">Todas las variedades</SelectItem>
+                          <SelectItem value="especificas">Variedades específicas</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {seleccionado.modo_variedades === 'especificas' && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {(detalle?.variedades ?? []).length === 0 ? (
+                          <p className="text-xs text-muted-foreground">
+                            Este cultivo no tiene variedades cargadas. Seleccione "Todas las variedades" o cargue variedades en el catálogo de cultivos.
+                          </p>
+                        ) : (
+                          detalle?.variedades.map((variedad) => {
+                            const checked = seleccionado.ids_variedades.includes(variedad.id_variedad);
+                            const conflicto = variedadConflictiva === variedad.id_variedad;
+                            return (
+                              <label
+                                key={variedad.id_variedad}
+                                className={`flex items-center gap-2 text-sm cursor-pointer rounded-md px-2 py-1 ${
+                                  conflicto ? 'bg-destructive/10 ring-1 ring-destructive' : 'bg-background border border-border'
+                                }`}
+                              >
+                                <Checkbox
+                                  checked={checked}
+                                  onCheckedChange={(value) => {
+                                    const actuales = form.getValues(`cultivos.${indexForm}.ids_variedades`) ?? [];
+                                    form.setValue(
+                                      `cultivos.${indexForm}.ids_variedades`,
+                                      value === true
+                                        ? [...actuales, variedad.id_variedad]
+                                        : actuales.filter((id) => id !== variedad.id_variedad),
+                                      { shouldDirty: true },
+                                    );
+                                  }}
+                                />
+                                {variedad.nombre_variedad}
+                              </label>
+                            );
+                          })
                         )}
                       </div>
                     )}
                   </div>
-                );
-              })}
+
+                  {/* Quitar fila */}
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCultivo(indexForm)}
+                    className="absolute top-4 right-4 sm:static sm:mt-1.5 text-muted-foreground hover:text-destructive flex items-center justify-center shrink-0"
+                    title="Quitar fila"
+                  >
+                    <HugeiconsIcon icon={Delete02Icon} className="size-5" />
+                  </button>
+                </div>
+              );
+            })}
+
+            {/* Slots Vacíos (Estado Local) */}
+            {emptySlots.map((slotId) => (
+              <div key={slotId} className="flex flex-col sm:flex-row items-start gap-4 border border-border border-dashed rounded-xl p-4 bg-transparent relative">
+                <div className="w-full sm:w-[250px] shrink-0">
+                  <Select 
+                    value=""
+                    onValueChange={(val) => handleSelectEmptySlot(slotId, Number(val))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar cultivo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cultivosDisponibles
+                        .filter(c => !cultivosSeleccionados.some(sel => sel.id_cultivo_base === c.id_cultivo_base))
+                        .map(c => (
+                          <SelectItem key={c.id_cultivo_base} value={String(c.id_cultivo_base)}>
+                            {c.nombre_cultivo_base}
+                          </SelectItem>
+                        ))
+                      }
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex-1 min-w-0 pr-8 sm:pr-4 sm:pt-2 mt-2 sm:mt-0">
+                  <p className="text-sm text-muted-foreground">Elegí un cultivo para configurar sus variedades...</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleDeleteEmptySlot(slotId)}
+                  className="absolute top-4 right-4 sm:static sm:mt-1.5 text-muted-foreground hover:text-destructive flex items-center justify-center shrink-0"
+                  title="Quitar fila"
+                >
+                  <HugeiconsIcon icon={Delete02Icon} className="size-5" />
+                </button>
+              </div>
+            ))}
+
+            <div className="flex justify-start mt-2">
+              <Button type="button" variant="default" onClick={handleAddEmptySlot}>
+                <HugeiconsIcon icon={Add01Icon} className="size-4 mr-2" />
+                Agregar cultivo
+              </Button>
             </div>
-          )}
+          </div>
+          
           <FormField
             control={form.control}
             name="cultivos"
@@ -241,15 +333,20 @@ export function PlantillaFormulario({
           />
         </section>
 
-        <section>
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <h3 className="text-base font-semibold">Cronograma</h3>
+        <section className="bg-card border border-border rounded-2xl p-6">
+          <div className="flex items-start justify-between gap-4 mb-6">
+            <div>
+              <h3 className="text-base font-semibold mb-1">Cronograma</h3>
+              <p className="text-sm text-muted-foreground">
+                Definí los hitos y tareas a lo largo del tiempo.
+              </p>
+            </div>
             <Button
               type="button"
-              variant="outline"
+              variant="default"
               onClick={() => appendHito({ nombre_hpb: '', tareas: [] })}
             >
-              <HugeiconsIcon icon={Add01Icon} className="size-4" />
+              <HugeiconsIcon icon={Add01Icon} className="size-4 mr-2" />
               Agregar hito
             </Button>
           </div>
@@ -329,7 +426,7 @@ function HitoEditor({
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium">Tareas</p>
+        <p className="text-sm font-semibold">Tareas</p>
         <Button type="button" variant="outline" size="sm" onClick={() => append(TAREA_VACIA)}>
           <HugeiconsIcon icon={Add01Icon} className="size-4" />
           Agregar tarea

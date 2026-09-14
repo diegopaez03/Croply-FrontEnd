@@ -8,9 +8,12 @@ import { useMiFincaListQuery, useMiFincaResumenQuery, useParcelaResumenDynamicQu
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowRight01Icon, Plant01Icon } from '@hugeicons/core-free-icons';
 import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
+import { MensajePendienteFinca } from '../../components/shared/MensajePendienteFinca';
+import { useAuth } from '../../context/AuthContext';
 
 export default function DashboardAdminFincaPage() {
   const navigate = useNavigate();
+  const { usuario } = useAuth();
   
   // 1. Selector data
   const { data: fincasRes, isLoading: loadingFincas, isError: errorFincas } = useMiFincaListQuery();
@@ -44,6 +47,16 @@ export default function DashboardAdminFincaPage() {
   const { data: parcelaResumen, isLoading: loadingParcela } = useParcelaResumenDynamicQuery(selectedParcelaId);
 
   // Global 403 / No fincas check
+  const isFirstTimeUser = (usuario?.fincas?.length ?? 0) === 0 && !loadingFincas && fincas.length === 0;
+
+  if (isFirstTimeUser) {
+    return (
+      <div className="w-full max-w-screen-xl mx-auto flex flex-col items-center justify-center pb-20 pt-10 min-h-[60vh]">
+        <MensajePendienteFinca />
+      </div>
+    );
+  }
+
   const isFincaNotAvailable = (!loadingFincas && fincas.length === 0) || errorFincas || errorFincaResumen;
 
   if (isFincaNotAvailable) {
