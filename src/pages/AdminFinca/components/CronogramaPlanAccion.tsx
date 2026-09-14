@@ -5,6 +5,7 @@ import {
   Note01Icon,
   PencilEdit02Icon,
   PlusSignIcon,
+  CheckmarkCircle01Icon,
 } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import {
@@ -67,6 +68,13 @@ export function CronogramaPlanAccion({
   const eliminarTarea = useEliminarTareaPlan(idPlanAccion, idParcela);
   const cambiarEstadoPlan = useCambiarEstadoPlanAccion(idPlanAccion, idParcela);
 
+  const planActivo = plan?.estado === 'Activo';
+  const hitos = plan ? [...plan.hitos].sort((a, b) => a.orden_hito - b.orden_hito) : [];
+
+  const defaultExpandedId = hitos.find(h => h.tareas.some(t => t.estado !== 'Completado'))?.id_hito_real ?? hitos[0]?.id_hito_real;
+  const [expandedHitoId, setExpandedHitoId] = useState<number | null>(null);
+  const currentExpandedId = expandedHitoId ?? defaultExpandedId;
+
   if (isLoading) {
     return (
       <div className="flex items-center gap-3 text-muted-foreground text-sm py-6">
@@ -83,9 +91,6 @@ export function CronogramaPlanAccion({
       </p>
     );
   }
-
-  const planActivo = plan.estado === 'Activo';
-  const hitos = [...plan.hitos].sort((a, b) => a.orden_hito - b.orden_hito);
 
   const esLaUltimaPendiente = (tareaActual: TareaPlanAccion) => {
     if (!plan) return false;
@@ -139,113 +144,159 @@ export function CronogramaPlanAccion({
         )}
       </div>
 
-      <div className="space-y-4">
-        {hitos.map((hito) => (
-          <section
-            key={hito.id_hito_real}
-            className="rounded-xl border border-border/60 bg-muted/10 p-4 space-y-3"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                  <HugeiconsIcon icon={Note01Icon} className="size-4" />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                    Hito {hito.orden_hito}
-                  </p>
-                  <h5 className="font-semibold text-sm text-foreground">{hito.nombre_hito}</h5>
-                </div>
+      <div className="flex overflow-x-auto pb-8 pt-2 gap-0 custom-scrollbar w-full mb-2 snap-x">
+        {hitos.map((hito, i) => {
+          const isComplete = hito.tareas.length > 0 && hito.tareas.every(t => t.estado === 'Completado');
+          const isActual = hito.id_hito_real === defaultExpandedId;
+          const isSelected = hito.id_hito_real === currentExpandedId;
+
+          return (
+            <div 
+              key={hito.id_hito_real} 
+              className="flex-1 min-w-[120px] flex flex-col items-center relative cursor-pointer group snap-center"
+              onClick={() => setExpandedHitoId(hito.id_hito_real)}
+            >
+              {i !== hitos.length - 1 && (
+                <div className={`absolute top-[1.35rem] left-[50%] right-[-50%] w-full h-[2px] -z-10 transition-colors duration-300 ${isComplete ? 'bg-primary' : 'bg-border'}`} />
+              )}
+              
+              <div className={`flex items-center justify-center w-11 h-11 rounded-full border-[3px] border-card transition-all duration-300 mb-2 ${
+                isComplete 
+                  ? 'bg-primary text-primary-foreground shadow-sm' 
+                  : isActual 
+                    ? 'bg-primary/10 border-primary text-primary ring-4 ring-primary/10' 
+                    : 'bg-muted text-muted-foreground'
+              }`}>
+                {isComplete ? (
+                  <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-5" strokeWidth={2} />
+                ) : (
+                  <span className="text-sm font-bold">{hito.orden_hito}</span>
+                )}
               </div>
-              {planActivo && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="rounded-xl h-8 text-xs"
-                  onClick={() => setHitoDestino(hito)}
-                >
-                  <HugeiconsIcon icon={PlusSignIcon} className="size-4 mr-1" />
-                  Agregar tarea
-                </Button>
+              
+              <h5 className={`text-xs font-bold text-center line-clamp-2 px-2 transition-colors ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                {hito.nombre_hito}
+              </h5>
+              
+              {isSelected && (
+                <div className="absolute -bottom-2 w-1.5 h-1.5 rounded-full bg-primary" />
               )}
             </div>
+          );
+        })}
+      </div>
 
-            {hito.tareas.length === 0 ? (
-              <p className="text-xs text-muted-foreground px-1">Este hito todavía no tiene tareas.</p>
-            ) : (
-              <div className="space-y-2">
-                {hito.tareas.map((tarea) => {
-                  const completada = tarea.estado === 'Completado';
-                  return (
-                    <article
-                      key={tarea.id_tarea}
-                      className="rounded-xl border border-border/50 bg-card p-3 space-y-2"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                        <div className="space-y-1 min-w-0">
-                          <p className="font-semibold text-sm text-foreground">{tarea.nombre_tarea}</p>
-                          <p className="text-xs text-muted-foreground">{tarea.descripcion_tarea}</p>
-                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-                            <span>Tipo: {tarea.nombre_tipo_tarea}</span>
-                            <span>Planificada: {tarea.fecha_planificada_tarea}</span>
-                            {tarea.nombre_responsable && (
-                              <span>Responsable: {tarea.nombre_responsable}</span>
-                            )}
-                            {tarea.nombre_producto_aa && (
-                              <span>
-                                {tarea.nombre_producto_aa} · {tarea.dosis_aa}
-                              </span>
+      <div className="space-y-4">
+        {hitos.map((hito) => {
+          if (hito.id_hito_real !== currentExpandedId) return null;
+          
+          return (
+            <section
+              key={hito.id_hito_real}
+              className="rounded-xl border border-border/60 bg-muted/10 p-4 space-y-3 animate-in fade-in duration-300"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                    <HugeiconsIcon icon={Note01Icon} className="size-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      Hito {hito.orden_hito}
+                    </p>
+                    <h5 className="font-semibold text-sm text-foreground">{hito.nombre_hito}</h5>
+                  </div>
+                </div>
+                {planActivo && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-xl h-8 text-xs"
+                    onClick={() => setHitoDestino(hito)}
+                  >
+                    <HugeiconsIcon icon={PlusSignIcon} className="size-4 mr-1" />
+                    Agregar tarea
+                  </Button>
+                )}
+              </div>
+
+              {hito.tareas.length === 0 ? (
+                <p className="text-xs text-muted-foreground px-1">Este hito todavía no tiene tareas.</p>
+              ) : (
+                <div className="space-y-2">
+                  {hito.tareas.map((tarea) => {
+                    const completada = tarea.estado === 'Completado';
+                    return (
+                      <article
+                        key={tarea.id_tarea}
+                        className="rounded-xl border border-border/50 bg-card p-3 space-y-2"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                          <div className="space-y-1 min-w-0">
+                            <p className="font-semibold text-sm text-foreground">{tarea.nombre_tarea}</p>
+                            <p className="text-xs text-muted-foreground">{tarea.descripcion_tarea}</p>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                              <span>Tipo: {tarea.nombre_tipo_tarea}</span>
+                              <span>Planificada: {tarea.fecha_planificada_tarea}</span>
+                              {tarea.nombre_responsable && (
+                                <span>Responsable: {tarea.nombre_responsable}</span>
+                              )}
+                              {tarea.nombre_producto_aa && (
+                                <span>
+                                  {tarea.nombre_producto_aa} · {tarea.dosis_aa}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Select
+                              value={tarea.estado}
+                              disabled={!planActivo || completada || cambiarEstadoTarea.isPending}
+                              onValueChange={(value) =>
+                                handleCambioEstado(tarea, value as EstadoTareaPlan)
+                              }
+                            >
+                              <SelectTrigger className="h-8 w-[140px] text-xs rounded-xl">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ESTADOS_TAREA.map((estado) => (
+                                  <SelectItem key={estado} value={estado}>
+                                    {estado}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {planActivo && !completada && (
+                              <>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="size-8"
+                                  onClick={() => setTareaEdicion(tarea)}
+                                >
+                                  <HugeiconsIcon icon={PencilEdit02Icon} className="size-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="size-8 text-destructive"
+                                  onClick={() => setTareaAEliminar(tarea)}
+                                >
+                                  <HugeiconsIcon icon={Delete02Icon} className="size-4" />
+                                </Button>
+                              </>
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Select
-                            value={tarea.estado}
-                            disabled={!planActivo || completada || cambiarEstadoTarea.isPending}
-                            onValueChange={(value) =>
-                              handleCambioEstado(tarea, value as EstadoTareaPlan)
-                            }
-                          >
-                            <SelectTrigger className="h-8 w-[140px] text-xs rounded-xl">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {ESTADOS_TAREA.map((estado) => (
-                                <SelectItem key={estado} value={estado}>
-                                  {estado}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {planActivo && !completada && (
-                            <>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="size-8"
-                                onClick={() => setTareaEdicion(tarea)}
-                              >
-                                <HugeiconsIcon icon={PencilEdit02Icon} className="size-4" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="size-8 text-destructive"
-                                onClick={() => setTareaAEliminar(tarea)}
-                              >
-                                <HugeiconsIcon icon={Delete02Icon} className="size-4" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-        ))}
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          );
+        })}
       </div>
 
       <TareaPlanModal
