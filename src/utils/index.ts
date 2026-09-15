@@ -12,3 +12,6 @@
  *   export { cn } from './cn'
  *   export { formatDate, formatCurrency } from './formatters'
  */
+
+export { cn } from './cn';
+
