@@ -48,26 +48,22 @@ function PlaceholderAdminFinca({ title }: { title: string }) {
 
 /**
  * App — Root router component.
- *
- * Routes will be added here as pages are developed.
- * Each page should be lazy-loaded with React.lazy() for code splitting.
- *
- * Example:
- *   const Dashboard = React.lazy(() => import('@pages/Dashboard/Dashboard'))
- *
- *   <Route path="/dashboard" element={
- *     <React.Suspense fallback={<LoadingSpinner />}>
- *       <Dashboard />
- *     </React.Suspense>
- *   } />
  */
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* ── Public routes ─────────────────────────────────── */}
-        {/* <Route path="/login" element={<LoginPage />} /> */}
-        {/* <Route path="/register" element={<RegisterPage />} /> */}
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* ── Public routes ─────────────────────────────────── */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/digitalizar-finca" element={<DigitalizarFincaPage />} />
+          
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/registro-invitado/:token" element={<RegistroInvitadoPage />} />
+            <Route path="/recuperar-contrasena" element={<RecuperarContrasenaPage />} />
+            <Route path="/resetear-contrasena/:token" element={<ResetearContrasenaPage />} />
+          </Route>
 
           {/* ── Protected routes ──────────────────────────────── */}
           <Route element={<ProtectedRoute />}>

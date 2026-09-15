@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -14,31 +15,40 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --background: 40 33.3% 94.3%; /* #F5F2EC */
+    --foreground: 0 0% 3.9%; /* #0A0A0A */
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 142.1 76.2% 36.3%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 157.2 87.7% 22.4%; /* #076B45 */
+    --primary-foreground: 0 0% 98%; /* #FAFAFA */
+    --secondary: 39 37.5% 94.5%; /* #F7F3EB */
+    --secondary-foreground: 0 0% 3.9%;
+    --muted: 39 37.5% 94.5%;
+    --muted-foreground: 0 0% 45.1%; /* #737373 */
+    --accent: 153.2 46.4% 93.7%; /* #E8F5EF */
+    --accent-foreground: 157.2 87.7% 22.4%;
+    --destructive: 0 72.2% 50.6%; /* #DC2626 */
+    --destructive-foreground: 0 0% 98%;
+    --border: 39 39.3% 87.8%; /* #EDE4D3 */
+    --input: 39 39.3% 87.8%;
+    --ring: 157.2 87.7% 22.4%;
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 0 0% 3.9%;
+    --sidebar-primary: 157.2 87.7% 22.4%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 153.2 46.4% 93.7%;
+    --sidebar-accent-foreground: 157.2 87.7% 22.4%;
+    --sidebar-border: 39 39.3% 87.8%;
+    --sidebar-ring: 157.2 87.7% 22.4%;
+    --radius: 0.625rem; /* 10px */
+    
+    --chart-1: 157.2 87.7% 22.4%;
+    --chart-2: 153.2 46.4% 93.7%;
+    --chart-3: 39 37.5% 94.5%;
+    --chart-4: 39 39.3% 87.8%;
+    --chart-5: 0 0% 45.1%;
   }
 
   .dark {
