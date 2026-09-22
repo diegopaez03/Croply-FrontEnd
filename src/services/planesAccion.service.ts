@@ -415,6 +415,8 @@ function ensureMockPlan(id_plan_accion: number): PlanAccionDetalle {
 
 function buildMockTarea(data: TareaPlanPayload, base?: TareaPlanAccion): TareaPlanAccion {
   const tipo = mockTiposTarea.find(t => t.id_tipo_tarea === data.id_tipo_tarea);
+  if (!tipo) throw mockNotFound();
+  
   const estadoBase = mockEstadosTarea.find(e => e.id_estado_tarea === 1) || mockEstadosTarea[0]; // Planificado (1) by default
   
   return {
@@ -425,7 +427,7 @@ function buildMockTarea(data: TareaPlanPayload, base?: TareaPlanAccion): TareaPl
     fecha_ejecucion_tarea: base?.fecha_ejecucion_tarea ?? null,
     fecha_creacion_tarea: base?.fecha_creacion_tarea ?? new Date().toISOString(),
     id_tipo_tarea: data.id_tipo_tarea,
-    nombre_tipo_tarea: tipo?.nombre_tipo_tarea ?? 'Tipo de tarea',
+    nombre_tipo_tarea: tipo.nombre_tipo_tarea,
     id_estado_tarea: base?.id_estado_tarea ?? estadoBase.id_estado_tarea,
     nombre_estado_tarea: base?.nombre_estado_tarea ?? estadoBase.nombre_estado_tarea,
     nombre_producto_aa: data.nombre_producto_aa ?? null,

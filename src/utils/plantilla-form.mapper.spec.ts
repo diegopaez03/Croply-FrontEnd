@@ -117,6 +117,11 @@ describe('mapCultivosFormularioARequest', () => {
 });
 
 describe('mapFormularioARequest', () => {
+  const mockTipos = [
+    { id_tipo_tarea: 2, es_tipo_agroquimico: false },
+    { id_tipo_tarea: 5, es_tipo_agroquimico: true },
+  ];
+
   it('asigna orden_hpb secuencial y limpia agroquímico si el tipo no lo requiere', () => {
     const request = mapFormularioARequest({
       nombre_pb: '  Plan Tomate  ',
@@ -135,7 +140,7 @@ describe('mapFormularioARequest', () => {
           ],
         },
       ],
-    });
+    }, mockTipos);
 
     expect(request.nombre_pb).toBe('Plan Tomate');
     expect(request.hitos[0].orden_hpb).toBe(1);
@@ -161,7 +166,7 @@ describe('mapFormularioARequest', () => {
           ],
         },
       ],
-    });
+    }, mockTipos);
 
     expect(request.hitos[0].tareas[0]).toMatchObject({
       nombre_producto: 'Cobre 50%',

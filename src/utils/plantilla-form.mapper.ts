@@ -5,7 +5,6 @@ import {
   PlantillaBaseListado,
   PlantillaCultivoRequest,
 } from '../types/plantillas.types';
-import { esAplicacionAgroquimico } from './tipo-tarea.catalog';
 
 export interface CultivoFormularioPlantilla {
   id_cultivo_base: number;
@@ -61,12 +60,13 @@ export function mapCultivosFormularioARequest(
 
 export function mapHitosFormularioARequest(
   hitos: HitoFormularioPlantilla[],
+  tiposTarea: { id_tipo_tarea: number, es_tipo_agroquimico: boolean }[]
 ): CrearPlantillaBaseRequest['hitos'] {
   return hitos.map((hito, index) => ({
     nombre_hpb: hito.nombre_hpb.trim(),
     orden_hpb: index + 1,
     tareas: hito.tareas.map((tarea) => {
-      const agroquimico = esAplicacionAgroquimico(Number(tarea.id_tipo_tarea));
+      const agroquimico = tiposTarea.find(t => t.id_tipo_tarea === Number(tarea.id_tipo_tarea))?.es_tipo_agroquimico ?? false;
       return {
         dia_relativo_tp: Number(tarea.dia_relativo_tp),
         id_tipo_tarea: Number(tarea.id_tipo_tarea),
@@ -80,11 +80,12 @@ export function mapHitosFormularioARequest(
 
 export function mapFormularioARequest(
   values: PlantillaFormularioValores,
+  tiposTarea: { id_tipo_tarea: number, es_tipo_agroquimico: boolean }[]
 ): CrearPlantillaBaseRequest {
   return {
     nombre_pb: values.nombre_pb.trim(),
     cultivos: mapCultivosFormularioARequest(values.cultivos),
-    hitos: mapHitosFormularioARequest(values.hitos),
+    hitos: mapHitosFormularioARequest(values.hitos, tiposTarea),
   };
 }
 

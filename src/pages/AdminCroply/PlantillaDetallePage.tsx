@@ -18,7 +18,8 @@ import { formatEpocaCultivo, formatFormaSiembra } from '@/utils/formatters';
 import { handleFormError } from '@/utils/errorHandler';
 import { showSuccessToast } from '@/utils/successHandler';
 import { CrearPlantillaBaseRequest, PlantillaBaseDetalle } from '@/types/plantillas.types';
-import { esAplicacionAgroquimico } from '@/utils/tipo-tarea.catalog';
+
+import { useTiposTarea } from '@/hooks/useTiposTarea';
 
 export default function PlantillaDetallePage() {
   const { id } = useParams();
@@ -29,6 +30,8 @@ export default function PlantillaDetallePage() {
 
   const { data: detalle, isLoading, error } = usePlantillaBase(Number.isFinite(idPlantilla) ? idPlantilla : null);
   const { data: cultivosData } = useCultivosBase();
+  const { query: tiposTareaQuery } = useTiposTarea();
+  const tiposTarea = tiposTareaQuery.data?.tipos_tarea ?? [];
   const actualizarMutation = useActualizarPlantillaBase();
 
   useEffect(() => {
@@ -88,6 +91,7 @@ export default function PlantillaDetallePage() {
               (cultivosData?.cultivos ?? []).map((c) => [c.id_cultivo_base, c.forma_siembra]),
             ) as Record<number, 'Directa' | 'Almacigo'>
           }
+          tiposTarea={tiposTarea}
           onEditar={() => setEditando(true)}
           onEliminar={() => setConfirmarEliminar(true)}
         />
@@ -106,11 +110,13 @@ export default function PlantillaDetallePage() {
 function VistaDetallePlantilla({
   detalle,
   formaSiembraPorCultivo,
+  tiposTarea,
   onEditar,
   onEliminar,
 }: {
   detalle: PlantillaBaseDetalle;
   formaSiembraPorCultivo: Record<number, 'Directa' | 'Almacigo'>;
+  tiposTarea: { id_tipo_tarea: number, es_tipo_agroquimico: boolean }[];
   onEditar: () => void;
   onEliminar: () => void;
 }) {
@@ -186,7 +192,7 @@ function VistaDetallePlantilla({
                         Día {tarea.dia_relativo_tp} · {tarea.nombre_tipo_tarea}
                       </p>
                       <p className="text-muted-foreground">{tarea.descripcion_tp}</p>
-                      {esAplicacionAgroquimico(tarea.id_tipo_tarea) &&
+                      {(tiposTarea.find(t => t.id_tipo_tarea === tarea.id_tipo_tarea)?.es_tipo_agroquimico ?? false) &&
                         (tarea.nombre_producto || tarea.dosis_aa) && (
                           <p className="text-muted-foreground mt-1">
                             {tarea.nombre_producto}

@@ -4,7 +4,9 @@ import { FincaCreatePayload, FincaUpdatePayload } from '../types/fincas.types';
 import { showSuccessToast } from '../utils/successHandler';
 import { handleFormError } from '../utils/errorHandler';
 import { guardarFincasCache, guardarParcelasCache } from '../utils/offlineCache';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { toast } from 'sonner';
 export function useFincasQuery(page: number, pageSize: number, search?: string) {
   return useQuery({
     queryKey: ['fincas', page, pageSize, search],
@@ -78,16 +80,26 @@ export function useUpdateFincaMutation(id: number, onSuccess?: () => void, setEr
 
 export function useDeleteFincaMutation() {
   const queryClient = useQueryClient();
-  return useMutation({
+  const [isCooldown, setIsCooldown] = useState(false);
+  
+  const mutation = useMutation({
     mutationFn: (id: number) => fincasService.deleteFinca(id),
     onSuccess: (res) => {
       showSuccessToast(res.message);
       queryClient.invalidateQueries({ queryKey: ['fincas'] });
     },
     onError: (error) => {
-      handleFormError(error);
+      if (axios.isAxiosError(error) && !error.response) {
+        toast.error("La baja puede tardar unos segundos si hay muchas tareas asociadas. Esperá un momento, refrescá el listado y confirmá si ya se aplicó antes de volver a intentar.", { duration: 8000 });
+        setIsCooldown(true);
+        setTimeout(() => setIsCooldown(false), 5000);
+      } else {
+        handleFormError(error);
+      }
     },
   });
+
+  return { ...mutation, isPending: mutation.isPending || isCooldown };
 }
 
 export function useAdministradoresFincaDisponiblesQuery() {
@@ -197,7 +209,9 @@ export function useUpdateParcelaMutation(id_finca: number, onSuccess?: () => voi
 
 export function useDeleteParcelaMutation(id_finca: number, onSuccess?: () => void) {
   const queryClient = useQueryClient();
-  return useMutation({
+  const [isCooldown, setIsCooldown] = useState(false);
+  
+  const mutation = useMutation({
     mutationFn: (id_parcela: number) => fincasService.deleteParcela(id_finca, id_parcela),
     onSuccess: (res) => {
       showSuccessToast(res.message);
@@ -205,9 +219,17 @@ export function useDeleteParcelaMutation(id_finca: number, onSuccess?: () => voi
       if (onSuccess) onSuccess();
     },
     onError: (error) => {
-      handleFormError(error);
+      if (axios.isAxiosError(error) && !error.response) {
+        toast.error("La baja puede tardar unos segundos si hay muchas tareas asociadas. Esperá un momento, refrescá el listado y confirmá si ya se aplicó antes de volver a intentar.", { duration: 8000 });
+        setIsCooldown(true);
+        setTimeout(() => setIsCooldown(false), 5000);
+      } else {
+        handleFormError(error);
+      }
     },
   });
+
+  return { ...mutation, isPending: mutation.isPending || isCooldown };
 }
 
 export function useHistorialCultivosQuery(id_parcela: number | null) {
