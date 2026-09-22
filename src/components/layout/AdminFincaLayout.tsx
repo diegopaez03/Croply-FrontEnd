@@ -1,8 +1,10 @@
 import { Outlet } from 'react-router-dom';
 import { NavbarAdminFinca } from './NavbarAdminFinca';
 import { HeaderAdminFinca } from './HeaderAdminFinca';
+import { useSincronizacionNotas } from '@/hooks/useSincronizacionNotas';
 
 export default function AdminFincaLayout() {
+  useSincronizacionNotas();
   return (
     <div className="flex h-screen w-full bg-[var(--background,#fcf9f3)] overflow-hidden">
       <NavbarAdminFinca />

@@ -38,8 +38,6 @@ export interface CrearPlanAccionRequest {
   asignaciones: AsignacionVariedadRequest[];
 }
 
-export type EstadoTareaPlan = 'Planificado' | 'En Progreso' | 'Completado';
-
 export type EstadoPlanAccionManual =
   | 'Finalizado'
   | 'Cancelado'
@@ -54,12 +52,14 @@ export interface TareaPlanAccion {
   fecha_creacion_tarea: string;
   id_tipo_tarea: number;
   nombre_tipo_tarea: string;
-  estado: EstadoTareaPlan;
+  id_estado_tarea: number;
+  nombre_estado_tarea: string;
   nombre_producto_aa: string | null;
   dosis_aa: string | null;
   id_responsable: number | null;
   nombre_responsable: string | null;
   fecha_hora_aplicacion_aa: string | null;
+  atrasada: boolean;
 }
 
 export interface HitoPlanAccion {
@@ -67,6 +67,17 @@ export interface HitoPlanAccion {
   nombre_hito: string;
   orden_hito: number;
   tareas: TareaPlanAccion[];
+}
+
+export interface ReprogramarTareaPayload {
+  fecha_planificada_tarea: string;
+}
+
+export interface ReprogramarTareaResponse {
+  message: string;
+  id_tarea: number;
+  fecha_planificada_tarea: string;
+  atrasada: boolean;
 }
 
 export interface PlanAccionDetalle {
@@ -92,7 +103,9 @@ export interface TareaPlanPayload {
 export interface CambiarEstadoTareaResponse {
   message: string;
   id_tarea: number;
-  estado: EstadoTareaPlan;
+  id_estado_tarea: number;
+  nombre_estado_tarea: string;
   fecha_ejecucion_tarea: string | null;
   todas_tareas_completadas: boolean;
+  registro_agroquimico_generado: boolean;
 }

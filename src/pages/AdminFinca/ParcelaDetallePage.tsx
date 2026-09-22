@@ -4,9 +4,9 @@ import {
   ArrowLeft01Icon, 
   QrCodeIcon, 
   AiBrain01Icon,
-  NoteEditIcon,
   PlusSignIcon,
-  Plant01Icon
+  Plant01Icon,
+  NoteAddIcon
 } from '@hugeicons/core-free-icons';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -18,11 +18,15 @@ import { useGenerarQRParcela, useConsultarQRParcela } from '../../hooks/useFinca
 import { QRModal } from './components/QRModal';
 import { CardMonitoreoSensores } from './components/CardMonitoreoSensores';
 import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
+import { CapturarNotaModal } from './components/CapturarNotaModal';
+import { VerNotasModal } from './components/VerNotasModal';
 
 export default function ParcelaDetallePage() {
   const [activeTab, setActiveTab] = useState<'cultivo' | 'historial'>('cultivo');
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [qrUrl, setQrUrl] = useState('');
+  const [isNotaModalOpen, setIsNotaModalOpen] = useState(false);
+  const [isVerNotasModalOpen, setIsVerNotasModalOpen] = useState(false);
 
   const { mutate: generarQR, isPending: isGeneratingQR } = useGenerarQRParcela((res: any) => {
     setQrUrl(res.url_acceso_qr);
@@ -166,20 +170,21 @@ export default function ParcelaDetallePage() {
         </div>
       </div>
 
-      {/* Banner de Observaciones Placeholder */}
-      <div className="bg-card border border-dashed border-border rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="size-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
-            <HugeiconsIcon icon={NoteEditIcon} className="size-5" />
+      {/* Cuaderno de Notas Horizontal */}
+      <div className="bg-card border border-border shadow-sm rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-4">
+          <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <HugeiconsIcon icon={NoteAddIcon} className="size-6 text-primary" />
           </div>
           <div>
-            <h4 className="font-bold text-xs text-foreground">Cuaderno de Notas de Campo</h4>
-            <p className="text-[11px] text-muted-foreground">// TODO: HU-TC-07 Captura y seguimiento de notas de campo</p>
+            <h3 className="text-sm font-bold text-primary">¿Alguna observación hoy?</h3>
+            <p className="text-sm text-muted-foreground mt-1">Ingresa una nota con tu observación o mira las notas que has ingresado</p>
           </div>
         </div>
-        <Button size="sm" variant="outline" disabled className="text-xs h-8 rounded-xl cursor-not-allowed">
-          Capturar Nota (// TODO)
-        </Button>
+        <div className="flex items-center gap-3 shrink-0">
+          <Button onClick={() => setIsNotaModalOpen(true)}>Capturar Nota</Button>
+          <Button variant="outline" className="text-primary hover:text-primary hover:bg-primary/5" onClick={() => setIsVerNotasModalOpen(true)}>Ver notas</Button>
+        </div>
       </div>
       {/* SECCIÓN DE CULTIVOS ASOCIADOS (HU-FP-04 & HU-FP-06) */}
       <div className="space-y-0 pt-4">
@@ -287,6 +292,18 @@ export default function ParcelaDetallePage() {
         onClose={() => setIsQRModalOpen(false)}
         url={qrUrl}
         nombreParcela={parcela?.nombre_parcela || 'Parcela'}
+      />
+      <CapturarNotaModal 
+        open={isNotaModalOpen} 
+        onOpenChange={setIsNotaModalOpen} 
+        idFincaInicial={fincaId}
+        idParcelaInicial={idParcela}
+      />
+      <VerNotasModal 
+        open={isVerNotasModalOpen}
+        onOpenChange={setIsVerNotasModalOpen}
+        idFinca={fincaId}
+        idParcela={idParcela}
       />
     </>
   );

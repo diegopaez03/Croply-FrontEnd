@@ -3,7 +3,8 @@ import { fincasService } from '../services/fincas.service';
 import { FincaCreatePayload, FincaUpdatePayload } from '../types/fincas.types';
 import { showSuccessToast } from '../utils/successHandler';
 import { handleFormError } from '../utils/errorHandler';
-
+import { guardarFincasCache, guardarParcelasCache } from '../utils/offlineCache';
+import { useEffect } from 'react';
 export function useFincasQuery(page: number, pageSize: number, search?: string) {
   return useQuery({
     queryKey: ['fincas', page, pageSize, search],
@@ -246,19 +247,35 @@ export function useConsultarQRParcela(onSuccess?: (res: any) => void) {
 
 
 export function useMiFincaListQuery() {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['mi-finca-list'],
     queryFn: () => fincasService.getMiFincaList(),
   });
+
+  useEffect(() => {
+    if (query.data && query.data.fincas) {
+      guardarFincasCache(query.data.fincas);
+    }
+  }, [query.data]);
+
+  return query;
 }
 
 export function useMiFincaResumenQuery(id_finca: number | null) {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['mi-finca-resumen', id_finca],
     queryFn: () => fincasService.getMiFincaResumen(id_finca as number),
     enabled: !!id_finca,
     retry: false, // Don't retry on 403
   });
+
+  useEffect(() => {
+    if (id_finca && query.data && query.data.parcelas) {
+      guardarParcelasCache(id_finca, query.data.parcelas);
+    }
+  }, [id_finca, query.data]);
+
+  return query;
 }
 
 export function useParcelaResumenDynamicQuery(id_parcela: number | null) {
