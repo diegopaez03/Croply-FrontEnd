@@ -1,0 +1,30 @@
+export const ROUTES = {
+  CROPLY: {
+    DASHBOARD: '/croply/dashboard',
+    GESTION_USUARIOS: '/croply/gestion-usuarios',
+    CATALOGOS_BASE: '/croply/catalogos-base',
+    CULTIVOS: '/croply/cultivos',
+    FINCAS: '/croply/fincas',
+    FINCA_NUEVA: '/croply/fincas/nueva',
+    FINCA_DETALLE_ROUTE: '/croply/fincas/:id',
+    fincaDetalle: (id: string | number) => `/croply/fincas/${id}`,
+    PLANTILLAS: '/croply/plantillas',
+    PLANTILLA_NUEVA: '/croply/plantillas/nueva',
+    PLANTILLA_DETALLE_ROUTE: '/croply/plantillas/:id',
+    plantillaDetalle: (id: string | number) => `/croply/plantillas/${id}`,
+  },
+  FINCA: {
+    MI_FINCA: '/finca/mi-finca',
+    PARCELA_DETALLE_ROUTE: '/finca/parcelas/:id',
+    parcelaDetalle: (id: string | number) => `/finca/parcelas/${id}`,
+    BIBLIOTECA: '/finca/biblioteca',
+    CULTIVO_BIBLIOTECA_DETALLE_ROUTE: '/finca/biblioteca/:id',
+    cultivoBibliotecaDetalle: (id: string | number) => `/finca/biblioteca/${id}`,
+    GENERAR_PLAN_ACCION_ROUTE: '/finca/biblioteca/:id/generar-plan',
+    generarPlanAccion: (id: string | number) => `/finca/biblioteca/${id}/generar-plan`,
+    AGROQUIMICOS: '/finca/agroquimicos',
+    COSTOS: '/finca/costos',
+    GESTION_USUARIOS: '/finca/gestion-usuarios',
+    SOPORTE: '/finca/soporte',
+  }
+} as const;

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
+import { ROUTES } from '../../constants/routes';
 import { format } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -73,7 +74,7 @@ export default function GenerarPlanAccionPage() {
       if (idParcela) queryClient.invalidateQueries({ queryKey: ['parcela', idParcela] });
       queryClient.invalidateQueries({ queryKey: ['planPreview'] });
       showSuccessToast({ message: msg });
-      navigate(`/admin-finca/parcelas/${idParcela}`);
+      navigate(ROUTES.FINCA.parcelaDetalle(idParcela));
     },
     (err: any) => {
       if (err?.response?.data?.field === 'superficie_asignada') {
@@ -120,7 +121,7 @@ export default function GenerarPlanAccionPage() {
   useEffect(() => {
     if (error) {
       handleFormError(error, undefined, {
-        onNotFoundRedirect: () => navigate('/admin-finca/biblioteca'),
+        onNotFoundRedirect: () => navigate(ROUTES.FINCA.BIBLIOTECA),
       });
     }
   }, [error, navigate]);
@@ -221,7 +222,7 @@ export default function GenerarPlanAccionPage() {
         <Button 
           type="button"
           variant="outline" 
-          onClick={() => navigate(`/admin-finca/biblioteca/${idCultivo}${location.search}`)}
+          onClick={() => navigate(`${ROUTES.FINCA.cultivoBibliotecaDetalle(idCultivo)}${location.search}`)}
           className="rounded-full gap-2 text-sm font-medium border-border shadow-sm mb-6 h-9 px-4 bg-background"
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
@@ -559,7 +560,7 @@ export default function GenerarPlanAccionPage() {
                   type="button" 
                   variant="outline" 
                   className="rounded-full px-6 bg-background h-10 border-border/80 text-foreground font-semibold" 
-                  onClick={() => navigate(`/admin-finca/biblioteca/${idCultivo}${location.search}`)}
+                  onClick={() => navigate(`${ROUTES.FINCA.cultivoBibliotecaDetalle(idCultivo)}${location.search}`)}
                 >
                   Cancelar
                 </Button>

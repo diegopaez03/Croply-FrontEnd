@@ -10,7 +10,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../context/AuthContext';
 import { PERMISO_SISTEMA } from '../../constants/permisos';
-
+import { ROUTES } from '../../constants/routes';
 interface NavbarAdminCroplyProps {
   mobile?: boolean;
 }
@@ -22,11 +22,11 @@ export function NavbarAdminCroply({ mobile }: NavbarAdminCroplyProps) {
   const layoutClasses = mobile ? baseClasses : `hidden md:flex ${baseClasses}`;
 
   const isActive = (path: string) => {
-    if (path === '/admin-croply/catalogos-base') {
+    if (path === ROUTES.CROPLY.CATALOGOS_BASE) {
       return (
         location.pathname === path ||
-        location.pathname === '/cultivos' ||
-        location.pathname.startsWith('/admin-croply/plantillas')
+        location.pathname === ROUTES.CROPLY.CULTIVOS ||
+        location.pathname.startsWith(ROUTES.CROPLY.PLANTILLAS)
       );
     }
     return location.pathname === path;
@@ -40,27 +40,27 @@ export function NavbarAdminCroply({ mobile }: NavbarAdminCroplyProps) {
 
       <div className="flex-1 px-4 py-6 space-y-1">
         {/* Nav Items */}
-        <Link to="/admin-croply/dashboard" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive('/admin-croply/dashboard') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
+        <Link to={ROUTES.CROPLY.DASHBOARD} className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive(ROUTES.CROPLY.DASHBOARD) ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
           <HugeiconsIcon icon={DashboardSquare01Icon} className="shrink-0 size-5" />
           <span className="font-sans font-semibold text-sm">Dashboard</span>
         </Link>
         
         {tienePermiso(PERMISO_SISTEMA.GESTION_USUARIOS, PERMISO_SISTEMA.SOLICITUDES_DIGITALIZACION) && (
-          <Link to="/admin-croply/gestion-usuarios" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive('/admin-croply/gestion-usuarios') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
+          <Link to={ROUTES.CROPLY.GESTION_USUARIOS} className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive(ROUTES.CROPLY.GESTION_USUARIOS) ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
             <HugeiconsIcon icon={UserGroupIcon} className="shrink-0 size-5" />
             <span className="font-sans font-semibold text-sm">Gestión de usuarios</span>
           </Link>
         )}
         
         {tienePermiso(PERMISO_SISTEMA.FINCAS_INFRAESTRUCTURA) && (
-          <Link to="/admin-croply/fincas" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${location.pathname.startsWith('/admin-croply/fincas') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
+          <Link to={ROUTES.CROPLY.FINCAS} className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${location.pathname.startsWith(ROUTES.CROPLY.FINCAS) ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
             <HugeiconsIcon icon={TractorIcon} className="shrink-0 size-5" />
             <span className="font-sans font-semibold text-sm">Fincas e Infraestructura</span>
           </Link>
         )}
         
         {tienePermiso(PERMISO_SISTEMA.CATALOGOS_BASE) && (
-          <Link to="/admin-croply/catalogos-base" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive('/admin-croply/catalogos-base') ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
+          <Link to={ROUTES.CROPLY.CATALOGOS_BASE} className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive(ROUTES.CROPLY.CATALOGOS_BASE) ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
             <HugeiconsIcon icon={Book02Icon} className="shrink-0 size-5" />
             <span className="font-sans font-semibold text-sm">Catálogos Base</span>
           </Link>

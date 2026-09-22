@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { ROUTES } from '../../constants/routes';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -243,7 +244,7 @@ export default function DashboardAdminFincaPage() {
 
                 <Button 
                   className="w-full mt-2 bg-muted hover:bg-muted/80 text-foreground font-semibold"
-                  onClick={() => navigate(`/admin-finca/parcelas/${parcelaResumen.id_parcela}`)}
+                  onClick={() => navigate(ROUTES.FINCA.parcelaDetalle(parcelaResumen.id_parcela))}
                 >
                   Ver detalle parcela
                   <HugeiconsIcon icon={ArrowRight01Icon} className="size-4 ml-2" />

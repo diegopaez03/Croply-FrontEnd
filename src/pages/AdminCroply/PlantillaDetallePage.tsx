@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon, Delete02Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
+import { ROUTES } from '../../constants/routes';
 import { PlantillaFormulario } from './components/PlantillaFormulario';
 import { ConfirmacionEliminarPlantilla } from './components/ConfirmacionEliminarPlantilla';
 import {
@@ -37,7 +38,7 @@ export default function PlantillaDetallePage() {
   useEffect(() => {
     if (error) {
       handleFormError(error, undefined, {
-        onNotFoundRedirect: () => navigate('/admin-croply/plantillas'),
+        onNotFoundRedirect: () => navigate(ROUTES.CROPLY.PLANTILLAS),
       });
     }
   }, [error, navigate]);
@@ -53,14 +54,14 @@ export default function PlantillaDetallePage() {
 
   useEffect(() => {
     if (!Number.isFinite(idPlantilla)) {
-      navigate('/admin-croply/plantillas');
+      navigate(ROUTES.CROPLY.PLANTILLAS);
     }
   }, [idPlantilla, navigate]);
 
   return (
     <div className="w-full max-w-screen-xl mx-auto px-6 py-8">
       <Link
-        to="/admin-croply/plantillas"
+        to={ROUTES.CROPLY.PLANTILLAS}
         className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline mb-6"
       >
         <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
@@ -101,7 +102,7 @@ export default function PlantillaDetallePage() {
         idPlantilla={idPlantilla}
         open={confirmarEliminar}
         onOpenChange={setConfirmarEliminar}
-        onEliminada={() => navigate('/admin-croply/plantillas')}
+        onEliminada={() => navigate(ROUTES.CROPLY.PLANTILLAS)}
       />
     </div>
   );

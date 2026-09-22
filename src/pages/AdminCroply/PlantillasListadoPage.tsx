@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon, PlusSignIcon } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
+import { ROUTES } from '../../constants/routes';
 import { useCultivosBase } from '@/hooks/useCultivosBase';
 import { usePlantillasBase } from '@/hooks/usePlantillasBase';
 import { nombresCultivosDePlantilla } from '@/utils/plantilla-form.mapper';
@@ -32,7 +33,7 @@ export default function PlantillasListadoPage() {
   return (
     <div className="w-full max-w-screen-xl mx-auto px-6 py-8">
       <Link
-        to="/admin-croply/catalogos-base"
+        to={ROUTES.CROPLY.CATALOGOS_BASE}
         className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline mb-6"
       >
         <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
@@ -47,7 +48,7 @@ export default function PlantillasListadoPage() {
           </p>
         </div>
         <Button
-          onClick={() => navigate('/admin-croply/plantillas/nueva')}
+          onClick={() => navigate(ROUTES.CROPLY.PLANTILLA_NUEVA)}
           className="shrink-0 rounded-full px-5"
         >
           <HugeiconsIcon icon={PlusSignIcon} className="size-4 mr-2" />
@@ -70,7 +71,7 @@ export default function PlantillasListadoPage() {
                 key={plantilla.id_plantilla_base}
                 plantilla={plantilla}
                 nombresCultivos={nombresCultivosDePlantilla(plantilla, cultivos)}
-                onVer={() => navigate(`/admin-croply/plantillas/${plantilla.id_plantilla_base}`)}
+                onVer={() => navigate(ROUTES.CROPLY.plantillaDetalle(plantilla.id_plantilla_base))}
                 onEliminar={() => setIdAEliminar(plantilla.id_plantilla_base)}
               />
             ))}

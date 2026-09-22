@@ -1,5 +1,6 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
+import { ROUTES } from '../../constants/routes';
 import { 
   ArrowLeft01Icon, 
   QrCodeIcon, 
@@ -68,7 +69,7 @@ export default function ParcelaDetallePage() {
     return (
       <div className="text-center py-16">
         <h2 className="text-2xl font-bold mb-4 text-foreground">Parcela no encontrada</h2>
-        <Button onClick={() => navigate('/admin-finca/mi-finca')}>Volver a Mi finca</Button>
+        <Button onClick={() => navigate(ROUTES.FINCA.MI_FINCA)}>Volver a Mi finca</Button>
       </div>
     );
   }
@@ -86,7 +87,7 @@ export default function ParcelaDetallePage() {
       {/* Header navegación */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <Link
-          to="/admin-finca/mi-finca"
+          to={ROUTES.FINCA.MI_FINCA}
           className="inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors"
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
@@ -204,7 +205,7 @@ export default function ParcelaDetallePage() {
           {/* Botones derecha */}
           <div className="flex items-center gap-3 pb-3">
             <Button
-              onClick={() => navigate(`/admin-finca/biblioteca?id_finca=${fincaId}&id_parcela=${parcela.id_parcela}`)}
+              onClick={() => navigate(`${ROUTES.FINCA.BIBLIOTECA}?id_finca=${fincaId}&id_parcela=${parcela.id_parcela}`)}
               disabled={activeTab === 'historial' || !canAsociar || parcela.estado_parcela === 'Inactiva'}
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl text-xs h-9"
             >
@@ -242,7 +243,7 @@ export default function ParcelaDetallePage() {
                 </div>
                 <Button
                   disabled={parcela.estado_parcela === 'Inactiva' || !canAsociar}
-                  onClick={() => navigate(`/admin-finca/biblioteca?id_finca=${fincaId}&id_parcela=${parcela.id_parcela}`)}
+                  onClick={() => navigate(`${ROUTES.FINCA.BIBLIOTECA}?id_finca=${fincaId}&id_parcela=${parcela.id_parcela}`)}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl px-6 text-sm mt-4"
                 >
                   <HugeiconsIcon icon={Plant01Icon} className="size-4 mr-2" />

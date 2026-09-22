@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Plant01Icon, PlusSignIcon } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
+import { ROUTES } from '../../../constants/routes';
 import {
   Dialog,
   DialogContent,
@@ -87,7 +88,7 @@ export function SeccionCultivosBase() {
 
         <div className="bg-[#F2F7F4] px-6 py-4 border-t border-border/50">
           <Link
-            to="/admin-croply/cultivos"
+            to={ROUTES.CROPLY.CULTIVOS}
             className="text-sm font-bold text-[#1A7B48] hover:underline"
           >
             Ver todos los cultivos ({cantidad})
