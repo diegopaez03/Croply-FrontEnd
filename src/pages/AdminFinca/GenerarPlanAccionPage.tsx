@@ -190,6 +190,14 @@ export default function GenerarPlanAccionPage() {
     });
   };
 
+  useEffect(() => {
+    if (!loadingCultivo && !loadingFincas && detalle) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }, 0);
+    }
+  }, [loadingCultivo, loadingFincas, detalle]);
+
   if (loadingCultivo || !detalle || loadingFincas) {
     return (
       <div className="flex justify-center items-center py-16 text-muted-foreground">

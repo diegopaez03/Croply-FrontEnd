@@ -1,6 +1,11 @@
+import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useMonitoreoSensoresQuery } from '@/hooks/useMonitoreoSensores';
 import { mapNombreSensorAIcono } from '@/utils/sensorIconMap';
+import { Button } from '@/components/ui/button';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
+import { SensorMonitoreo } from '@/types/monitoreoSensores.types';
 
 interface CardMonitoreoSensoresProps {
   idParcela: number;
@@ -25,6 +30,27 @@ const formatDate = (dateStr: string | null) => {
 
 export function CardMonitoreoSensores({ idParcela }: CardMonitoreoSensoresProps) {
   const { data, isLoading, isError } = useMonitoreoSensoresQuery(idParcela);
+  const [currentControladorIdx, setCurrentControladorIdx] = useState(0);
+
+  // Group by controller
+  const groupedSensores = useMemo(() => {
+    if (!data?.sensores) return [];
+    
+    const groups: Record<string, { id_controlador: number; nombre: string; sensores: SensorMonitoreo[] }> = {};
+    data.sensores.forEach(s => {
+      const key = `${s.id_controlador_sensor || 0}`;
+      if (!groups[key]) {
+        groups[key] = {
+          id_controlador: s.id_controlador_sensor || 0,
+          nombre: s.nombre_controlador || 'Controlador Principal',
+          sensores: []
+        };
+      }
+      groups[key].sensores.push(s);
+    });
+    
+    return Object.values(groups);
+  }, [data?.sensores]);
 
   // Mismos estilos base que el placeholder, pero sin dashed
   const baseClasses = "lg:col-span-2 bg-card border border-border rounded-2xl p-6 flex flex-col space-y-4 shadow-sm h-full";
@@ -60,7 +86,7 @@ export function CardMonitoreoSensores({ idParcela }: CardMonitoreoSensoresProps)
   }
 
   // Caso: parcela sin sensores asociados
-  if (!data?.sensores || data.sensores.length === 0) {
+  if (groupedSensores.length === 0) {
     return (
       <div className={baseClasses}>
         <div className="flex items-center justify-between">
@@ -75,18 +101,47 @@ export function CardMonitoreoSensores({ idParcela }: CardMonitoreoSensoresProps)
     );
   }
 
+  // Prevent index out of bounds if data updates
+  const validIdx = Math.min(currentControladorIdx, groupedSensores.length - 1);
+  const activeGroup = groupedSensores[validIdx];
+
+  const handlePrev = () => {
+    setCurrentControladorIdx((prev) => (prev > 0 ? prev - 1 : groupedSensores.length - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentControladorIdx((prev) => (prev < groupedSensores.length - 1 ? prev + 1 : 0));
+  };
+
   return (
     <div className={baseClasses}>
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <h3 className="font-bold text-sm text-foreground">Sensores IoT</h3>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-sm text-foreground">Sensores IoT</h3>
+          </div>
+          {groupedSensores.length > 1 && (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {activeGroup.nombre} ({validIdx + 1} de {groupedSensores.length})
+              </span>
+              <div className="flex items-center">
+                <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={handlePrev}>
+                  <HugeiconsIcon icon={ArrowLeft01Icon} className="size-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={handleNext}>
+                  <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
-        {data.estado_general && estadoSenalBadge(data.estado_general)}
+        {data?.estado_general && estadoSenalBadge(data.estado_general)}
       </div>
 
       {/* Warning No Bloqueante */}
-      {data.estado_general === 'Sin_senal' && (
+      {data?.estado_general === 'Sin_senal' && (
         <div className="bg-destructive/10 text-destructive text-xs font-medium px-4 py-3 rounded-lg border border-destructive/20">
           No se pudo actualizar la información de los sensores. Mostrando los últimos datos disponibles.
         </div>
@@ -94,7 +149,7 @@ export function CardMonitoreoSensores({ idParcela }: CardMonitoreoSensoresProps)
 
       {/* Grid de Sensores */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-2">
-        {data.sensores.map((sensor) => (
+        {activeGroup.sensores.map((sensor) => (
           <div key={sensor.id_sensor} className="border border-border/70 rounded-xl p-4 flex flex-col justify-between bg-card hover:border-primary/30 transition-colors">
             
             {/* Top row: Label + Icon */}
