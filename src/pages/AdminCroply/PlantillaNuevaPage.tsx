@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { PlantillaFormulario } from './components/PlantillaFormulario';
+import { ROUTES } from '../../constants/routes';
 import { useCrearPlantillaBase } from '@/hooks/usePlantillasBase';
 import { showSuccessToast } from '@/utils/successHandler';
 import { CrearPlantillaBaseRequest } from '@/types/plantillas.types';
@@ -13,13 +14,13 @@ export default function PlantillaNuevaPage() {
   const guardar = async (data: CrearPlantillaBaseRequest) => {
     const response = await crearMutation.mutateAsync(data);
     showSuccessToast(response, 'Plantilla creada correctamente');
-    navigate(`/admin-croply/plantillas/${response.id_plantilla_base}`);
+    navigate(ROUTES.CROPLY.plantillaDetalle(response.id_plantilla_base));
   };
 
   return (
     <div className="w-full max-w-screen-xl mx-auto px-6 py-8">
       <Link
-        to="/admin-croply/catalogos-base"
+        to={ROUTES.CROPLY.CATALOGOS_BASE}
         className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline mb-6"
       >
         <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
@@ -33,7 +34,7 @@ export default function PlantillaNuevaPage() {
 
       <PlantillaFormulario
         onGuardar={guardar}
-        onCancel={() => navigate('/admin-croply/catalogos-base')}
+        onCancel={() => navigate(ROUTES.CROPLY.CATALOGOS_BASE)}
         isPending={crearMutation.isPending}
         textoSubmit="Guardar"
       />

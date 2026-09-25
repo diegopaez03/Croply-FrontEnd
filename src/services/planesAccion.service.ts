@@ -6,13 +6,13 @@ import {
   TareaPlanPayload,
   TareaPlanAccion,
   CambiarEstadoTareaResponse,
-  EstadoTareaPlan,
   EstadoPlanAccionManual,
 } from '@/types/planesAccion.types';
 import { mockCultivos as mockCultivosBase } from './cultivos.service';
 import { mockPlantillas as mockPlantillasBase } from './plantillas.service';
 import { mockFincas } from './fincas.service';
-import { findTipoTarea } from '@/utils/tipo-tarea.catalog';
+import { mockEstadosTarea } from './estadosTarea.service';
+import { mockTiposTarea } from './tiposTarea.service';
 
 export const planesAccionService = {
   obtenerPreviewPlan: async (id_cultivo_base: number, id_parcela: number): Promise<PlanPreviewResponse> => {
@@ -128,12 +128,46 @@ export const planesAccionService = {
     return response.data;
   },
 
-  obtenerPlanAccion: async (id_plan_accion: number): Promise<PlanAccionDetalle> => {
+  obtenerPlanAccion: async (
+    id_plan_accion: number,
+    filters?: { id_estado_tarea?: string; fecha?: string }
+  ): Promise<PlanAccionDetalle> => {
     if (import.meta.env.VITE_USE_MOCKS === 'true') {
       await delay(300);
-      return structuredClone(ensureMockPlan(id_plan_accion));
+      const planBase = structuredClone(ensureMockPlan(id_plan_accion));
+      
+      const hoyStr = new Date().toISOString().split('T')[0];
+
+      planBase.hitos.forEach(hito => {
+        hito.tareas = hito.tareas.filter(tarea => {
+          // Calculate atrasada
+          const est = mockEstadosTarea.find(e => e.id_estado_tarea === tarea.id_estado_tarea);
+          const isFinalizador = est?.es_estado_finalizador ?? false;
+          tarea.atrasada = !isFinalizador && tarea.fecha_planificada_tarea < hoyStr;
+
+          // Apply filters
+          if (filters?.id_estado_tarea && filters.id_estado_tarea !== 'todos') {
+            if (String(tarea.id_estado_tarea) !== filters.id_estado_tarea) return false;
+          }
+          if (filters?.fecha && filters.fecha !== '') {
+            if (tarea.fecha_planificada_tarea !== filters.fecha) return false;
+          }
+          return true;
+        });
+      });
+
+      return planBase;
     }
-    const response = await apiClient.get<PlanAccionDetalle>(`/planes-accion/${id_plan_accion}`);
+    const params = new URLSearchParams();
+    if (filters?.id_estado_tarea && filters.id_estado_tarea !== 'todos') {
+      params.append('estado', filters.id_estado_tarea);
+    }
+    if (filters?.fecha && filters.fecha !== '') {
+      params.append('fecha', filters.fecha);
+    }
+    
+    const queryStr = params.toString() ? `?${params.toString()}` : '';
+    const response = await apiClient.get<PlanAccionDetalle>(`/planes-accion/${id_plan_accion}${queryStr}`);
     return response.data;
   },
 
@@ -166,7 +200,8 @@ export const planesAccionService = {
     if (import.meta.env.VITE_USE_MOCKS === 'true') {
       await delay(300);
       const found = findMockTarea(id_plan_accion, id_tarea);
-      if (found.tarea.estado === 'Completado') throw mockTaskNotEditable();
+      const estadoAnterior = mockEstadosTarea.find(e => e.id_estado_tarea === found.tarea.id_estado_tarea);
+      if (estadoAnterior?.es_estado_finalizador) throw mockTaskNotEditable();
       Object.assign(found.tarea, buildMockTarea(data, found.tarea));
       return structuredClone(found.tarea);
     }
@@ -180,28 +215,96 @@ export const planesAccionService = {
   cambiarEstadoTarea: async (
     id_plan_accion: number,
     id_tarea: number,
-    estado: EstadoTareaPlan,
+    id_estado_tarea: number,
   ): Promise<CambiarEstadoTareaResponse> => {
     if (import.meta.env.VITE_USE_MOCKS === 'true') {
       await delay(300);
       const found = findMockTarea(id_plan_accion, id_tarea);
-      if (found.tarea.estado === 'Completado') throw mockTaskNotEditable();
-      found.tarea.estado = estado;
-      found.tarea.fecha_ejecucion_tarea = estado === 'Completado' ? new Date().toISOString() : null;
-      const todas = found.plan.hitos.every((hito) =>
-        hito.tareas.every((tarea) => tarea.estado === 'Completado'),
-      );
+      const estadoAnterior = mockEstadosTarea.find(e => e.id_estado_tarea === found.tarea.id_estado_tarea);
+      if (estadoAnterior?.es_estado_finalizador) throw mockTaskNotEditable();
+
+      const estadoNuevo = mockEstadosTarea.find(e => e.id_estado_tarea === id_estado_tarea);
+      if (!estadoNuevo) throw mockNotFound();
+
+      found.tarea.id_estado_tarea = id_estado_tarea;
+      found.tarea.nombre_estado_tarea = estadoNuevo.nombre_estado_tarea;
+      
+      if (estadoNuevo.cuenta_para_cierre_exitoso) {
+        found.tarea.fecha_ejecucion_tarea = new Date().toISOString();
+      } else {
+        found.tarea.fecha_ejecucion_tarea = null;
+      }
+
+      let registro_agroquimico_generado = false;
+      let message = 'Estado de la tarea actualizado correctamente';
+
+      const tipoTarea = mockTiposTarea.find(t => t.id_tipo_tarea === found.tarea.id_tipo_tarea);
+      if (tipoTarea?.es_tipo_agroquimico && estadoNuevo.cuenta_para_cierre_exitoso) {
+        if ((found.tarea as any)._registroAgroquimicoGenerado) {
+           message = 'Ya existe un registro de agroquímico asociado a esta tarea. No se generó un nuevo registro.';
+        } else {
+           (found.tarea as any)._registroAgroquimicoGenerado = true;
+           registro_agroquimico_generado = true;
+        }
+      }
+
+      const allTasks = found.plan.hitos.flatMap(h => h.tareas);
+      const todasFinalizadoras = allTasks.every(t => {
+         const est = mockEstadosTarea.find(e => e.id_estado_tarea === t.id_estado_tarea);
+         return est?.es_estado_finalizador;
+      });
+      const alMenosUnaExitosa = allTasks.some(t => {
+         const est = mockEstadosTarea.find(e => e.id_estado_tarea === t.id_estado_tarea);
+         return est?.cuenta_para_cierre_exitoso;
+      });
+      const todas_tareas_completadas = allTasks.length > 0 && todasFinalizadoras && alMenosUnaExitosa;
+
       return {
-        message: 'Estado de la tarea actualizado correctamente',
+        message,
         id_tarea,
-        estado,
+        id_estado_tarea,
+        nombre_estado_tarea: estadoNuevo.nombre_estado_tarea,
         fecha_ejecucion_tarea: found.tarea.fecha_ejecucion_tarea,
-        todas_tareas_completadas: todas && found.plan.hitos.some((h) => h.tareas.length > 0),
+        todas_tareas_completadas,
+        registro_agroquimico_generado,
       };
     }
     const response = await apiClient.put<CambiarEstadoTareaResponse>(
       `/planes-accion/${id_plan_accion}/tareas/${id_tarea}/estado`,
-      { estado },
+      { id_estado_tarea },
+    );
+    return response.data;
+  },
+
+  reprogramarTarea: async (
+    id_plan_accion: number,
+    id_tarea: number,
+    payload: { fecha_planificada_tarea: string }
+  ) => {
+    if (import.meta.env.VITE_USE_MOCKS === 'true') {
+      await delay(300);
+      const found = findMockTarea(id_plan_accion, id_tarea);
+      const estadoActual = mockEstadosTarea.find(e => e.id_estado_tarea === found.tarea.id_estado_tarea);
+      if (estadoActual?.es_estado_finalizador) throw mockTaskNotEditable();
+
+      found.tarea.fecha_planificada_tarea = payload.fecha_planificada_tarea;
+      
+      const hoyStr = new Date().toISOString().split('T')[0];
+      const isFinalizador = estadoActual?.es_estado_finalizador ?? false;
+      const atrasada = !isFinalizador && payload.fecha_planificada_tarea < hoyStr;
+
+      found.tarea.atrasada = atrasada;
+
+      return {
+        message: 'Tarea reprogramada exitosamente.',
+        id_tarea,
+        fecha_planificada_tarea: payload.fecha_planificada_tarea,
+        atrasada,
+      };
+    }
+    const response = await apiClient.put(
+      `/planes-accion/${id_plan_accion}/tareas/${id_tarea}/fecha`,
+      payload,
     );
     return response.data;
   },
@@ -210,7 +313,8 @@ export const planesAccionService = {
     if (import.meta.env.VITE_USE_MOCKS === 'true') {
       await delay(300);
       const found = findMockTarea(id_plan_accion, id_tarea);
-      if (found.tarea.estado === 'Completado') throw mockTaskNotEditable();
+      const estadoAnterior = mockEstadosTarea.find(e => e.id_estado_tarea === found.tarea.id_estado_tarea);
+      if (estadoAnterior?.es_estado_finalizador) throw mockTaskNotEditable();
       found.hito.tareas = found.hito.tareas.filter((tarea) => tarea.id_tarea !== id_tarea);
       return { message: 'Tarea eliminada correctamente' };
     }
@@ -231,28 +335,24 @@ export const planesAccionService = {
       }
       const plan = ensureMockPlan(id_plan_accion);
       if (estado === 'Finalizado') {
-        const todas = plan.hitos.every((hito) =>
-          hito.tareas.length > 0 && hito.tareas.every((tarea) => tarea.estado === 'Completado'),
-        );
-        if (!todas) {
+        const allTasks = plan.hitos.flatMap(h => h.tareas);
+        const todasFinalizadoras = allTasks.every(t => {
+           const est = mockEstadosTarea.find(e => e.id_estado_tarea === t.id_estado_tarea);
+           return est?.es_estado_finalizador;
+        });
+        if (!todasFinalizadoras || allTasks.length === 0) {
           throw mockDomain('TASKS_NOT_COMPLETED', 400, 'No se puede finalizar el plan hasta completar todas las tareas.');
         }
       }
       plan.estado = estado;
       plan.fecha_fin_pa = new Date().toISOString().slice(0, 10);
 
-      // Sincronizar mockFincas para que desaparezca de cultivos activos
       if (['Finalizado', 'Cancelado', 'FinalizadoPorContingencia'].includes(estado)) {
         for (const f of mockFincas) {
           for (const p of f.parcelas) {
             if (p.cultivos_asignados) {
               const asigIndex = p.cultivos_asignados.findIndex((c: any) => c.id_plan_accion === id_plan_accion);
               if (asigIndex !== -1) {
-                // Lo marcamos como inactivo o lo removemos según cómo lo lea useParcelaQuery
-                // Como mapParcelaDetalle lee todo cultivos_asignados, y la vista usa estado='Activo',
-                // simplemente le cambiamos el estado al cultivo dentro de mockFincas,
-                // o lo removemos de cultivos_asignados y lo mandamos a un mock_historial (si existiera).
-                // Para que desaparezca de la vista de "Cultivos", le seteamos el nuevo estado:
                 p.cultivos_asignados[asigIndex].estado = estado;
               }
             }
@@ -299,7 +399,7 @@ function seedMockPlan(
             nombre_tarea: 'Preparación de almácigo',
             descripcion_tarea: 'Preparación de almácigo en sector norte',
             fecha_planificada_tarea: fecha_inicio_pa,
-            id_tipo_tarea: 2,
+            id_tipo_tarea: mockTiposTarea[0]?.id_tipo_tarea ?? 1,
           }),
         ],
       },
@@ -314,7 +414,11 @@ function ensureMockPlan(id_plan_accion: number): PlanAccionDetalle {
 }
 
 function buildMockTarea(data: TareaPlanPayload, base?: TareaPlanAccion): TareaPlanAccion {
-  const tipo = findTipoTarea(data.id_tipo_tarea);
+  const tipo = mockTiposTarea.find(t => t.id_tipo_tarea === data.id_tipo_tarea);
+  if (!tipo) throw mockNotFound();
+  
+  const estadoBase = mockEstadosTarea.find(e => e.id_estado_tarea === 1) || mockEstadosTarea[0]; // Planificado (1) by default
+  
   return {
     id_tarea: base?.id_tarea ?? (nextMockTareaId += 1),
     nombre_tarea: data.nombre_tarea,
@@ -323,13 +427,15 @@ function buildMockTarea(data: TareaPlanPayload, base?: TareaPlanAccion): TareaPl
     fecha_ejecucion_tarea: base?.fecha_ejecucion_tarea ?? null,
     fecha_creacion_tarea: base?.fecha_creacion_tarea ?? new Date().toISOString(),
     id_tipo_tarea: data.id_tipo_tarea,
-    nombre_tipo_tarea: tipo?.nombre_tipo_tarea ?? 'Tipo de tarea',
-    estado: base?.estado ?? 'Planificado',
+    nombre_tipo_tarea: tipo.nombre_tipo_tarea,
+    id_estado_tarea: base?.id_estado_tarea ?? estadoBase.id_estado_tarea,
+    nombre_estado_tarea: base?.nombre_estado_tarea ?? estadoBase.nombre_estado_tarea,
     nombre_producto_aa: data.nombre_producto_aa ?? null,
     dosis_aa: data.dosis_aa ?? null,
     id_responsable: data.id_responsable ?? null,
     nombre_responsable: null,
     fecha_hora_aplicacion_aa: data.fecha_hora_aplicacion_aa ?? null,
+    atrasada: false, // Calculated on the fly in obtenerPlanAccion
   };
 }
 

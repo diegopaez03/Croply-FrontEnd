@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { ROUTES } from '../../../constants/routes';
 import { CultivoImagen } from '@/components/shared/CultivoImagen';
 import { formatEpocaCultivo } from '@/utils/formatters';
 import { DEFAULT_IMAGEN_CULTIVO, urlImagenCultivo } from '@/utils/imagen-cultivo';
@@ -14,7 +15,7 @@ export function CultivoBibliotecaCard({ cultivo, searchString = '' }: CultivoBib
 
   return (
     <Link
-      to={`/admin-finca/biblioteca/${cultivo.id_cultivo_base}${searchString}`}
+      to={`${ROUTES.FINCA.cultivoBibliotecaDetalle(cultivo.id_cultivo_base)}${searchString}`}
       className="bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-primary/30 transition-all flex flex-col"
     >
       <div className="h-40 bg-[#EAF2ED] overflow-hidden">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { ROUTES } from '../../constants/routes';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateFincaMutation, useAdministradoresFincaDisponiblesQuery } from '../../hooks/useFincas';
@@ -57,7 +58,7 @@ export default function FincaCrearPage() {
   });
 
   const { mutate: createFinca, isPending } = useCreateFincaMutation(
-    (id) => navigate(`/admin-croply/fincas/${id}`),
+    (id) => navigate(ROUTES.CROPLY.fincaDetalle(id)),
     form.setError
   );
 
@@ -84,7 +85,7 @@ export default function FincaCrearPage() {
       {/* Header con Breadcrumbs y Título */}
       <div className="flex flex-col mt-2">
         <div className="flex items-center text-sm text-muted-foreground gap-2 mb-3">
-          <Link to="/admin-croply/fincas" className="hover:text-foreground transition-colors font-medium">
+          <Link to={ROUTES.CROPLY.FINCAS} className="hover:text-foreground transition-colors font-medium">
             Fincas e Infraestructura
           </Link>
           <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" strokeWidth={2} />
@@ -396,7 +397,7 @@ export default function FincaCrearPage() {
                   if (isAddingParcela) {
                     setIsAddingParcela(false);
                   } else {
-                    navigate('/admin-croply/fincas');
+                    navigate(ROUTES.CROPLY.FINCAS);
                   }
                 }}
                 disabled={isPending}

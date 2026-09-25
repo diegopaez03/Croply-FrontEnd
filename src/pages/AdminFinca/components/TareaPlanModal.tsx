@@ -30,11 +30,8 @@ import {
 } from '@/components/ui/select';
 import { tareaPlanSchema, TareaPlanFormValues } from '@/utils/validators';
 import { TareaPlanAccion, TareaPlanPayload } from '@/types/planesAccion.types';
-import {
-  esAplicacionAgroquimico,
-  TIPO_TAREA_CATALOG,
-} from '@/utils/tipo-tarea.catalog';
 import { usuariosService } from '@/services/usuarios.service';
+import { useTiposTarea } from '@/hooks/useTiposTarea';
 
 interface TareaPlanModalProps {
   open: boolean;
@@ -55,13 +52,15 @@ export function TareaPlanModal({
   isPending,
   onSubmit,
 }: TareaPlanModalProps) {
+  const { query: { data: tiposData } } = useTiposTarea();
   const form = useForm<TareaPlanFormValues>({
     resolver: zodResolver(tareaPlanSchema),
     defaultValues: valoresIniciales(tarea),
   });
 
   const idTipo = Number(form.watch('id_tipo_tarea'));
-  const esAgro = esAplicacionAgroquimico(idTipo);
+  const tipoElegido = tiposData?.tipos_tarea.find(t => t.id_tipo_tarea === idTipo);
+  const esAgro = tipoElegido?.es_tipo_agroquimico ?? false;
 
   const { data: usuariosData } = useQuery({
     queryKey: ['usuariosFinca', idFinca, 'responsables'],
@@ -168,7 +167,7 @@ export function TareaPlanModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {TIPO_TAREA_CATALOG.map((tipo) => (
+                        {tiposData?.tipos_tarea.map((tipo) => (
                           <SelectItem
                             key={tipo.id_tipo_tarea}
                             value={String(tipo.id_tipo_tarea)}

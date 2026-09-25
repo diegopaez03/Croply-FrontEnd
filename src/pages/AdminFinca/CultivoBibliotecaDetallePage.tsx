@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { ROUTES } from '../../constants/routes';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ArrowLeft01Icon,
@@ -50,7 +51,7 @@ export default function CultivoBibliotecaDetallePage() {
   useEffect(() => {
     if (error) {
       handleFormError(error, undefined, {
-        onNotFoundRedirect: () => navigate('/admin-finca/biblioteca'),
+        onNotFoundRedirect: () => navigate(ROUTES.FINCA.BIBLIOTECA),
       });
     }
   }, [error, navigate]);
@@ -77,7 +78,7 @@ export default function CultivoBibliotecaDetallePage() {
     const params = new URLSearchParams(location.search);
     if (idVariedad) params.set('variedad', String(idVariedad));
     navigate(
-      `/admin-finca/biblioteca/${detalle.id_cultivo_base}/generar-plan?${params.toString()}`,
+      `${ROUTES.FINCA.generarPlanAccion(detalle.id_cultivo_base)}?${params.toString()}`,
     );
   };
 
@@ -119,7 +120,7 @@ export default function CultivoBibliotecaDetallePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-black/20" />
 
         <Link
-          to={`/admin-finca/biblioteca${location.search}`}
+          to={`${ROUTES.FINCA.BIBLIOTECA}${location.search}`}
           className="absolute top-5 left-5 inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-white"
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />

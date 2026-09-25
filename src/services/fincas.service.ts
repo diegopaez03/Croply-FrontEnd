@@ -823,7 +823,9 @@ export const fincasService = {
             found.controladores.forEach((c: any) => {
               c.sensores.forEach((s: any) => {
                 sensores.push({
-                  id_sensor: s.id_sensor,
+                  id_controlador_sensor: c.id_controlador_sensor,
+                    nombre_controlador: c.nombre_controlador,
+                    id_sensor: s.id_sensor,
                   nombre_tipo_sensor: s.nombre_tipo_sensor,
                   unidad_medida_ts: s.codigo_tipo_sensor === 'PH' ? 'pH' : (s.codigo_tipo_sensor === 'HUM' ? '%' : ''),
                   ultimo_valor: s.ultimo_valor,

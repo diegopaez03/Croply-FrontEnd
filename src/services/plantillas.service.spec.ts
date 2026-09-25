@@ -14,7 +14,7 @@ const payloadBase = {
       tareas: [
         {
           dia_relativo_tp: 0,
-          id_tipo_tarea: 2,
+          id_tipo_tarea: 1,
           descripcion_tp: 'Preparar almácigo',
           nombre_producto: null,
           dosis_aa: null,
@@ -61,6 +61,30 @@ describe('plantillasService mocks', () => {
     });
     const assertion = expect(promesa).rejects.toMatchObject({
       response: { data: { errorCode: 'DUPLICATE_VALUE', field: 'nombre_pb' } },
+    });
+    await vi.runAllTimersAsync();
+    await assertion;
+  });
+
+  it('rechaza si un id_tipo_tarea no existe con RESOURCE_NOT_FOUND', async () => {
+    const promesa = plantillasService.crear({
+      ...payloadBase,
+      nombre_pb: 'Plan invalido',
+      hitos: [
+        {
+          nombre_hpb: 'Siembra',
+          orden_hpb: 1,
+          tareas: [
+            {
+              ...payloadBase.hitos[0].tareas[0],
+              id_tipo_tarea: 9999, // Invalido
+            },
+          ],
+        },
+      ],
+    });
+    const assertion = expect(promesa).rejects.toMatchObject({
+      response: { data: { errorCode: 'RESOURCE_NOT_FOUND' } },
     });
     await vi.runAllTimersAsync();
     await assertion;

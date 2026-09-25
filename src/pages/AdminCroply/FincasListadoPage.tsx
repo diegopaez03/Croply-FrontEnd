@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../../constants/routes';
 import { useFincasQuery, useFincasStats, useDeleteFincaMutation } from '../../hooks/useFincas';
 import { FincaListado } from '../../types/fincas.types';
 import { TablaConPaginacion, ColumnDef } from '../../components/shared/TablaConPaginacion';
@@ -115,7 +116,7 @@ export default function FincasListadoPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(`/admin-croply/fincas/${item.id_finca}`)}
+            onClick={() => navigate(ROUTES.CROPLY.fincaDetalle(item.id_finca))}
             title="Ver detalle"
             className="size-8 text-muted-foreground hover:text-primary hover:bg-accent"
           >
@@ -200,7 +201,7 @@ export default function FincasListadoPage() {
             placeholder="Buscar finca"
           />
         </div>
-        <Button onClick={() => navigate('/admin-croply/fincas/nueva')} className="gap-2 px-6">
+        <Button onClick={() => navigate(ROUTES.CROPLY.FINCA_NUEVA)} className="gap-2 px-6">
           <HugeiconsIcon icon={PlusSignIcon} className="size-4" strokeWidth={2} />
           Nueva Finca
         </Button>

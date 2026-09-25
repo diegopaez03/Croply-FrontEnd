@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/button';
 import { useAuth } from '../../../context/AuthContext';
 import logoImg from '../../../assets/images/LogoCroplyHoriz2.svg';
+import { ROUTES } from '../../../constants/routes';
 
 export default function LandingNavbar() {
   const navigate = useNavigate();
@@ -9,9 +10,9 @@ export default function LandingNavbar() {
 
   const handleDashboardRedirect = () => {
     if (usuario?.rol_sistema) {
-      navigate('/admin-croply/dashboard');
+      navigate(ROUTES.CROPLY.DASHBOARD);
     } else {
-      navigate('/admin-finca/mi-finca');
+      navigate(ROUTES.FINCA.MI_FINCA);
     }
   };
 

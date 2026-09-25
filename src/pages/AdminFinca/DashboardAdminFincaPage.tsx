@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import { ROUTES } from '../../constants/routes';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { useMiFincaListQuery, useMiFincaResumenQuery, useParcelaResumenDynamicQuery } from '../../hooks/useFincas';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowRight01Icon, Plant01Icon } from '@hugeicons/core-free-icons';
+import { ArrowRight01Icon, Plant01Icon, NoteAddIcon } from '@hugeicons/core-free-icons';
 import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
 import { MensajePendienteFinca } from '../../components/shared/MensajePendienteFinca';
+import { CapturarNotaModal } from './components/CapturarNotaModal';
+import { VerNotasModal } from './components/VerNotasModal';
 import { useAuth } from '../../context/AuthContext';
 
 export default function DashboardAdminFincaPage() {
@@ -20,6 +24,8 @@ export default function DashboardAdminFincaPage() {
   const fincas = fincasRes?.fincas || [];
   
   const [selectedFincaId, setSelectedFincaId] = useState<number | null>(null);
+  const [isNotaModalOpen, setIsNotaModalOpen] = useState(false);
+  const [isVerNotasModalOpen, setIsVerNotasModalOpen] = useState(false);
 
   useEffect(() => {
     if (fincas.length > 0 && !selectedFincaId) {
@@ -144,12 +150,21 @@ export default function DashboardAdminFincaPage() {
               </div>
             )}
           </Card>
-
-          {/* Cuaderno de notas (Placeholder visual) */}
-          <Card className="bg-card border-dashed border-border shadow-none">
-            <CardContent className="p-6 flex flex-col items-center justify-center text-muted-foreground min-h-[100px]">
-              <span className="font-mono text-sm">// TODO: Cuaderno de notas</span>
-            </CardContent>
+          {/* Cuaderno de notas */}
+          <Card className="bg-card border-border shadow-sm p-6">
+            <div className="flex items-start sm:items-center gap-4 mb-5">
+              <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <HugeiconsIcon icon={NoteAddIcon} className="size-6 text-primary"/>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-primary">¿Alguna observación hoy?</h3>
+                <p className="text-sm text-muted-foreground mt-1">Ingresa una nota con tu observación o mira las notas que has ingresado</p>
+              </div>
+            </div>
+            <div className="flex justify-center items-center gap-3">
+              <Button onClick={() => setIsNotaModalOpen(true)}>Capturar Nota</Button>
+              <Button variant="outline" className="text-primary hover:text-primary hover:bg-primary/5" onClick={() => setIsVerNotasModalOpen(true)}>Ver notas</Button>
+            </div>
           </Card>
 
           {/* Resumen de Costos (Placeholder visual) */}
@@ -229,7 +244,7 @@ export default function DashboardAdminFincaPage() {
 
                 <Button 
                   className="w-full mt-2 bg-muted hover:bg-muted/80 text-foreground font-semibold"
-                  onClick={() => navigate(`/admin-finca/parcelas/${parcelaResumen.id_parcela}`)}
+                  onClick={() => navigate(ROUTES.FINCA.parcelaDetalle(parcelaResumen.id_parcela))}
                 >
                   Ver detalle parcela
                   <HugeiconsIcon icon={ArrowRight01Icon} className="size-4 ml-2" />
@@ -250,6 +265,17 @@ export default function DashboardAdminFincaPage() {
           <HugeiconsIcon icon={ArrowRight01Icon} className="size-4 ml-2" />
         </Button>
       </div>
+      
+      <CapturarNotaModal 
+        open={isNotaModalOpen} 
+        onOpenChange={setIsNotaModalOpen} 
+        idFincaInicial={selectedFincaId} 
+      />
+      <VerNotasModal 
+        open={isVerNotasModalOpen}
+        onOpenChange={setIsVerNotasModalOpen}
+        idFinca={selectedFincaId}
+      />
     </div>
   );
 }
