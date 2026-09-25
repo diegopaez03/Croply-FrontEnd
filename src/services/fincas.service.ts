@@ -26,7 +26,7 @@ import { mockTiposSensor } from './tiposSensor.service';
 
 export let mockFincas: FincaDetalle[] = [
   {
-    id_finca: 1,
+    id_finca: 12,
     nombre_finca: 'Finca La Esperanza',
     provincia: 'Mendoza',
     departamento: 'Capital',
@@ -566,7 +566,7 @@ export const fincasService = {
           const nuevaParcela: ParcelaResumen = {
             id_parcela: Date.now(),
             nombre_parcela: data.nombre_parcela,
-            estado_parcela: 'Activo',
+            estado_parcela: 'Activa',
             superficie_parcela: data.superficie_parcela,
             controladores: (data.controladores || []).map(c => ({
               id_controlador_sensor: Date.now() + Math.floor(Math.random() * 1000),
@@ -684,7 +684,7 @@ export const fincasService = {
 
           const parcela = finca.parcelas.find(p => p.id_parcela === id_parcela);
           if (parcela) {
-            parcela.estado_parcela = 'Inactivo';
+            parcela.estado_parcela = 'Inactiva';
             finca.cantidad_parcelas = Math.max(0, finca.cantidad_parcelas - 1);
           }
           resolve({ message: 'Parcela dada de baja correctamente. Las tareas pendientes fueron canceladas y el cultivo activo fue inactivado.' });

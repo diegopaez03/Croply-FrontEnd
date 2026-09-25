@@ -467,3 +467,64 @@ function mockDomain(errorCode: string, status: number, message: string) {
     },
   };
 }
+
+export function mockParcelWithoutActionPlan() {
+  return mockDomain('PARCEL_WITHOUT_ACTION_PLAN', 400, 'La parcela no tiene plan activo');
+}
+
+export function _mockCrearTareaAgroquimico(
+  id_plan_accion: number,
+  id_hito_real: number,
+  data: TareaPlanPayload,
+  responsableNombre: string
+): TareaPlanAccion {
+  const plan = ensureMockPlan(id_plan_accion);
+  const hito = plan.hitos.find((item) => item.id_hito_real === id_hito_real);
+  if (!hito) throw mockNotFound();
+  
+  const tarea = buildMockTarea(data);
+  const estadoFinalizador = mockEstadosTarea.find(e => e.es_estado_finalizador);
+  if (estadoFinalizador) {
+    tarea.id_estado_tarea = estadoFinalizador.id_estado_tarea;
+    tarea.nombre_estado_tarea = estadoFinalizador.nombre_estado_tarea;
+  }
+  tarea.fecha_ejecucion_tarea = data.fecha_planificada_tarea; // or data.fecha_hora_aplicacion_aa if different, but they are the same here
+  tarea.nombre_responsable = responsableNombre;
+  (tarea as any)._registroAgroquimicoGenerado = true;
+  
+  hito.tareas.unshift(tarea); // Add at the beginning of the milestone tasks
+  return tarea;
+}
+
+export function _mockEditarTareaAgroquimico(
+  id_tarea: number,
+  newData: {
+    fecha_ejecucion_tarea: string;
+    descripcion_tarea: string;
+    id_responsable: number;
+  },
+  responsableNombre: string
+) {
+  let foundTarea = null;
+  for (const plan of mockPlanes.values()) {
+    for (const hito of plan.hitos) {
+      const t = hito.tareas.find((item) => item.id_tarea === id_tarea);
+      if (t) {
+        foundTarea = t;
+        break;
+      }
+    }
+    if (foundTarea) break;
+  }
+
+  if (!foundTarea) {
+    throw new Error('Inconsistencia: Tarea vinculada no encontrada en los planes de acción.');
+  }
+
+  foundTarea.fecha_ejecucion_tarea = newData.fecha_ejecucion_tarea;
+  foundTarea.descripcion_tarea = newData.descripcion_tarea;
+  foundTarea.id_responsable = newData.id_responsable;
+  foundTarea.nombre_responsable = responsableNombre;
+  
+  return foundTarea;
+}
