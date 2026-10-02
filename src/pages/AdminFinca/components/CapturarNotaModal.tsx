@@ -130,76 +130,78 @@ export function CapturarNotaModal({
           </DialogDescription>
         </DialogHeader>
 
-        {!hasFincas ? (
-          <div className="py-6 text-center text-sm text-muted-foreground border border-dashed border-border rounded-lg bg-muted/10">
-            No hay fincas disponibles en el dispositivo. Conectate a internet para sincronizar.
+        <div className="p-6 flex flex-col gap-6">
+          {!hasFincas ? (
+            <div className="py-6 text-center text-sm text-muted-foreground border border-dashed border-border rounded-lg bg-muted/10">
+              No hay fincas disponibles en el dispositivo. Conectate a internet para sincronizar.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-foreground">Finca *</label>
+                <Select
+                  value={idFinca ? String(idFinca) : ''}
+                  onValueChange={(val) => {
+                    setIdFinca(Number(val));
+                    setIdParcela(null); // Reiniciar parcela al cambiar finca
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar finca" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fincas.map((f) => (
+                      <SelectItem key={f.id_finca} value={String(f.id_finca)}>
+                        {f.nombre_finca}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-foreground">Parcela (Opcional)</label>
+                <Select
+                  value={idParcela ? String(idParcela) : 'ninguna'}
+                  onValueChange={(val) => setIdParcela(val === 'ninguna' ? null : Number(val))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="General (toda la finca)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ninguna">General (toda la finca)</SelectItem>
+                    {parcelas.map((p) => (
+                      <SelectItem key={p.id_parcela} value={String(p.id_parcela)}>
+                        {p.nombre_parcela}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-foreground">Nota *</label>
+                <Textarea
+                  value={contenido}
+                  onChange={(e) => setContenido(e.target.value)}
+                  placeholder="Escribí acá tu observación..."
+                  className="min-h-[120px] resize-none"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={handleClose}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={!hasFincas || !contenido.trim() || crearNotaMutation.isPending}
+            >
+              {crearNotaMutation.isPending ? 'Guardando...' : 'Guardar'}
+            </Button>
           </div>
-        ) : (
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-foreground">Finca *</label>
-              <Select
-                value={idFinca ? String(idFinca) : ''}
-                onValueChange={(val) => {
-                  setIdFinca(Number(val));
-                  setIdParcela(null); // Reiniciar parcela al cambiar finca
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar finca" />
-                </SelectTrigger>
-                <SelectContent>
-                  {fincas.map((f) => (
-                    <SelectItem key={f.id_finca} value={String(f.id_finca)}>
-                      {f.nombre_finca}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-foreground">Parcela (Opcional)</label>
-              <Select
-                value={idParcela ? String(idParcela) : 'ninguna'}
-                onValueChange={(val) => setIdParcela(val === 'ninguna' ? null : Number(val))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="General (toda la finca)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ninguna">General (toda la finca)</SelectItem>
-                  {parcelas.map((p) => (
-                    <SelectItem key={p.id_parcela} value={String(p.id_parcela)}>
-                      {p.nombre_parcela}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-foreground">Nota *</label>
-              <Textarea
-                value={contenido}
-                onChange={(e) => setContenido(e.target.value)}
-                placeholder="Escribí acá tu observación..."
-                className="min-h-[120px] resize-none"
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-end gap-3 pt-2">
-          <Button variant="ghost" onClick={handleClose}>
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!hasFincas || !contenido.trim() || crearNotaMutation.isPending}
-          >
-            {crearNotaMutation.isPending ? 'Guardando...' : 'Guardar'}
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

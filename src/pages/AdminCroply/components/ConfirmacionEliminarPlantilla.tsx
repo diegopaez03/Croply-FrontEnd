@@ -50,7 +50,7 @@ export function ConfirmacionEliminarPlantilla({
             Los planes de acción ya generados a partir de ella no se verán afectados.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
+        <DialogFooter className="p-6 pt-4">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

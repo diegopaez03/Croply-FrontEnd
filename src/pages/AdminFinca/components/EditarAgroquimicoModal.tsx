@@ -133,12 +133,12 @@ export function EditarAgroquimicoModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[700px] bg-card border border-border shadow-lg">
+      <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-foreground">
+          <DialogTitle>
             {isEditing ? 'Editar Aplicación' : 'Detalle de Aplicación'}
           </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
+          <DialogDescription>
             {isEditing 
               ? 'Modificá los datos necesarios del tratamiento fitosanitario.' 
               : 'Visualizá los datos del tratamiento fitosanitario.'}
@@ -147,7 +147,7 @@ export function EditarAgroquimicoModal({
 
         <form 
           onSubmit={handleSubmit(onSubmit)} 
-          className="space-y-4"
+          className="p-6 space-y-4"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'BUTTON' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
               e.preventDefault();

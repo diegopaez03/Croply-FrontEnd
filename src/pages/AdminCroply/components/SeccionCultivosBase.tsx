@@ -110,7 +110,7 @@ export function SeccionCultivosBase() {
               Esta acción dará de baja el cultivo y ya no estará disponible en la biblioteca.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="p-6 pt-4">
             <Button
               variant="outline"
               onClick={() => setCultivoAEliminar(null)}

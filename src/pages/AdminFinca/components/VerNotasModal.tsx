@@ -87,7 +87,7 @@ export function VerNotasModal({
             <DialogTitle>Notas de campo</DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto pr-2 mt-4 space-y-4">
+          <div className="p-6 flex-1 overflow-y-auto space-y-4">
             {isLoading ? (
               <div className="py-10 text-center text-sm text-muted-foreground flex items-center justify-center">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mr-3" />

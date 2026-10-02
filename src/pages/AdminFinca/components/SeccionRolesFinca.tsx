@@ -196,7 +196,8 @@ export function SeccionRolesFinca({ idFinca }: { idFinca: number }) {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="grid gap-4 py-4">
+              <div className="p-6 flex flex-col gap-6">
+                <div className="grid gap-4">
                 <FormField
                   control={form.control}
                   name="nombre_rol"
@@ -293,6 +294,7 @@ export function SeccionRolesFinca({ idFinca }: { idFinca: number }) {
                   Guardar
                 </Button>
               </DialogFooter>
+            </div>
             </form>
           </Form>
         </DialogContent>
@@ -304,28 +306,30 @@ export function SeccionRolesFinca({ idFinca }: { idFinca: number }) {
           <DialogHeader>
             <DialogTitle>¿Deseás eliminar este rol?</DialogTitle>
           </DialogHeader>
-          <div className="py-4 text-sm text-muted-foreground">
-            Al confirmar, el rol se dará de baja y no podrá ser asignado a nuevos usuarios.
-            Los usuarios actuales podrían perder sus accesos.
+          <div className="p-6 pt-4 flex flex-col gap-4">
+            <div className="text-sm text-muted-foreground">
+              Al confirmar, el rol se dará de baja y no podrá ser asignado a nuevos usuarios.
+              Los usuarios actuales podrían perder sus accesos.
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCloseDeleteModal}
+                disabled={deleteMutation.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+              >
+                Sí, eliminar
+              </Button>
+            </DialogFooter>
           </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCloseDeleteModal}
-              disabled={deleteMutation.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={deleteMutation.isPending}
-            >
-              Sí, eliminar
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

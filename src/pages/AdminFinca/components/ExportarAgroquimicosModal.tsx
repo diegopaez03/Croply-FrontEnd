@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Download04Icon, InformationCircleIcon } from '@hugeicons/core-free-icons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useExportarAgroquimicosMutation } from '@/hooks/useAgroquimicos';
-import { mockAplicaciones } from '@/services/agroquimicos.service';
+import { useExportarAgroquimicosMutation, useAplicacionesQuery } from '@/hooks/useAgroquimicos';
 
 interface ExportarAgroquimicosModalProps {
   open: boolean;
@@ -44,24 +43,18 @@ export function ExportarAgroquimicosModal({ open, onOpenChange, id_finca, nombre
     ? 'La fecha de fin debe ser igual o posterior a la fecha de inicio.' 
     : '';
 
-  // Vista Previa filtrando los mocks localmente
-  const vistaPreviaData = useMemo(() => {
-    if (!open) return [];
-    
-    let filtradas = mockAplicaciones;
+  const { data: aplicacionesData, isLoading: isVistaPreviaLoading } = useAplicacionesQuery(
+    open ? id_finca : null,
+    {
+      page: 1,
+      pageSize: 8,
+      id_parcela: idParcela !== 'all' ? Number(idParcela) : undefined,
+      fecha_desde: fechaDesde || undefined,
+      fecha_hasta: fechaHasta || undefined,
+    }
+  );
 
-    if (idParcela !== 'all') {
-      filtradas = filtradas.filter(a => a.id_parcela.toString() === idParcela);
-    }
-    if (fechaDesde) {
-      filtradas = filtradas.filter(a => a.fecha_hora_aplicacion_aa.split('T')[0] >= fechaDesde);
-    }
-    if (fechaHasta) {
-      filtradas = filtradas.filter(a => a.fecha_hora_aplicacion_aa.split('T')[0] <= fechaHasta);
-    }
-
-    return filtradas;
-  }, [open, fechaDesde, fechaHasta, idParcela, mockAplicaciones]);
+  const vistaPreviaData = aplicacionesData?.aplicaciones || [];
 
   const handleDownload = () => {
     if (dateError) {
@@ -96,7 +89,7 @@ export function ExportarAgroquimicosModal({ open, onOpenChange, id_finca, nombre
       <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden bg-card border border-border flex flex-col md:flex-row h-[600px] max-h-[95vh]">
         {/* Izquierda: Configuración */}
         <div className="w-full md:w-1/2 p-6 flex flex-col h-full border-r border-border overflow-hidden">
-          <DialogHeader className="mb-4 shrink-0">
+          <DialogHeader className="mb-4 shrink-0 bg-transparent border-none p-0">
             <DialogTitle className="text-xl font-semibold text-foreground">Exportar Reporte de Agroquímicos</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">Configurá los filtros para descargar el historial.</DialogDescription>
           </DialogHeader>
@@ -235,20 +228,27 @@ export function ExportarAgroquimicosModal({ open, onOpenChange, id_finca, nombre
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {vistaPreviaData.slice(0, 8).map((app, i) => (
-                      <tr key={i} className="text-gray-700">
-                        <td className="py-1.5 px-1">{app.fecha_hora_aplicacion_aa.split('T')[0].split('-').reverse().join('/')}</td>
-                        <td className="py-1.5 px-1 font-medium">{app.nombre_producto_aa}</td>
-                        <td className="py-1.5 px-1">{app.dosis_aa}</td>
-                        <td className="py-1.5 px-1 text-right">{app.nombre_parcela}</td>
+                    {isVistaPreviaLoading ? (
+                      <tr>
+                        <td colSpan={4} className="py-6 text-center text-gray-400 italic">
+                          Cargando vista previa...
+                        </td>
                       </tr>
-                    ))}
-                    {vistaPreviaData.length === 0 && (
+                    ) : vistaPreviaData.length === 0 ? (
                       <tr>
                         <td colSpan={4} className="py-6 text-center text-gray-400 italic">
                           No hay aplicaciones registradas en este período.
                         </td>
                       </tr>
+                    ) : (
+                      vistaPreviaData.slice(0, 8).map((app, i) => (
+                        <tr key={i} className="text-gray-700">
+                          <td className="py-1.5 px-1">{app.fecha_hora_aplicacion_aa.split('T')[0].split('-').reverse().join('/')}</td>
+                          <td className="py-1.5 px-1 font-medium">{app.nombre_producto_aa}</td>
+                          <td className="py-1.5 px-1">{app.dosis_aa}</td>
+                          <td className="py-1.5 px-1 text-right">{app.nombre_parcela}</td>
+                        </tr>
+                      ))
                     )}
                   </tbody>
                 </table>

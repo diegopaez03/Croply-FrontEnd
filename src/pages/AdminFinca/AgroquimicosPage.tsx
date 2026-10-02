@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PlusSignIcon, FlaskConicalIcon, Search01Icon, ViewIcon, Calendar01Icon, Download04Icon } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import { RegistrarAgroquimicoModal } from './components/RegistrarAgroquimicoModal';
 import { EditarAgroquimicoModal } from './components/EditarAgroquimicoModal';
 import { ExportarAgroquimicosModal } from './components/ExportarAgroquimicosModal';
-import { useMiFincaListQuery, useMiFincaResumenQuery } from '@/hooks/useFincas';
+import { useMiFincaResumenQuery } from '@/hooks/useFincas';
+import { useFincaActiva } from '@/contexts/FincaActivaContext';
 import { useAplicacionesQuery } from '@/hooks/useAgroquimicos';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -16,20 +17,12 @@ import { AplicacionAgroquimicoDetalle } from '@/types/agroquimicos.types';
 
 
 export function AgroquimicosPage() {
-  const { data: fincasRes } = useMiFincaListQuery();
-  const fincas = fincasRes?.fincas || [];
+  const { fincaActivaId: selectedFincaId, fincas } = useFincaActiva();
   
-  const [selectedFincaId, setSelectedFincaId] = useState<number | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEditApp, setSelectedEditApp] = useState<AplicacionAgroquimicoDetalle | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (fincas.length > 0 && !selectedFincaId) {
-      setSelectedFincaId(fincas[0].id_finca);
-    }
-  }, [fincas, selectedFincaId]);
 
   // Filtros
   const [page, setPage] = useState(1);
@@ -154,29 +147,6 @@ export function AgroquimicosPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          {fincas.length > 1 && (
-            <div className="w-full sm:w-48 shrink-0">
-              <Select 
-                value={selectedFincaId?.toString() || ""} 
-                onValueChange={(val) => {
-                  setSelectedFincaId(Number(val));
-                  handleClearFilters();
-                }}
-              >
-                <SelectTrigger className="bg-background border-input text-foreground h-10">
-                  <SelectValue placeholder="Seleccionar finca" />
-                </SelectTrigger>
-                <SelectContent>
-                  {fincas.map((f: any) => (
-                    <SelectItem key={f.id_finca} value={f.id_finca.toString()}>
-                      {f.nombre_finca}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          
           <Button 
             variant="outline" 
             onClick={() => setIsExportModalOpen(true)}

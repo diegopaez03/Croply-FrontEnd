@@ -137,17 +137,17 @@ export function RegistrarAgroquimicoModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[700px] bg-card border border-border shadow-lg">
+      <DialogContent className="sm:max-w-[700px] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-foreground">
+          <DialogTitle>
             Registrar Aplicación
           </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
+          <DialogDescription>
             Completá los datos para registrar un tratamiento fitosanitario.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           {/* Fila 1: Parcela y Hito */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
