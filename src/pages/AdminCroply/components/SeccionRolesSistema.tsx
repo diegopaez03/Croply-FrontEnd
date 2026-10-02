@@ -186,103 +186,105 @@ export function SeccionRolesSistema() {
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="grid gap-4 py-4">
-                <FormField
-                  control={form.control}
-                  name="nombre_rol"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nombre</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej. Administrador" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="descripcion"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Descripción (Opcional)</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Breve descripción de los accesos..." 
-                          className="resize-none" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="p-6 flex flex-col gap-6">
+                <div className="grid gap-4">
+                  <FormField
+                    control={form.control}
+                    name="nombre_rol"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nombre</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ej. Administrador" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="descripcion"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Descripción (Opcional)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Breve descripción de los accesos..." 
+                            className="resize-none" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="permisos"
-                  render={() => (
-                    <FormItem>
-                      <div className="mb-4 mt-2">
-                        <FormLabel className="text-base">Permisos</FormLabel>
-                        <DialogDescription>
-                          Seleccioná los módulos a los que este rol tendrá acceso.
-                        </DialogDescription>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {isLoadingPermisos ? (
-                          <div className="text-sm text-muted-foreground">Cargando permisos...</div>
-                        ) : (
-                          permisosData?.permisos.map((permiso) => (
-                            <FormField
-                              key={permiso.id_permiso}
-                              control={form.control}
-                              name="permisos"
-                              render={({ field }) => {
-                                return (
-                                  <FormItem
-                                    key={permiso.id_permiso}
-                                    className="flex flex-row items-start space-x-3 space-y-0"
-                                  >
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(permiso.id_permiso)}
-                                        onCheckedChange={(checked) => {
-                                          return checked
-                                            ? field.onChange([...(field.value || []), permiso.id_permiso])
-                                            : field.onChange(
-                                                field.value?.filter(
-                                                  (value) => value !== permiso.id_permiso
+                  <FormField
+                    control={form.control}
+                    name="permisos"
+                    render={() => (
+                      <FormItem>
+                        <div className="mb-4 mt-2">
+                          <FormLabel className="text-base">Permisos</FormLabel>
+                          <DialogDescription>
+                            Seleccioná los módulos a los que este rol tendrá acceso.
+                          </DialogDescription>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {isLoadingPermisos ? (
+                            <div className="text-sm text-muted-foreground">Cargando permisos...</div>
+                          ) : (
+                            permisosData?.permisos.map((permiso) => (
+                              <FormField
+                                key={permiso.id_permiso}
+                                control={form.control}
+                                name="permisos"
+                                render={({ field }) => {
+                                  return (
+                                    <FormItem
+                                      key={permiso.id_permiso}
+                                      className="flex flex-row items-start space-x-3 space-y-0"
+                                    >
+                                      <FormControl>
+                                        <Checkbox
+                                          checked={field.value?.includes(permiso.id_permiso)}
+                                          onCheckedChange={(checked) => {
+                                            return checked
+                                              ? field.onChange([...(field.value || []), permiso.id_permiso])
+                                              : field.onChange(
+                                                  field.value?.filter(
+                                                    (value) => value !== permiso.id_permiso
+                                                  )
                                                 )
-                                              )
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="font-normal">
-                                      {permiso.nombre_permiso}
-                                    </FormLabel>
-                                  </FormItem>
-                                )
-                              }}
-                            />
-                          ))
-                        )}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                                          }}
+                                        />
+                                      </FormControl>
+                                      <FormLabel className="font-normal">
+                                        {permiso.nombre_permiso}
+                                      </FormLabel>
+                                    </FormItem>
+                                  )
+                                }}
+                              />
+                            ))
+                          )}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={handleCloseModal} disabled={saveRolMutation.isPending}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={saveRolMutation.isPending}>
-                  Guardar
-                </Button>
-              </DialogFooter>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={handleCloseModal} disabled={saveRolMutation.isPending}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={saveRolMutation.isPending}>
+                    Guardar
+                  </Button>
+                </DialogFooter>
+              </div>
             </form>
           </Form>
         </DialogContent>
@@ -299,7 +301,7 @@ export function SeccionRolesSistema() {
                 : "Esta acción no se puede deshacer y el rol ya no estará disponible."}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="p-6 pt-4">
             <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)} disabled={deleteMutation.isPending}>Cancelar</Button>
             <Button 
               onClick={(e: React.MouseEvent) => {

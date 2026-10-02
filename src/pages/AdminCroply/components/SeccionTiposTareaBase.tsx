@@ -128,30 +128,32 @@ export function SeccionTiposTareaBase() {
                 <DialogTitle>{selectedTipo ? "Editar Tipo de Tarea" : "Nuevo Tipo de Tarea"}</DialogTitle>
               </DialogHeader>
 
-              <div className="grid gap-4 py-4">
-                <FormField
-                  control={form.control}
-                  name="nombre_tipo_tarea"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nombre</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej. Siembra" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <div className="p-6 flex flex-col gap-6">
+                <div className="grid gap-4">
+                  <FormField
+                    control={form.control}
+                    name="nombre_tipo_tarea"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nombre</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ej. Siembra" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={handleCloseModal} disabled={createMutation.isPending || updateMutation.isPending}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  Guardar
-                </Button>
-              </DialogFooter>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={handleCloseModal} disabled={createMutation.isPending || updateMutation.isPending}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                    Guardar
+                  </Button>
+                </DialogFooter>
+              </div>
             </form>
           </Form>
         </DialogContent>

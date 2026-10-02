@@ -91,13 +91,13 @@ export function CambiarContrasenaModal() {
           Cambiar contraseña
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] p-6 gap-6 bg-card border-border rounded-xl shadow-lg">
-        <DialogHeader className="flex flex-row items-center justify-between p-0 m-0 space-y-0">
-          <DialogTitle className="text-xl font-semibold text-foreground tracking-tight">Cambiar contraseña</DialogTitle>
+      <DialogContent className="sm:max-w-[425px] rounded-xl">
+        <DialogHeader>
+          <DialogTitle>Cambiar contraseña</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-4">
             
             <FormField
               control={form.control}

@@ -164,7 +164,8 @@ export function SeccionTiposSensor() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="grid gap-4 py-4">
+              <div className="p-6 flex flex-col gap-6">
+                <div className="grid gap-4">
                 <FormField
                   control={form.control}
                   name="codigo_tipo_sensor"
@@ -221,16 +222,17 @@ export function SeccionTiposSensor() {
                     </FormItem>
                   )}
                 />
+                </div>
+                
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={handleCloseModal} disabled={createMutation.isPending || updateMutation.isPending}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                    {selectedSensor ? "Guardar cambios" : "Guardar"}
+                  </Button>
+                </DialogFooter>
               </div>
-
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={handleCloseModal} disabled={createMutation.isPending || updateMutation.isPending}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {selectedSensor ? "Guardar cambios" : "Guardar"}
-                </Button>
-              </DialogFooter>
             </form>
           </Form>
         </DialogContent>

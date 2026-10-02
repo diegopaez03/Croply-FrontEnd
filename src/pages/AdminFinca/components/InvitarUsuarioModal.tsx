@@ -118,7 +118,7 @@ export function InvitarUsuarioModal({ open, onOpenChange, idFinca, rolesData, is
         </DialogHeader>
 
         {pendingInvitationId ? (
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 p-6">
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3 text-amber-900">
               <HugeiconsIcon icon={Alert02Icon} className="size-5 shrink-0 text-amber-600 mt-0.5" />
               <div className="text-sm space-y-1">
@@ -148,7 +148,7 @@ export function InvitarUsuarioModal({ open, onOpenChange, idFinca, rolesData, is
           </div>
         ) : (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-6">
               <FormField
                 control={form.control}
                 name="email_invitado"

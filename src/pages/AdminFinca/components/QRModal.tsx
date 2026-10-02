@@ -54,8 +54,8 @@ export function QRModal({ isOpen, onClose, url, nombreParcela }: QRModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-sm flex flex-col items-center p-8 bg-card">
-        <DialogHeader className="text-center w-full">
-          <DialogTitle className="text-2xl font-bold text-center">Código QR de Parcela</DialogTitle>
+        <DialogHeader className="text-center w-full bg-transparent border-none p-0">
+          <DialogTitle className="text-2xl font-bold text-center text-foreground">Código QR de Parcela</DialogTitle>
           <DialogDescription className="text-center mt-2">
             Escanea este código para acceder rápidamente a los detalles de la parcela desde cualquier dispositivo móvil.
           </DialogDescription>

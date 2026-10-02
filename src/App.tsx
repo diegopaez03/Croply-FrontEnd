@@ -27,6 +27,7 @@ import GenerarPlanAccionPage from './pages/AdminFinca/GenerarPlanAccionPage'
 import FincasListadoPage from './pages/AdminCroply/FincasListadoPage'
 import FincaCrearPage from './pages/AdminCroply/FincaCrearPage'
 import FincaDetallePage from './pages/AdminCroply/FincaDetallePage'
+import { AgroquimicosPage } from './pages/AdminFinca/AgroquimicosPage'
 import ParcelaDetallePage from './pages/AdminFinca/ParcelaDetallePage'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { PerfilRoute } from './components/layout/PerfilRoute'
@@ -78,7 +79,7 @@ function App() {
               <Route path={ROUTES.FINCA.BIBLIOTECA} element={<RequirePermiso permisos={[PERMISO_FINCA.TAREAS_CAMPO]} redirectTo={ROUTES.FINCA.MI_FINCA}><BibliotecaCultivosPage /></RequirePermiso>} />
               <Route path={ROUTES.FINCA.GENERAR_PLAN_ACCION_ROUTE} element={<RequirePermiso permisos={[PERMISO_FINCA.TAREAS_CAMPO]} redirectTo={ROUTES.FINCA.MI_FINCA}><GenerarPlanAccionPage /></RequirePermiso>} />
               <Route path={ROUTES.FINCA.CULTIVO_BIBLIOTECA_DETALLE_ROUTE} element={<RequirePermiso permisos={[PERMISO_FINCA.TAREAS_CAMPO]} redirectTo={ROUTES.FINCA.MI_FINCA}><CultivoBibliotecaDetallePage /></RequirePermiso>} />
-              <Route path={ROUTES.FINCA.AGROQUIMICOS} element={<RequirePermiso permisos={[PERMISO_FINCA.REGISTRO_AGROQUIMICOS]} redirectTo={ROUTES.FINCA.MI_FINCA}><PlaceholderAdminFinca title="Agroquímicos" /></RequirePermiso>} />
+              <Route path={ROUTES.FINCA.AGROQUIMICOS} element={<RequirePermiso permisos={[PERMISO_FINCA.REGISTRO_AGROQUIMICOS]} redirectTo={ROUTES.FINCA.MI_FINCA}><AgroquimicosPage /></RequirePermiso>} />
               <Route path={ROUTES.FINCA.COSTOS} element={<RequirePermiso permisos={[PERMISO_FINCA.REPORTES]} redirectTo={ROUTES.FINCA.MI_FINCA}><PlaceholderAdminFinca title="Costos" /></RequirePermiso>} />
               <Route path={ROUTES.FINCA.GESTION_USUARIOS} element={<RequirePermiso permisos={[PERMISO_FINCA.GESTION_TRABAJADORES]} redirectTo={ROUTES.FINCA.MI_FINCA}><GestionUsuariosPage /></RequirePermiso>} />
               <Route path={ROUTES.FINCA.SOPORTE} element={<PlaceholderAdminFinca title="Ayuda y soporte" />} />

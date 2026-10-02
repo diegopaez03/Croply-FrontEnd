@@ -6,7 +6,8 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { useMiFincaListQuery, useMiFincaResumenQuery, useParcelaResumenDynamicQuery } from '../../hooks/useFincas';
+import { useMiFincaResumenQuery, useParcelaResumenDynamicQuery } from '../../hooks/useFincas';
+import { useFincaActiva } from '@/contexts/FincaActivaContext';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowRight01Icon, Plant01Icon, NoteAddIcon } from '@hugeicons/core-free-icons';
 import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
@@ -19,19 +20,11 @@ export default function DashboardAdminFincaPage() {
   const navigate = useNavigate();
   const { usuario } = useAuth();
   
-  // 1. Selector data
-  const { data: fincasRes, isLoading: loadingFincas, isError: errorFincas } = useMiFincaListQuery();
-  const fincas = fincasRes?.fincas || [];
+  // 1. Selector data compartida
+  const { fincaActivaId: selectedFincaId, setFincaActivaId: setSelectedFincaId, fincas, isLoading: loadingFincas } = useFincaActiva();
   
-  const [selectedFincaId, setSelectedFincaId] = useState<number | null>(null);
   const [isNotaModalOpen, setIsNotaModalOpen] = useState(false);
   const [isVerNotasModalOpen, setIsVerNotasModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (fincas.length > 0 && !selectedFincaId) {
-      setSelectedFincaId(fincas[0].id_finca);
-    }
-  }, [fincas, selectedFincaId]);
   
   // 2. Croquis data
   const { data: fincaResumen, isLoading: loadingFinca, isError: errorFincaResumen } = useMiFincaResumenQuery(selectedFincaId);
@@ -63,7 +56,7 @@ export default function DashboardAdminFincaPage() {
     );
   }
 
-  const isFincaNotAvailable = (!loadingFincas && fincas.length === 0) || errorFincas || errorFincaResumen;
+  const isFincaNotAvailable = (!loadingFincas && fincas.length === 0) || errorFincaResumen;
 
   if (isFincaNotAvailable) {
     return (

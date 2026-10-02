@@ -102,7 +102,7 @@ export function TareaPlanModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{tarea ? 'Editar tarea' : 'Agregar tarea'}</DialogTitle>
           <DialogDescription>
@@ -110,7 +110,7 @@ export function TareaPlanModal({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
             <FormField
               control={form.control}
               name="nombre_tarea"
