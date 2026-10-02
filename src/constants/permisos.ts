@@ -10,6 +10,7 @@ export const PERMISO_FINCA = {
   REPORTES: 'Reportes',
   GESTION_TRABAJADORES: 'Gestión de trabajadores',
   TAREAS_CAMPO: 'Tareas de campo',
+  COSTOS: 'Costos',
 } as const;
 
 export const PERMISOS_SISTEMA = Object.values(PERMISO_SISTEMA);
