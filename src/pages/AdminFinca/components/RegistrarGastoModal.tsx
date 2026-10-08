@@ -23,6 +23,7 @@ import { useCrearGastoMutation } from '@/hooks/useCostos';
 import { useFincaActiva } from '@/contexts/FincaActivaContext';
 import { usuariosService } from '@/services/usuarios.service';
 import { useQuery } from '@tanstack/react-query';
+import { DatePicker } from '@/components/ui/date-picker';
 
 const formSchema = z.object({
   nombre_insumo_gp: z.string().min(1, 'El insumo es obligatorio').max(150, 'El insumo no puede superar los 150 caracteres'),
@@ -152,7 +153,12 @@ export function RegistrarGastoModal({ open, onOpenChange }: RegistrarGastoModalP
 
           <div className="space-y-2">
             <Label htmlFor="fecha_gp">Fecha de compra</Label>
-            <Input id="fecha_gp" type="date" max={today} {...register('fecha_gp')} />
+            <DatePicker
+              id="fecha_gp"
+              value={watch('fecha_gp')}
+              max={today}
+              onChange={(value) => setValue('fecha_gp', value, { shouldValidate: true })}
+            />
             {errors.fecha_gp && <p className="text-[0.8rem] text-destructive">{errors.fecha_gp.message}</p>}
           </div>
 

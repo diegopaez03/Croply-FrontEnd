@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { PlusSignIcon, Download04Icon, Calendar01Icon, Coins01Icon, Edit01Icon, Delete01Icon } from '@hugeicons/core-free-icons';
+import { PlusSignIcon, Download04Icon, Coins01Icon, Edit01Icon, Delete01Icon } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useFincaActiva } from '@/contexts/FincaActivaContext';
 import { useAuth } from '@/context/AuthContext';
 import { PERMISO_FINCA } from '@/constants/permisos';
@@ -59,9 +59,13 @@ export default function CostosPage() {
 
   const { data: evolucionData, isLoading: isEvolucionLoading } = useEvolucionMensualQuery(fincaActivaId, chartFechas);
 
-  const gastos = data?.gastos || [];
-  const totalItems = data?.total || 0;
-  const totalPages = Math.ceil(totalItems / 10);
+  const pageSize = 10;
+  const rawGastos = data?.gastos || [];
+  const totalItems = data?.total ?? rawGastos.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const gastos = rawGastos.length > pageSize
+    ? rawGastos.slice((page - 1) * pageSize, page * pageSize)
+    : rawGastos;
   const montoTotalPeriodo = data?.monto_total_periodo || 0;
   const etiquetaPeriodo = data?.etiqueta_periodo || 'mes_actual';
 
@@ -173,48 +177,28 @@ export default function CostosPage() {
                   <span>{fincaActiva?.nombre_finca || 'Cargando finca...'}</span>
                 </div>
   
-                <div className="relative w-full">
-                  <Input
-                    type={fechaDesde ? "date" : "text"}
-                    value={fechaDesde}
-                    onChange={(e) => {
-                      setFechaDesde(e.target.value);
-                      if (e.target.value && fechaHasta && e.target.value > fechaHasta) {
-                        setFechaHasta('');
-                      }
-                      setPage(1);
-                    }}
-                    max={fechaHasta || undefined}
-                    onFocus={(e) => { e.target.type = 'date'; e.target.showPicker && e.target.showPicker(); }}
-                    onBlur={(e) => !fechaDesde && (e.target.type = 'text')}
-                    className="bg-background border-input text-foreground pr-10 [&::-webkit-datetime-edit]:text-foreground [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
-                    placeholder="Fecha Desde"
-                  />
-                  <HugeiconsIcon 
-                    icon={Calendar01Icon} 
-                    className="absolute right-3 top-2.5 size-4 text-muted-foreground pointer-events-none" 
-                  />
-                </div>
+                <DatePicker
+                  value={fechaDesde}
+                  max={fechaHasta || undefined}
+                  placeholder="Fecha Desde"
+                  onChange={(value) => {
+                    setFechaDesde(value);
+                    if (value && fechaHasta && value > fechaHasta) {
+                      setFechaHasta('');
+                    }
+                    setPage(1);
+                  }}
+                />
   
-                <div className="relative w-full">
-                  <Input
-                    type={fechaHasta ? "date" : "text"}
-                    value={fechaHasta}
-                    onChange={(e) => {
-                      setFechaHasta(e.target.value);
-                      setPage(1);
-                    }}
-                    min={fechaDesde || undefined}
-                    onFocus={(e) => { e.target.type = 'date'; e.target.showPicker && e.target.showPicker(); }}
-                    onBlur={(e) => !fechaHasta && (e.target.type = 'text')}
-                    className="bg-background border-input text-foreground pr-10 [&::-webkit-datetime-edit]:text-foreground [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
-                    placeholder="Fecha Hasta"
-                  />
-                  <HugeiconsIcon 
-                    icon={Calendar01Icon} 
-                    className="absolute right-3 top-2.5 size-4 text-muted-foreground pointer-events-none" 
-                  />
-                </div>
+                <DatePicker
+                  value={fechaHasta}
+                  min={fechaDesde || undefined}
+                  placeholder="Fecha Hasta"
+                  onChange={(value) => {
+                    setFechaHasta(value);
+                    setPage(1);
+                  }}
+                />
 
                 {hasDateFilters && (
                   <Button 
@@ -254,6 +238,7 @@ export default function CostosPage() {
                   onPageChange={handlePageChange}
                   isLoading={isFetching}
                   totalItems={totalItems}
+                  pageSize={pageSize}
                 />
               </div>
             )}

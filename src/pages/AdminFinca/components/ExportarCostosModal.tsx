@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFincaActiva } from '@/contexts/FincaActivaContext';
@@ -152,30 +152,18 @@ export function ExportarCostosModal({ open, onOpenChange }: ExportarCostosModalP
                 <div className="space-y-2">
                   <Label>Rango de Fechas</Label>
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="relative w-full">
-                      <Input
-                        type={fechaDesde ? "date" : "text"}
-                        value={fechaDesde}
-                        onChange={(e) => setFechaDesde(e.target.value)}
-                        max={fechaHasta || undefined}
-                        onFocus={(e) => { e.target.type = 'date'; e.target.showPicker && e.target.showPicker(); }}
-                        onBlur={(e) => !fechaDesde && (e.target.type = 'text')}
-                        className="bg-background border-input text-foreground pr-8 [&::-webkit-datetime-edit]:text-foreground [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-8 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10 text-xs"
-                        placeholder="Desde"
-                      />
-                    </div>
-                    <div className="relative w-full">
-                      <Input
-                        type={fechaHasta ? "date" : "text"}
-                        value={fechaHasta}
-                        onChange={(e) => setFechaHasta(e.target.value)}
-                        min={fechaDesde || undefined}
-                        onFocus={(e) => { e.target.type = 'date'; e.target.showPicker && e.target.showPicker(); }}
-                        onBlur={(e) => !fechaHasta && (e.target.type = 'text')}
-                        className="bg-background border-input text-foreground pr-8 [&::-webkit-datetime-edit]:text-foreground [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-8 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10 text-xs"
-                        placeholder="Hasta"
-                      />
-                    </div>
+                    <DatePicker
+                      value={fechaDesde}
+                      max={fechaHasta || undefined}
+                      placeholder="Desde"
+                      onChange={setFechaDesde}
+                    />
+                    <DatePicker
+                      value={fechaHasta}
+                      min={fechaDesde || undefined}
+                      placeholder="Hasta"
+                      onChange={setFechaHasta}
+                    />
                   </div>
                 </div>
 

@@ -27,6 +27,8 @@ import { useMiFincaResumenQuery, useParcelaQuery } from '@/hooks/useFincas';
 import { usuariosService } from '@/services/usuarios.service';
 import { useQuery } from '@tanstack/react-query';
 import { planesAccionService } from '@/services/planesAccion.service';
+import { DateTimePicker } from '@/components/ui/date-picker';
+import { preventAccidentalDialogDismiss } from '@/utils/dialog-dismiss';
 
 const formSchema = z.object({
   fecha_hora_aplicacion_aa: z.string().min(1, 'La fecha y hora son obligatorias'),
@@ -113,14 +115,8 @@ export function RegistrarAgroquimicoModal({
           toast.success('Aplicación registrada correctamente.');
           handleClose();
         },
-        onError: (error: any) => {
-          const errorCode = error?.response?.data?.errorCode;
-          const msg = error?.response?.data?.message || 'Error al registrar la aplicación';
-          if (errorCode === 'AGROCHEMICAL_TASK_TYPE_UNAVAILABLE' || errorCode === 'PARCEL_WITHOUT_ACTION_PLAN') {
-            toast.error(msg);
-          } else {
-            toast.error(msg);
-          }
+        onError: () => {
+          toast.error('No se pudo registrar la aplicación. Revisá tu conexión e intentá de nuevo.');
         },
       }
     );
@@ -136,8 +132,12 @@ export function RegistrarAgroquimicoModal({
   const hitos = planDetalle?.hitos || [];
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[700px] flex flex-col">
+    <Dialog open={open} onOpenChange={(next) => { if (!next) handleClose(); }}>
+      <DialogContent
+        className="sm:max-w-[700px] flex flex-col"
+        onPointerDownOutside={preventAccidentalDialogDismiss}
+        onInteractOutside={preventAccidentalDialogDismiss}
+      >
         <DialogHeader>
           <DialogTitle>
             Registrar Aplicación
@@ -208,13 +208,10 @@ export function RegistrarAgroquimicoModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="text-sm font-medium text-foreground">Fecha y hora</Label>
-              <div className="relative w-full">
-                <Input
-                  type="datetime-local"
-                  className="bg-background border-input text-foreground [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3"
-                  {...register('fecha_hora_aplicacion_aa')}
-                />
-              </div>
+              <DateTimePicker
+                value={watch('fecha_hora_aplicacion_aa')}
+                onChange={(value) => setValue('fecha_hora_aplicacion_aa', value, { shouldValidate: true })}
+              />
               {errors.fecha_hora_aplicacion_aa && <p className="text-xs text-red-600">{errors.fecha_hora_aplicacion_aa.message}</p>}
             </div>
             <div className="space-y-1.5">

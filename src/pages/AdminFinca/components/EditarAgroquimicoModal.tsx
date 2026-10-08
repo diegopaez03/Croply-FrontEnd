@@ -22,6 +22,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { preventAccidentalDialogDismiss } from '@/utils/dialog-dismiss';
+import { DateTimePicker } from '@/components/ui/date-picker';
 import { useAgroquimicosMutations } from '@/hooks/useAgroquimicos';
 import { usuariosService } from '@/services/usuarios.service';
 import { useQuery } from '@tanstack/react-query';
@@ -121,9 +123,8 @@ export function EditarAgroquimicoModal({
           toast.success('Aplicación actualizada correctamente.');
           handleClose();
         },
-        onError: (error: any) => {
-          const msg = error?.response?.data?.message || 'Error al actualizar la aplicación';
-          toast.error(msg);
+        onError: () => {
+          toast.error('No se pudo actualizar la aplicación. Revisá tu conexión e intentá de nuevo.');
         },
       }
     );
@@ -132,8 +133,12 @@ export function EditarAgroquimicoModal({
   if (!initialData) return null;
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[700px]">
+    <Dialog open={open} onOpenChange={(next) => { if (!next) handleClose(); }}>
+      <DialogContent
+        className="sm:max-w-[700px]"
+        onPointerDownOutside={preventAccidentalDialogDismiss}
+        onInteractOutside={preventAccidentalDialogDismiss}
+      >
         <DialogHeader>
           <DialogTitle>
             {isEditing ? 'Editar Aplicación' : 'Detalle de Aplicación'}
@@ -177,13 +182,10 @@ export function EditarAgroquimicoModal({
               <Label className="text-sm font-medium text-foreground">Fecha y hora</Label>
               {isEditing ? (
                 <>
-                  <div className="relative w-full">
-                    <Input
-                      type="datetime-local"
-                      className="bg-background border-input text-foreground [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3"
-                      {...register('fecha_hora_aplicacion_aa')}
-                    />
-                  </div>
+                  <DateTimePicker
+                    value={watch('fecha_hora_aplicacion_aa')}
+                    onChange={(value) => setValue('fecha_hora_aplicacion_aa', value, { shouldValidate: true })}
+                  />
                   {errors.fecha_hora_aplicacion_aa && <p className="text-xs text-red-600">{errors.fecha_hora_aplicacion_aa.message}</p>}
                 </>
               ) : (

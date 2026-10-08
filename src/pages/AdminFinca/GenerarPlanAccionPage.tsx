@@ -19,6 +19,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -504,7 +505,11 @@ export default function GenerarPlanAccionPage() {
                 render={({ field }) => (
                   <FormItem className="mb-4">
                     <FormControl>
-                      <Input type="date" className="h-11 bg-background block w-full justify-between [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60" {...field} />
+                      <DatePicker
+                        value={field.value ?? ''}
+                        onChange={field.onChange}
+                        className="h-11"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

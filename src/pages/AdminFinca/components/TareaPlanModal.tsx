@@ -21,6 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { DatePicker, DateTimePicker } from '@/components/ui/date-picker';
 import {
   Select,
   SelectContent,
@@ -145,7 +146,10 @@ export function TareaPlanModal({
                   <FormItem>
                     <FormLabel>Fecha planificada</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker
+                        value={field.value ?? ''}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -255,7 +259,10 @@ export function TareaPlanModal({
                     <FormItem>
                       <FormLabel>Fecha y hora de aplicación</FormLabel>
                       <FormControl>
-                        <Input type="datetime-local" {...field} value={field.value ?? ''} />
+                        <DateTimePicker
+                          value={field.value ?? ''}
+                          onChange={field.onChange}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
