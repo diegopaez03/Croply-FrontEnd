@@ -14,6 +14,7 @@ import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
 import { MensajePendienteFinca } from '../../components/shared/MensajePendienteFinca';
 import { CapturarNotaModal } from './components/CapturarNotaModal';
 import { VerNotasModal } from './components/VerNotasModal';
+import { ResumenCostosDashboard } from './components/ResumenCostosDashboard';
 import { useAuth } from '../../context/AuthContext';
 
 export default function DashboardAdminFincaPage() {
@@ -159,16 +160,6 @@ export default function DashboardAdminFincaPage() {
               <Button variant="outline" className="text-primary hover:text-primary hover:bg-primary/5" onClick={() => setIsVerNotasModalOpen(true)}>Ver notas</Button>
             </div>
           </Card>
-
-          {/* Resumen de Costos (Placeholder visual) */}
-          <div className="pt-2">
-            <h2 className="text-xl font-bold text-foreground mb-4">Resumen de Costos</h2>
-            <Card className="bg-card border-dashed border-border shadow-none">
-              <CardContent className="p-6 flex flex-col items-center justify-center text-muted-foreground min-h-[140px]">
-                <span className="font-mono text-sm">// TODO: EP-08 / HU-GC-05 Costos de producción</span>
-              </CardContent>
-            </Card>
-          </div>
         </div>
 
         {/* COLUMNA DERECHA */}
@@ -248,16 +239,7 @@ export default function DashboardAdminFincaPage() {
         </div>
       </div>
 
-      <div className="flex justify-end mt-4">
-        <Button 
-          variant="outline"
-          onClick={() => navigate('/digitalizar-finca')}
-          className="text-primary border-primary/20 hover:bg-primary/5 font-semibold px-6 rounded-xl"
-        >
-          Solicitar digitalización de finca
-          <HugeiconsIcon icon={ArrowRight01Icon} className="size-4 ml-2" />
-        </Button>
-      </div>
+      <ResumenCostosDashboard idFinca={selectedFincaId} />
       
       <CapturarNotaModal 
         open={isNotaModalOpen} 

@@ -4,7 +4,7 @@ import { Download04Icon, InformationCircleIcon } from '@hugeicons/core-free-icon
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useExportarAgroquimicosMutation, useAplicacionesQuery } from '@/hooks/useAgroquimicos';
 
@@ -101,25 +101,19 @@ export function ExportarAgroquimicosModal({ open, onOpenChange, id_finca, nombre
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Rango de Fechas</Label>
-                  <div className="relative">
-                    <Input
-                      type="date"
-                      value={fechaDesde}
-                      onChange={(e) => setFechaDesde(e.target.value)}
-                      className="bg-background border-input text-foreground text-sm"
-                    />
-                  </div>
+                  <DatePicker
+                    value={fechaDesde}
+                    onChange={setFechaDesde}
+                    placeholder="Desde"
+                  />
                 </div>
                 <div className="space-y-1.5 flex flex-col justify-end">
-                  <div className="relative">
-                    <Input
-                      type="date"
-                      value={fechaHasta}
-                      min={fechaDesde}
-                      onChange={(e) => setFechaHasta(e.target.value)}
-                      className="bg-background border-input text-foreground text-sm"
-                    />
-                  </div>
+                  <DatePicker
+                    value={fechaHasta}
+                    min={fechaDesde}
+                    onChange={setFechaHasta}
+                    placeholder="Hasta"
+                  />
                 </div>
               </div>
               {dateError && <p className="text-xs text-red-500">{dateError}</p>}

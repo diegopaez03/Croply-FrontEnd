@@ -46,12 +46,17 @@ export function TablaConPaginacion<T>({
 }: TablaConPaginacionProps<T>) {
   
   const generatePageNumbers = () => {
-    const pages = [];
-    // Logica simplificada para mostrar siempre todas las paginas (asumiendo que no hay miles)
-    // En una app real, si totalPages es > 5, se mostrarían elipses
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(i);
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
     }
+
+    const pages: Array<number | 'ellipsis'> = [1];
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    if (start > 2) pages.push('ellipsis');
+    for (let page = start; page <= end; page += 1) pages.push(page);
+    if (end < totalPages - 1) pages.push('ellipsis');
+    pages.push(totalPages);
     return pages;
   };
 
@@ -160,7 +165,10 @@ export function TablaConPaginacion<T>({
               <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" strokeWidth={1.5} />
             </button>
             
-            {generatePageNumbers().map((p) => (
+            {generatePageNumbers().map((p, index) => (
+              p === 'ellipsis' ? (
+                <span key={`ellipsis-${index}`} className="px-1 text-muted-foreground">…</span>
+              ) : (
               <button 
                 key={p}
                 onClick={() => onPageChange(p)}
@@ -169,6 +177,7 @@ export function TablaConPaginacion<T>({
               >
                 {p}
               </button>
+              )
             ))}
 
             <button 

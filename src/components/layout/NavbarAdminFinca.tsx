@@ -5,7 +5,7 @@ import {
   TractorIcon, 
   Book02Icon, 
   Plant01Icon,
-  Coins02Icon,
+  MoneyBag02Icon,
   UserGroupIcon,
   CustomerService01Icon 
 } from '@hugeicons/core-free-icons';
@@ -55,9 +55,9 @@ export function NavbarAdminFinca({ mobile }: NavbarAdminFincaProps) {
           </Link>
         )}
         
-        {tienePermiso(PERMISO_FINCA.REPORTES) && (
+        {tienePermiso(PERMISO_FINCA.COSTOS) && (
           <Link to={ROUTES.FINCA.COSTOS} className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive(ROUTES.FINCA.COSTOS) ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
-            <HugeiconsIcon icon={Coins02Icon} className="shrink-0 size-5" />
+            <HugeiconsIcon icon={MoneyBag02Icon} className="shrink-0 size-5" />
             <span className="font-sans font-semibold text-sm">Costos</span>
           </Link>
         )}

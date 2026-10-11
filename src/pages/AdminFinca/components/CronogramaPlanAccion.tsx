@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -221,11 +222,11 @@ export function CronogramaPlanAccion({
               ))}
             </SelectContent>
           </Select>
-          <input
-            type="date"
+          <DatePicker
             value={filtroFecha}
-            onChange={(e) => setFiltroFecha(e.target.value)}
-            className="h-9 w-full sm:w-[150px] bg-white border border-border rounded-lg px-3 text-sm text-foreground outline-none shadow-sm"
+            onChange={setFiltroFecha}
+            placeholder="Fecha"
+            className="h-9 w-full bg-white sm:w-[180px]"
           />
           {planActivo && (
             <Button
@@ -383,12 +384,11 @@ export function CronogramaPlanAccion({
                             {reprogramandoId === tarea.id_tarea && (
                               <div className="pt-2 mt-2 border-t border-border flex flex-wrap items-center gap-2">
                                 <span className="text-xs font-medium text-foreground">Nueva fecha:</span>
-                                <input 
-                                  type="date" 
-                                  value={nuevaFecha} 
-                                  onChange={e => setNuevaFecha(e.target.value)} 
-                                  className="h-8 px-2 border border-border rounded-md text-sm outline-none w-[140px]" 
+                                <DatePicker
+                                  value={nuevaFecha}
+                                  onChange={setNuevaFecha}
                                   disabled={reprogramarTarea.isPending}
+                                  className="h-8 w-[160px]"
                                 />
                                 <Button
                                   size="sm"

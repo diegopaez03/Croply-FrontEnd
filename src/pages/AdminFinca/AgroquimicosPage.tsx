@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { PlusSignIcon, FlaskConicalIcon, Search01Icon, ViewIcon, Calendar01Icon, Download04Icon } from '@hugeicons/core-free-icons';
+import { PlusSignIcon, FlaskConicalIcon, Search01Icon, ViewIcon, Download04Icon } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import { RegistrarAgroquimicoModal } from './components/RegistrarAgroquimicoModal';
 import { EditarAgroquimicoModal } from './components/EditarAgroquimicoModal';
@@ -9,7 +9,7 @@ import { useMiFincaResumenQuery } from '@/hooks/useFincas';
 import { useFincaActiva } from '@/contexts/FincaActivaContext';
 import { useAplicacionesQuery } from '@/hooks/useAgroquimicos';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { TablaConPaginacion } from '@/components/shared/TablaConPaginacion';
 import { useQuery } from '@tanstack/react-query';
 import { usuariosService } from '@/services/usuarios.service';
@@ -41,16 +41,15 @@ export function AgroquimicosPage() {
     setFilterResponsable(val);
     setPage(1);
   };
-  const handleFechaDesdeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
+  const handleFechaDesdeChange = (val: string) => {
     setFechaDesde(val);
     if (val && fechaHasta && val > fechaHasta) {
       setFechaHasta('');
     }
     setPage(1);
   };
-  const handleFechaHastaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFechaHasta(e.target.value);
+  const handleFechaHastaChange = (val: string) => {
+    setFechaHasta(val);
     setPage(1);
   };
 
@@ -189,38 +188,19 @@ export function AgroquimicosPage() {
                 </SelectContent>
               </Select>
 
-              <div className="relative w-full">
-                <Input
-                  type={fechaDesde ? "date" : "text"}
-                  value={fechaDesde}
-                  onChange={handleFechaDesdeChange}
-                  onFocus={(e) => { e.target.type = 'date'; e.target.showPicker && e.target.showPicker(); }}
-                  onBlur={(e) => !fechaDesde && (e.target.type = 'text')}
-                  className="bg-background border-input text-foreground pr-10 [&::-webkit-datetime-edit]:text-foreground [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
-                  placeholder="Fecha desde"
-                />
-                <HugeiconsIcon 
-                  icon={Calendar01Icon} 
-                  className="absolute right-3 top-2.5 size-4 text-muted-foreground pointer-events-none" 
-                />
-              </div>
+              <DatePicker
+                value={fechaDesde}
+                onChange={handleFechaDesdeChange}
+                max={fechaHasta || undefined}
+                placeholder="Fecha desde"
+              />
 
-              <div className="relative w-full">
-                <Input
-                  type={fechaHasta ? "date" : "text"}
-                  value={fechaHasta}
-                  onChange={handleFechaHastaChange}
-                  onFocus={(e) => { e.target.type = 'date'; e.target.showPicker && e.target.showPicker(); }}
-                  onBlur={(e) => !fechaHasta && (e.target.type = 'text')}
-                  min={fechaDesde || undefined}
-                  className="bg-background border-input text-foreground pr-10 [&::-webkit-datetime-edit]:text-foreground [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
-                  placeholder="Fecha hasta"
-                />
-                <HugeiconsIcon 
-                  icon={Calendar01Icon} 
-                  className="absolute right-3 top-2.5 size-4 text-muted-foreground pointer-events-none" 
-                />
-              </div>
+              <DatePicker
+                value={fechaHasta}
+                onChange={handleFechaHastaChange}
+                min={fechaDesde || undefined}
+                placeholder="Fecha hasta"
+              />
 
               <Select value={filterResponsable} onValueChange={handleResponsableChange}>
                 <SelectTrigger className="bg-background border-input">
