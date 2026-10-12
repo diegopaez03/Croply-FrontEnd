@@ -8,7 +8,7 @@ export const mockTableroGlobal: TableroGlobalResponse = {
     nuevos_este_mes: 45,
   },
   sensores: {
-    activos: 24501,
+    activos: 23030,
     porcentaje_parque_total: 94,
     estado: 'Estable',
     total_activos: 23030,
@@ -19,12 +19,12 @@ export const mockTableroGlobal: TableroGlobalResponse = {
     provincias: 14,
   },
   evolucion_fincas: [
-    { mes: 'ENE', nuevas_fincas: 40 },
-    { mes: 'FEB', nuevas_fincas: 42 },
-    { mes: 'MAR', nuevas_fincas: 74 },
-    { mes: 'ABR', nuevas_fincas: 50 },
-    { mes: 'MAY', nuevas_fincas: 76 },
-    { mes: 'JUN', nuevas_fincas: 100 },
+    { mes: '2026-05', nuevas_fincas: 40 },
+    { mes: '2026-06', nuevas_fincas: 42 },
+    { mes: '2026-07', nuevas_fincas: 74 },
+    { mes: '2026-08', nuevas_fincas: 50 },
+    { mes: '2026-09', nuevas_fincas: 76 },
+    { mes: '2026-10', nuevas_fincas: 100 },
   ],
 };
 

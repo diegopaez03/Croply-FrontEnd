@@ -5,6 +5,21 @@ import { useDashboardAdminCroplyQuery } from '@/hooks/useDashboardAdminCroply';
 import { BarChart, Bar, XAxis, RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
+const MESES_ABREV = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+const MESES_NOMBRE = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
+// '2026-05' -> 'MAY'
+const formatearMesEje = (mes: string) => MESES_ABREV[Number(mes.slice(5, 7)) - 1] ?? mes;
+
+// '2026-05' -> 'Mayo 2026' (la ventana de 6 meses puede cruzar de año)
+const formatearMesTooltip = (mes: string) => {
+  const nombre = MESES_NOMBRE[Number(mes.slice(5, 7)) - 1];
+  return nombre ? `${nombre} ${mes.slice(0, 4)}` : mes;
+};
+
 export default function DashboardAdminCroplyPage() {
   const { data, isLoading } = useDashboardAdminCroplyQuery();
 
@@ -103,7 +118,7 @@ export default function DashboardAdminCroplyPage() {
             <ChartContainer
               config={{
                 nuevas_fincas: {
-                  label: 'Total de fincas',
+                  label: 'Nuevas fincas',
                   color: 'hsl(var(--chart-1))',
                 },
               }}
@@ -117,14 +132,16 @@ export default function DashboardAdminCroplyPage() {
                   dataKey="mes"
                   tickLine={false}
                   axisLine={false}
+                  tickFormatter={formatearMesEje}
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12, fontWeight: 600 }}
                 />
                 <ChartTooltip
                   content={
                     <ChartTooltipContent
+                      labelFormatter={(label) => formatearMesTooltip(String(label))}
                       formatter={(value) => (
                         <span className="font-medium text-foreground">
-                          Total de fincas: {value} fincas
+                          Nuevas fincas: {value}
                         </span>
                       )}
                     />
