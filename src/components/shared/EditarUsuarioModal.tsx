@@ -181,13 +181,15 @@ export function EditarUsuarioModal({ open, onOpenChange, usuario, context, id_fi
       if (!val) form.reset();
       onOpenChange(val);
     }}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>{isFinca ? "Editar Usuario (Finca)" : "Editar Usuario (Sistema)"}</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-primary">
+            {isFinca ? "Editar Usuario (Finca)" : "Editar Usuario (Sistema)"}
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-4">
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
