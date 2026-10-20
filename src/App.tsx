@@ -30,6 +30,8 @@ import FincaDetallePage from './pages/AdminCroply/FincaDetallePage'
 import { AgroquimicosPage } from './pages/AdminFinca/AgroquimicosPage'
 import CostosPage from './pages/AdminFinca/CostosPage'
 import ParcelaDetallePage from './pages/AdminFinca/ParcelaDetallePage'
+import SoporteAdminFincaPage from './pages/AdminFinca/SoporteAdminFincaPage'
+import SoporteAdminCroplyPage from './pages/AdminCroply/SoporteAdminCroplyPage'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { PerfilRoute } from './components/layout/PerfilRoute'
 import { RequirePermiso } from './components/layout/RequirePermiso'
@@ -37,17 +39,6 @@ import { PERMISO_FINCA, PERMISO_SISTEMA } from './constants/permisos'
 
 import AdminFincaLayout from './components/layout/AdminFincaLayout'
 
-function PlaceholderAdminFinca({ title }: { title: string }) {
-  return (
-    <div className="flex items-center justify-center h-full w-full">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">{title}</h2>
-        <p className="text-muted-foreground">Sección en construcción</p>
-        {/* TODO: Completar con el contenido real */}
-      </div>
-    </div>
-  );
-}
 
 /**
  * App — Root router component.
@@ -83,7 +74,7 @@ function App() {
               <Route path={ROUTES.FINCA.AGROQUIMICOS} element={<RequirePermiso permisos={[PERMISO_FINCA.REGISTRO_AGROQUIMICOS]} redirectTo={ROUTES.FINCA.MI_FINCA}><AgroquimicosPage /></RequirePermiso>} />
               <Route path={ROUTES.FINCA.COSTOS} element={<RequirePermiso permisos={[PERMISO_FINCA.COSTOS]} redirectTo={ROUTES.FINCA.MI_FINCA}><CostosPage /></RequirePermiso>} />
               <Route path={ROUTES.FINCA.GESTION_USUARIOS} element={<RequirePermiso permisos={[PERMISO_FINCA.GESTION_TRABAJADORES]} redirectTo={ROUTES.FINCA.MI_FINCA}><GestionUsuariosPage /></RequirePermiso>} />
-              <Route path={ROUTES.FINCA.SOPORTE} element={<PlaceholderAdminFinca title="Ayuda y soporte" />} />
+              <Route path={ROUTES.FINCA.SOPORTE} element={<SoporteAdminFincaPage />} />
             </Route>
 
             <Route element={<AdminCroplyLayout />}>
@@ -97,6 +88,7 @@ function App() {
               <Route path={ROUTES.CROPLY.PLANTILLAS} element={<RequirePermiso permisos={[PERMISO_SISTEMA.CATALOGOS_BASE]} redirectTo={ROUTES.CROPLY.DASHBOARD}><PlantillasListadoPage /></RequirePermiso>} />
               <Route path={ROUTES.CROPLY.PLANTILLA_NUEVA} element={<RequirePermiso permisos={[PERMISO_SISTEMA.CATALOGOS_BASE]} redirectTo={ROUTES.CROPLY.DASHBOARD}><PlantillaNuevaPage /></RequirePermiso>} />
               <Route path={ROUTES.CROPLY.PLANTILLA_DETALLE_ROUTE} element={<RequirePermiso permisos={[PERMISO_SISTEMA.CATALOGOS_BASE]} redirectTo={ROUTES.CROPLY.DASHBOARD}><PlantillaDetallePage /></RequirePermiso>} />
+              <Route path={ROUTES.CROPLY.SOPORTE} element={<RequirePermiso permisos={[PERMISO_SISTEMA.SOPORTE]} redirectTo={ROUTES.CROPLY.DASHBOARD}><SoporteAdminCroplyPage /></RequirePermiso>} />
             </Route>
 
             
@@ -116,3 +108,5 @@ function App() {
 }
 
 export default App
+
+
