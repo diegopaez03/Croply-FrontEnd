@@ -4,7 +4,6 @@ import { ROUTES } from '../../constants/routes';
 import { 
   ArrowLeft01Icon, 
   QrCodeIcon, 
-  AiBrain01Icon,
   PlusSignIcon,
   Plant01Icon,
   NoteAddIcon
@@ -18,6 +17,7 @@ import { useState } from 'react';
 import { useGenerarQRParcela, useConsultarQRParcela } from '../../hooks/useFincas';
 import { QRModal } from './components/QRModal';
 import { CardMonitoreoSensores } from './components/CardMonitoreoSensores';
+import { RecomendacionIaCard } from './components/RecomendacionIaCard';
 import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
 import { CapturarNotaModal } from './components/CapturarNotaModal';
 import { VerNotasModal } from './components/VerNotasModal';
@@ -149,26 +149,13 @@ export default function ParcelaDetallePage() {
         <CardClimaFinca variant="extendida" idFinca={fincaId ?? null} />
       </div>
 
-      {/* Grid media: Sensores IoT Placeholder + Recomendación IA Placeholder */}
+      {/* Sensores IoT y recomendación de IA */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Card Sensores IoT */}
         <CardMonitoreoSensores idParcela={parcela.id_parcela} />
 
-        {/* Card Recomendación IA Placeholder */}
-        <div className="bg-card border border-dashed border-border rounded-2xl p-6 flex flex-col justify-between space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={AiBrain01Icon} className="size-4 text-muted-foreground" />
-              <h4 className="font-bold text-sm text-foreground">Recomendación IA</h4>
-            </div>
-            <span className="text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground font-mono">// TODO: HU-NA-03</span>
-          </div>
-          <div className="py-6 text-center text-muted-foreground space-y-1">
-            <p className="text-xs font-medium">// TODO: Recomendaciones contextuales de IA</p>
-            <p className="text-[11px] text-muted-foreground/70">Generadas según estado del cultivo y sensores</p>
-          </div>
-        </div>
+        <RecomendacionIaCard idParcela={parcela.id_parcela} />
       </div>
 
       {/* Cuaderno de Notas Horizontal */}

@@ -11,6 +11,8 @@ import { useFincaActiva } from '@/contexts/FincaActivaContext';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowRight01Icon, Plant01Icon, NoteAddIcon } from '@hugeicons/core-free-icons';
 import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
+import { AlertasClimaticasBanner } from './components/AlertasClimaticasBanner';
+import { RecomendacionIaResumenCard } from './components/RecomendacionIaResumenCard';
 import { MensajePendienteFinca } from '../../components/shared/MensajePendienteFinca';
 import { CapturarNotaModal } from './components/CapturarNotaModal';
 import { VerNotasModal } from './components/VerNotasModal';
@@ -106,6 +108,8 @@ export default function DashboardAdminFincaPage() {
           </div>
         )}
       </div>
+
+      <AlertasClimaticasBanner idFinca={selectedFincaId} />
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* COLUMNA IZQUIERDA */}
@@ -167,6 +171,8 @@ export default function DashboardAdminFincaPage() {
           {/* Clima */}
           <CardClimaFinca variant="compacta" idFinca={selectedFincaId} />
 
+          <RecomendacionIaResumenCard parcelas={parcelas} cargandoParcelas={loadingFinca} />
+
           {/* Detalle Parcela Activa */}
           <Card className="bg-card border-border shadow-sm flex flex-col flex-1">
             <CardHeader className="pb-4">
@@ -212,17 +218,6 @@ export default function DashboardAdminFincaPage() {
                         ? `${parcelaResumen.cultivo.superficie_ocupada_pa} ha` 
                         : '---'}
                     </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 mt-auto">
-                  <div className="bg-primary/5 border border-primary/20 border-dashed rounded-lg p-4 flex flex-col items-center justify-center min-h-[70px]">
-                    <span className="text-sm font-semibold text-foreground text-center">---</span>
-                    <span className="font-mono text-[10px] text-primary/80 text-center mt-1">// TODO: EP-07 / HU-NA-03 Recomendación IA</span>
-                  </div>
-                  <div className="bg-amber-500/5 border border-amber-500/20 border-dashed rounded-lg p-4 flex flex-col items-center justify-center min-h-[70px]">
-                    <span className="text-sm font-semibold text-foreground text-center">---</span>
-                    <span className="font-mono text-[10px] text-amber-600/80 text-center mt-1">// TODO: EP-07 / HU-NA-01 Alertas automáticas</span>
                   </div>
                 </div>
 
