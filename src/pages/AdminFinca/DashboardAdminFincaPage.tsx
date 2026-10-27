@@ -9,15 +9,78 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useMiFincaResumenQuery, useParcelaResumenDynamicQuery } from '../../hooks/useFincas';
 import { useFincaActiva } from '@/contexts/FincaActivaContext';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowRight01Icon, Plant01Icon, NoteAddIcon } from '@hugeicons/core-free-icons';
+import { ArrowRight01Icon, Calendar01Icon, CheckmarkCircle01Icon, FlowSquareIcon, NoteAddIcon, Plant01Icon } from '@hugeicons/core-free-icons';
 import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
 import { AlertasClimaticasBanner } from './components/AlertasClimaticasBanner';
-import { RecomendacionIaResumenCard } from './components/RecomendacionIaResumenCard';
+import { RecomendacionIaCard } from './components/RecomendacionIaCard';
+import { CultivoResumenParcela } from '@/types/fincas.types';
 import { MensajePendienteFinca } from '../../components/shared/MensajePendienteFinca';
 import { CapturarNotaModal } from './components/CapturarNotaModal';
 import { VerNotasModal } from './components/VerNotasModal';
 import { ResumenCostosDashboard } from './components/ResumenCostosDashboard';
 import { useAuth } from '../../context/AuthContext';
+
+function formatFechaParcela(fecha?: string | null): string {
+  if (!fecha) return '---';
+  const coincidencia = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha);
+  if (!coincidencia) return '---';
+  const fechaUtc = new Date(Date.UTC(Number(coincidencia[1]), Number(coincidencia[2]) - 1, Number(coincidencia[3])));
+  const texto = fechaUtc
+    .toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+    .replace(/\./g, '');
+  return texto.replace(/(\d+)\s+([a-záéíóúñ]+)/i, (_, dia: string, mes: string) => {
+    return `${dia} ${mes.charAt(0).toUpperCase()}${mes.slice(1)}`;
+  });
+}
+
+function MetricasCultivo({ cultivo }: { cultivo: CultivoResumenParcela | null }) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <MetricaParcela
+        icono={Plant01Icon}
+        etiqueta="Cultivo"
+        valor={cultivo?.nombre_cultivo_base ?? '---'}
+      />
+      <MetricaParcela
+        icono={FlowSquareIcon}
+        etiqueta="Superficie"
+        valor={cultivo ? `${cultivo.superficie_ocupada_pa} ha` : '---'}
+      />
+      <MetricaParcela
+        icono={Calendar01Icon}
+        etiqueta="Transplante"
+        valor={formatFechaParcela(cultivo?.fecha_inicio_pa)}
+      />
+      <MetricaParcela
+        icono={CheckmarkCircle01Icon}
+        etiqueta="Est. Cosecha"
+        valor={formatFechaParcela(cultivo?.fecha_estimada_cosecha)}
+      />
+    </div>
+  );
+}
+
+function MetricaParcela({
+  icono,
+  etiqueta,
+  valor,
+}: {
+  icono: typeof Plant01Icon;
+  etiqueta: string;
+  valor: string;
+}) {
+  return (
+    <div className="flex items-start gap-2">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <HugeiconsIcon icon={icono} className="size-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">{etiqueta}</p>
+        <p className="text-sm font-semibold text-foreground">{valor}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardAdminFincaPage() {
   const navigate = useNavigate();
@@ -171,8 +234,6 @@ export default function DashboardAdminFincaPage() {
           {/* Clima */}
           <CardClimaFinca variant="compacta" idFinca={selectedFincaId} />
 
-          <RecomendacionIaResumenCard parcelas={parcelas} cargandoParcelas={loadingFinca} />
-
           {/* Detalle Parcela Activa */}
           <Card className="bg-card border-border shadow-sm flex flex-col flex-1">
             <CardHeader className="pb-4">
@@ -198,28 +259,15 @@ export default function DashboardAdminFincaPage() {
 
             {parcelaResumen && !loadingParcela && (
               <CardContent className="flex flex-col gap-4 flex-1">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs text-muted-foreground flex items-center">
-                      Cultivo y Variedad
-                    </span>
-                    <span className="text-sm font-semibold">
-                      {parcelaResumen.cultivo 
-                        ? `${parcelaResumen.cultivo.nombre_cultivo_base} - ${parcelaResumen.cultivo.nombre_variedad}` 
-                        : '---'}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs text-muted-foreground flex items-center">
-                      Superficie Ocupada
-                    </span>
-                    <span className="text-sm font-semibold">
-                      {parcelaResumen.cultivo 
-                        ? `${parcelaResumen.cultivo.superficie_ocupada_pa} ha` 
-                        : '---'}
-                    </span>
-                  </div>
-                </div>
+                <MetricasCultivo cultivo={parcelaResumen.cultivo} />
+
+                <RecomendacionIaCard
+                  idParcela={parcelaResumen.id_parcela}
+                  nombreParcela={parcelaResumen.nombre_parcela}
+                  consultar={Boolean(parcelaResumen.cultivo) && parcelaResumen.estado_parcela === 'Activa'}
+                  sinPlan={!parcelaResumen.cultivo}
+                  variante="embebida"
+                />
 
                 <Button 
                   className="w-full mt-2 bg-muted hover:bg-muted/80 text-foreground font-semibold"

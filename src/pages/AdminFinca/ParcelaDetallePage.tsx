@@ -155,7 +155,13 @@ export default function ParcelaDetallePage() {
         {/* Card Sensores IoT */}
         <CardMonitoreoSensores idParcela={parcela.id_parcela} />
 
-        <RecomendacionIaCard idParcela={parcela.id_parcela} />
+        <RecomendacionIaCard
+          idParcela={parcela.id_parcela}
+          nombreParcela={parcela.nombre_parcela}
+          consultar={hasCultivo && parcela.estado_parcela === 'Activa'}
+          sinPlan={!hasCultivo}
+          variante="detalle"
+        />
       </div>
 
       {/* Cuaderno de Notas Horizontal */}

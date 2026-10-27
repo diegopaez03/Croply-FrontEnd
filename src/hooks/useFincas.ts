@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fincasService } from '../services/fincas.service';
-import { FincaCreatePayload, FincaUpdatePayload } from '../types/fincas.types';
+import { FincaCreatePayload, FincaUpdatePayload, ParcelaResumenDynamic } from '../types/fincas.types';
 import { showSuccessToast } from '../utils/successHandler';
 import { handleFormError } from '../utils/errorHandler';
 import { guardarFincasCache, guardarParcelasCache } from '../utils/offlineCache';
@@ -301,7 +301,7 @@ export function useMiFincaResumenQuery(id_finca: number | null) {
 }
 
 export function useParcelaResumenDynamicQuery(id_parcela: number | null) {
-  return useQuery({
+  return useQuery<ParcelaResumenDynamic>({
     queryKey: ['parcela-resumen-dynamic', id_parcela],
     queryFn: () => fincasService.getParcelaResumenDynamic(id_parcela as number),
     enabled: !!id_parcela,
