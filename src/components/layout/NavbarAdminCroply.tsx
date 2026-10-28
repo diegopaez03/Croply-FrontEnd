@@ -65,11 +65,12 @@ export function NavbarAdminCroply({ mobile }: NavbarAdminCroplyProps) {
             <span className="font-sans font-semibold text-sm">Catálogos Base</span>
           </Link>
         )}
-        
-         <div className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted opacity-50 cursor-not-allowed">
-          <HugeiconsIcon icon={CustomerService01Icon} className="shrink-0 size-5" />
-          <span className="font-sans font-semibold text-sm">Soporte</span>
-        </div>
+        {tienePermiso(PERMISO_SISTEMA.SOPORTE) && (
+          <Link to={ROUTES.CROPLY.SOPORTE} className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold ${isActive(ROUTES.CROPLY.SOPORTE) ? 'bg-accent text-primary' : 'text-muted-foreground hover:bg-muted'}`}>
+            <HugeiconsIcon icon={CustomerService01Icon} className="shrink-0 size-5" />
+            <span className="font-sans font-semibold text-sm">Soporte</span>
+          </Link>
+        )}
       </div>
     </nav>
   );
