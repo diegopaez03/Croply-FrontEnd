@@ -52,6 +52,22 @@ export interface ControladorResumen {
   sensores: SensorResumen[];
 }
 
+export interface CultivoResumenParcela {
+  nombre_cultivo_base: string;
+  nombre_variedad: string;
+  superficie_ocupada_pa: number;
+  fecha_inicio_pa?: string | null;
+  fecha_estimada_cosecha?: string | null;
+}
+
+export interface ParcelaResumenDynamic {
+  id_parcela: number;
+  nombre_parcela: string;
+  estado_parcela: string;
+  cultivo: CultivoResumenParcela | null;
+  recomendacion_ia_resumen: null;
+}
+
 export interface ParcelaResumen {
   id_parcela: number;
   nombre_parcela: string;
