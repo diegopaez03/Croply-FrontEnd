@@ -1,8 +1,9 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Notification01Icon, UserCircle02Icon, Menu01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons';
+import { UserCircle02Icon, Menu01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import { NavbarAdminFinca } from './NavbarAdminFinca';
 import { UserMenuDropdown } from '../shared/UserMenuDropdown';
+import { CampanitaNotificaciones } from './CampanitaNotificaciones';
 
 export function HeaderAdminFinca() {
   return (
@@ -22,10 +23,7 @@ export function HeaderAdminFinca() {
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Notifications Icon */}
-        <button className="flex items-center justify-center size-6 rounded-lg hover:bg-muted text-foreground">
-          <HugeiconsIcon icon={Notification01Icon} className="size-5" />
-        </button>
+        <CampanitaNotificaciones />
         
         <div className="px-2 mx-1">
           <div className="h-8 w-px bg-border" />
