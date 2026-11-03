@@ -6,6 +6,7 @@ interface PaginacionCardsProps {
   totalPages: number;
   totalItems: number;
   pageSize: number;
+  itemLabel?: string;
   isLoading?: boolean;
   onPageChange: (page: number) => void;
 }
@@ -15,6 +16,7 @@ export function PaginacionCards({
   totalPages,
   totalItems,
   pageSize,
+  itemLabel = 'plantillas',
   isLoading = false,
   onPageChange,
 }: PaginacionCardsProps) {
@@ -28,8 +30,8 @@ export function PaginacionCards({
     <div className="flex flex-col sm:flex-row justify-between items-center gap-3 px-1 py-2">
       <p className="text-muted-foreground text-sm">
         {totalItems > 0
-          ? `Mostrando ${startItem}-${endItem} de ${totalItems} plantillas`
-          : '0 plantillas'}
+          ? `Mostrando ${startItem}-${endItem} de ${totalItems} ${itemLabel}`
+          : `0 ${itemLabel}`}
       </p>
       <div className="flex gap-2 items-center">
         <button

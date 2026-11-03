@@ -1,9 +1,10 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Notification01Icon, UserCircle02Icon, Menu01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons';
+import { UserCircle02Icon, Menu01Icon, ArrowDown01Icon, Notification01Icon } from '@hugeicons/core-free-icons';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import { NavbarAdminFinca } from './NavbarAdminFinca';
 import { UserMenuDropdown } from '../shared/UserMenuDropdown';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { CampanitaNotificaciones } from './CampanitaNotificaciones';
 
 export function HeaderAdminFinca() {
   const isOnline = useOnlineStatus();
@@ -33,6 +34,7 @@ export function HeaderAdminFinca() {
         >
           <HugeiconsIcon icon={Notification01Icon} className="size-5" />
         </button>
+        <CampanitaNotificaciones />
         
         <div className="px-2 mx-1">
           <div className="h-8 w-px bg-border" />

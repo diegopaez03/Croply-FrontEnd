@@ -12,6 +12,7 @@ export const ROUTES = {
     PLANTILLA_NUEVA: '/croply/plantillas/nueva',
     PLANTILLA_DETALLE_ROUTE: '/croply/plantillas/:id',
     plantillaDetalle: (id: string | number) => `/croply/plantillas/${id}`,
+    SOPORTE: '/croply/soporte',
   },
   FINCA: {
     MI_FINCA: '/finca/mi-finca',
