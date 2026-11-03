@@ -13,7 +13,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usuariosService } from "@/services/usuarios.service";
 import { rolesFincaService } from "@/services/roles.service";
-import { UsuarioListado } from "@/types/usuarios.types";
+import { UsuarioListado, UsuarioFincaListado, esInvitacionPendiente } from "@/types/usuarios.types";
+
+const TITLE_INVITACION_PENDIENTE = "Invitación pendiente: todavía no hay usuario para editar";
 
 export default function GestionUsuariosPage() {
   const { usuario } = useAuth();
@@ -67,11 +69,15 @@ export default function GestionUsuariosPage() {
   const emptyStateMessage = hasFilters ? "Intentá ajustar los filtros o el texto de búsqueda." : "";
 
   // Columnas para Usuarios Finca
-  const columns: ColumnDef<UsuarioListado>[] = [
+  const columns: ColumnDef<UsuarioFincaListado>[] = [
     {
       key: 'nombre',
       label: 'Nombre',
-      render: (u) => <span className="font-semibold">{`${u.nombre} ${u.apellido}`}</span>
+      render: (u) => (
+        <span className="font-semibold">
+          {u.nombre === null && u.apellido === null ? '---' : `${u.nombre ?? ''} ${u.apellido ?? ''}`.trim()}
+        </span>
+      )
     },
     {
       key: 'email',
@@ -111,31 +117,54 @@ export default function GestionUsuariosPage() {
       key: 'acciones',
       label: 'Acciones',
       align: 'center',
-      render: (u) => (
-        <div className="flex gap-2 justify-center">
-          <button 
-            onClick={() => setSelectedUsuario(u)}
-            className="p-2 text-muted-foreground hover:bg-muted rounded-md"
-            title="Editar Rol"
-          >
-            <HugeiconsIcon icon={PencilEdit02Icon} className="size-5" strokeWidth={1.5} />
-          </button>
-          <button
-            onClick={() => setUsuarioADarDeBaja(u)}
-            disabled={u.estado === 'Inactivo' || u.id_usuario === usuario?.id_usuario}
-            className="p-2 text-red-500 hover:bg-red-50 rounded-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-            title={
-              u.id_usuario === usuario?.id_usuario
-                ? 'No podés darte de baja a vos mismo'
-                : u.estado === 'Inactivo'
-                  ? 'El usuario ya está inactivo'
-                  : 'Dar de baja'
-            }
-          >
-            <HugeiconsIcon icon={Delete02Icon} className="size-5" strokeWidth={1.5} />
-          </button>
-        </div>
-      )
+      render: (u) => {
+        if (esInvitacionPendiente(u)) {
+          return (
+            <div className="flex gap-2 justify-center">
+              <button
+                disabled
+                className="p-2 text-muted-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                title={TITLE_INVITACION_PENDIENTE}
+              >
+                <HugeiconsIcon icon={PencilEdit02Icon} className="size-5" strokeWidth={1.5} />
+              </button>
+              <button
+                disabled
+                className="p-2 text-red-500 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                title={TITLE_INVITACION_PENDIENTE}
+              >
+                <HugeiconsIcon icon={Delete02Icon} className="size-5" strokeWidth={1.5} />
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <div className="flex gap-2 justify-center">
+            <button 
+              onClick={() => setSelectedUsuario(u)}
+              className="p-2 text-muted-foreground hover:bg-muted rounded-md"
+              title="Editar Rol"
+            >
+              <HugeiconsIcon icon={PencilEdit02Icon} className="size-5" strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => setUsuarioADarDeBaja(u)}
+              disabled={u.estado === 'Inactivo' || u.id_usuario === usuario?.id_usuario}
+              className="p-2 text-red-500 hover:bg-red-50 rounded-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+              title={
+                u.id_usuario === usuario?.id_usuario
+                  ? 'No podés darte de baja a vos mismo'
+                  : u.estado === 'Inactivo'
+                    ? 'El usuario ya está inactivo'
+                    : 'Dar de baja'
+              }
+            >
+              <HugeiconsIcon icon={Delete02Icon} className="size-5" strokeWidth={1.5} />
+            </button>
+          </div>
+        );
+      }
     }
   ];
 
@@ -246,7 +275,7 @@ export default function GestionUsuariosPage() {
         
         {/* Table Area */}
         <div className="p-0 border-none shadow-none">
-          <TablaConPaginacion<UsuarioListado>
+          <TablaConPaginacion<UsuarioFincaListado>
             title="Lista de Usuarios"
             columns={columns}
             data={usuariosData?.usuarios || []}
@@ -255,7 +284,7 @@ export default function GestionUsuariosPage() {
             totalPages={usuariosData?.pagination.totalPages || 0}
             totalItems={usuariosData?.pagination.totalItems || 0}
             pageSize={pageSize}
-            keyExtractor={(u) => u.id_usuario}
+            keyExtractor={(u) => (esInvitacionPendiente(u) ? `inv-${u.id_invitacion_finca}` : `usr-${u.id_usuario}`)}
             onPageChange={setPage}
             emptyStateTitle={emptyStateTitle}
             emptyStateMessage={emptyStateMessage}
