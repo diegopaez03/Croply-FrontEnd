@@ -292,7 +292,8 @@ export const agroquimicosService = {
 
     const response = await apiClient.get<Blob>(`/fincas/${id_finca}/agroquimicos/exportar`, {
       params,
-      responseType: 'blob'
+      responseType: 'blob',
+      timeout: 60000,
     });
     return response.data;
   }

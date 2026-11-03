@@ -25,6 +25,7 @@ import { FincaListado } from '@/types/fincas.types';
 import { ParcelaListado } from '@/types/parcelas.types';
 import { handleFormError } from '@/utils/errorHandler';
 import { showSuccessToast } from '@/utils/successHandler';
+import { useFincaActiva } from '@/context/FincaActivaContext';
 
 interface CapturarNotaModalProps {
   open: boolean;
@@ -47,6 +48,7 @@ export function CapturarNotaModal({
   const [contenido, setContenido] = useState('');
 
   const crearNotaMutation = useCrearNotaCampo();
+  const { fincaActivaId } = useFincaActiva();
 
   // Cargar fincas del caché local
   useEffect(() => {
@@ -54,15 +56,16 @@ export function CapturarNotaModal({
       const cached = obtenerFincasCache();
       setFincas(cached);
       
-      const fincaToSet = idFincaInicial || (cached.length > 0 ? cached[0].id_finca : null);
+      const fincaFallback = (fincaActivaId && cached.some(f => f.id_finca === fincaActivaId))
+        ? fincaActivaId
+        : (cached.length > 0 ? cached[0].id_finca : null);
+      const fincaToSet = idFincaInicial || fincaFallback;
       if (fincaToSet) {
         setIdFinca(fincaToSet);
       }
-      if (idParcelaInicial) {
-        setIdParcela(idParcelaInicial);
-      }
+      setIdParcela(idParcelaInicial ?? null);
     }
-  }, [open, idFincaInicial, idParcelaInicial]);
+  }, [open, idFincaInicial, idParcelaInicial, fincaActivaId]);
 
   // Cargar parcelas cuando cambia la finca
   useEffect(() => {
@@ -133,12 +136,15 @@ export function CapturarNotaModal({
         <div className="p-6 flex flex-col gap-6">
           {!hasFincas ? (
             <div className="py-6 text-center text-sm text-muted-foreground border border-dashed border-border rounded-lg bg-muted/10">
-              No hay fincas disponibles en el dispositivo. Conectate a internet para sincronizar.
+              No hay fincas disponibles en el almacenamiento local.
             </div>
           ) : (
-            <div className="space-y-4">
+            <>
+              {/* Selector de Finca */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-foreground">Finca *</label>
+                <label className="text-sm font-medium text-foreground">
+                  Finca <span className="text-destructive">*</span>
+                </label>
                 <Select
                   value={idFinca ? String(idFinca) : ''}
                   onValueChange={(val) => {
@@ -159,17 +165,23 @@ export function CapturarNotaModal({
                 </Select>
               </div>
 
+              {/* Selector de Parcela (Opcional) */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-foreground">Parcela (Opcional)</label>
+                <label className="text-sm font-medium text-foreground">
+                  Parcela (Opcional)
+                </label>
                 <Select
-                  value={idParcela ? String(idParcela) : 'ninguna'}
-                  onValueChange={(val) => setIdParcela(val === 'ninguna' ? null : Number(val))}
+                  value={idParcela ? String(idParcela) : 'general'}
+                  onValueChange={(val) => {
+                    setIdParcela(val === 'general' ? null : Number(val));
+                  }}
+                  disabled={!idFinca || parcelas.length === 0}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="General (toda la finca)" />
+                    <SelectValue placeholder={parcelas.length === 0 ? "Sin parcelas disponibles" : "Observación general (sin parcela)"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ninguna">General (toda la finca)</SelectItem>
+                    <SelectItem value="general">Observación general (sin parcela)</SelectItem>
                     {parcelas.map((p) => (
                       <SelectItem key={p.id_parcela} value={String(p.id_parcela)}>
                         {p.nombre_parcela}
@@ -179,29 +191,40 @@ export function CapturarNotaModal({
                 </Select>
               </div>
 
+              {/* Contenido / Observación */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-foreground">Nota *</label>
+                <label className="text-sm font-medium text-foreground">
+                  Observación <span className="text-destructive">*</span>
+                </label>
                 <Textarea
+                  placeholder="Escribí lo que observaste en el campo..."
                   value={contenido}
                   onChange={(e) => setContenido(e.target.value)}
-                  placeholder="Escribí acá tu observación..."
-                  className="min-h-[120px] resize-none"
+                  rows={4}
+                  className="resize-none"
                 />
               </div>
-            </div>
-          )}
 
-          <div className="flex justify-end gap-3">
-            <Button variant="ghost" onClick={handleClose}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={!hasFincas || !contenido.trim() || crearNotaMutation.isPending}
-            >
-              {crearNotaMutation.isPending ? 'Guardando...' : 'Guardar'}
-            </Button>
-          </div>
+              {/* Botones de acción */}
+              <div className="flex justify-end gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClose}
+                  disabled={crearNotaMutation.isPending}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={!idFinca || !contenido.trim() || crearNotaMutation.isPending}
+                >
+                  {crearNotaMutation.isPending ? 'Guardando...' : 'Guardar'}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

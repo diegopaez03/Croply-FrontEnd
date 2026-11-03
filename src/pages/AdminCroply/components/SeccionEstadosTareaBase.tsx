@@ -97,17 +97,10 @@ export function SeccionEstadosTareaBase() {
     }
   };
 
-  const getBadgeColor = (e: EstadoTarea) => {
-    if (e.cuenta_para_cierre_exitoso) return "bg-green-50 text-green-700";   // Completado
-    if (e.es_estado_finalizador) return "bg-yellow-50 text-yellow-800";      // Cancelada (y futuros terminales sin éxito)
-    if (e.protegido) return "bg-muted text-muted-foreground";                // Planificado (el gris que ya tenía)
-    return "bg-blue-50 text-blue-800";                                       // En Progreso y cualquier estado nuevo que se cree
-  };
-
   const items = data?.estados_tarea.map((e) => ({
     id: e.id_estado_tarea,
     label: e.nombre_estado_tarea,
-    pillColor: getBadgeColor(e),
+    protegido: e.protegido,
   })) || [];
 
   return (

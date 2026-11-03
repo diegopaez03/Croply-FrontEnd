@@ -28,19 +28,21 @@ import { useAgroquimicosMutations } from '@/hooks/useAgroquimicos';
 import { usuariosService } from '@/services/usuarios.service';
 import { useQuery } from '@tanstack/react-query';
 import { AplicacionAgroquimicoDetalle } from '@/types/agroquimicos.types';
+import { UNIDADES_DOSIS } from '@/constants/agroquimicos';
+import { handleFormError } from '@/utils/errorHandler';
 
 const formSchema = z.object({
   fecha_hora_aplicacion_aa: z.string().min(1, 'La fecha y hora son obligatorias'),
   nombre_producto_aa: z.string().min(1, 'El producto es obligatorio'),
   dosis: z.coerce.number().min(0.01, 'La dosis debe ser mayor a 0'),
   unidad_dosis: z.string().min(1, 'La unidad es obligatoria'),
-  id_responsable: z.coerce.number({ required_error: 'El responsable es obligatorio' }),
+  id_responsable: z.coerce
+    .number({ required_error: 'El responsable es obligatorio', invalid_type_error: 'El responsable es obligatorio' })
+    .min(1, 'El responsable es obligatorio'),
   observaciones: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
-
-const UNIDADES_DOSIS = ['L/ha', 'kg/ha', 'cc/ha', 'ml/ha'];
 
 interface EditarAgroquimicoModalProps {
   open: boolean;
@@ -89,7 +91,7 @@ export function EditarAgroquimicoModal({
         nombre_producto_aa: initialData.nombre_producto_aa,
         dosis,
         unidad_dosis,
-        id_responsable: initialData.id_responsable,
+        id_responsable: (initialData.id_responsable ? initialData.id_responsable : undefined) as unknown as number,
         observaciones: initialData.observaciones || '',
       });
     }
@@ -123,8 +125,8 @@ export function EditarAgroquimicoModal({
           toast.success('Aplicación actualizada correctamente.');
           handleClose();
         },
-        onError: () => {
-          toast.error('No se pudo actualizar la aplicación. Revisá tu conexión e intentá de nuevo.');
+        onError: (error) => {
+          handleFormError(error);
         },
       }
     );
@@ -184,7 +186,7 @@ export function EditarAgroquimicoModal({
                 <>
                   <DateTimePicker
                     value={watch('fecha_hora_aplicacion_aa')}
-                    onChange={(value) => setValue('fecha_hora_aplicacion_aa', value, { shouldValidate: true })}
+                    onChange={(value) => setValue('fecha_hora_aplicacion_aa', value, { shouldDirty: true, shouldValidate: true })}
                   />
                   {errors.fecha_hora_aplicacion_aa && <p className="text-xs text-red-600">{errors.fecha_hora_aplicacion_aa.message}</p>}
                 </>
@@ -200,8 +202,8 @@ export function EditarAgroquimicoModal({
               {isEditing ? (
                 <>
                   <Select
-                    onValueChange={(v) => setValue('id_responsable', Number(v))}
-                    value={watch('id_responsable')?.toString()}
+                    onValueChange={(v) => setValue('id_responsable', Number(v), { shouldDirty: true, shouldValidate: true })}
+                    value={watch('id_responsable') ? watch('id_responsable')?.toString() : ''}
                   >
                     <SelectTrigger className="bg-background border-input text-foreground">
                       <SelectValue placeholder="Seleccionar usuario" />
@@ -224,7 +226,7 @@ export function EditarAgroquimicoModal({
                 </>
               ) : (
                 <div className="p-2 border border-border bg-muted/50 rounded-md text-sm text-muted-foreground">
-                  {initialData.nombre_responsable}
+                  {initialData.nombre_responsable || '-'}
                 </div>
               )}
             </div>
@@ -267,7 +269,7 @@ export function EditarAgroquimicoModal({
                   </div>
                   <div>
                     <Select
-                      onValueChange={(v) => setValue('unidad_dosis', v)}
+                      onValueChange={(v) => setValue('unidad_dosis', v, { shouldDirty: true, shouldValidate: true })}
                       value={watch('unidad_dosis')}
                     >
                       <SelectTrigger className="bg-background border-input text-foreground">

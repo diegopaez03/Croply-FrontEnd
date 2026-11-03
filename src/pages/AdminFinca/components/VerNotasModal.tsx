@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useNotasCampoQuery } from '@/hooks/useNotasCampo';
-import { listarNotasPendientes, obtenerParcelasCache } from '@/utils/offlineCache';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { listarNotasPendientes, obtenerParcelasCache, NOTAS_PENDIENTES_UPDATED_EVENT } from '@/utils/offlineCache';
 import { NotaCampoListado } from '@/types/notasCampo.types';
 import { ConvertirNotaModal } from './ConvertirNotaModal';
 
@@ -29,8 +30,21 @@ export function VerNotasModal({
   const { usuario } = useAuth();
   
   const [notaAConvertir, setNotaAConvertir] = useState<NotaCampoListado | null>(null);
+  const [localRevision, setLocalRevision] = useState(0);
 
   const { data, isLoading } = useNotasCampoQuery(idFinca ?? null, idParcela ?? null);
+  const isOnline = useOnlineStatus();
+  const showLoading = isLoading && isOnline;
+
+  useEffect(() => {
+    const handleUpdate = () => setLocalRevision(r => r + 1);
+    window.addEventListener(NOTAS_PENDIENTES_UPDATED_EVENT, handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener(NOTAS_PENDIENTES_UPDATED_EVENT, handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
 
   const notasCombinadas = useMemo(() => {
     if (!open) return []; // Optimization: don't compute when closed
@@ -75,7 +89,7 @@ export function VerNotasModal({
     );
 
     return combinadas;
-  }, [data?.notas, idFinca, idParcela, usuario?.nombre, open]);
+  }, [data?.notas, idFinca, idParcela, usuario?.nombre, open, localRevision]);
 
   const isEmpty = notasCombinadas.length === 0;
 
@@ -88,7 +102,7 @@ export function VerNotasModal({
           </DialogHeader>
 
           <div className="p-6 flex-1 overflow-y-auto space-y-4">
-            {isLoading ? (
+            {showLoading ? (
               <div className="py-10 text-center text-sm text-muted-foreground flex items-center justify-center">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mr-3" />
                 Cargando notas...
@@ -148,6 +162,8 @@ export function VerNotasModal({
                       <Button
                         variant="outline"
                         size="sm"
+                        disabled={!isOnline}
+                        title={!isOnline ? "Requiere conexión para convertir en tarea" : undefined}
                         onClick={() => setNotaAConvertir(nota)}
                       >
                         Convertir en tarea

@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCrearGastoMutation } from '@/hooks/useCostos';
-import { useFincaActiva } from '@/contexts/FincaActivaContext';
+import { useFincaActiva } from '@/context/FincaActivaContext';
 import { usuariosService } from '@/services/usuarios.service';
 import { useQuery } from '@tanstack/react-query';
 import { DatePicker } from '@/components/ui/date-picker';

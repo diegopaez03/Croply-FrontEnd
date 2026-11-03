@@ -42,7 +42,8 @@ import {
   PlusSignIcon,
   Delete02Icon
 } from '@hugeicons/core-free-icons';
-import { handleFormError } from '../../utils/errorHandler';
+import { handleFormError, isNetworkOrTimeoutError } from '../../utils/errorHandler';
+import { ErrorConexionServidor } from '../../components/shared/ErrorConexionServidor';
 import { CrearEditarParcelaForm } from './components/CrearEditarParcelaForm';
 
 const formSchema = z.object({
@@ -85,7 +86,7 @@ export default function FincaDetallePage() {
     defaultValues: { nombre_finca: '', superficie_finca: 0, descripcion_finca: '', id_usuario_propietario: 'none' },
   });
 
-  const { data: finca, isLoading } = useFincaQuery(Number(id));
+  const { data: finca, isLoading, error: errorFinca, refetch: refetchFinca, isFetching: isFetchingFinca } = useFincaQuery(Number(id));
   const { data: administradoresRes, isLoading: loadingAdmins } = useAdministradoresFincaDisponiblesQuery();
   const administradores = administradoresRes?.usuarios || [];
 
@@ -163,6 +164,15 @@ export default function FincaDetallePage() {
       <div className="flex justify-center items-center py-20">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
+    );
+  }
+
+  if (isNetworkOrTimeoutError(errorFinca)) {
+    return (
+      <ErrorConexionServidor
+        onReintentar={() => refetchFinca()}
+        isReintentando={isFetchingFinca}
+      />
     );
   }
 

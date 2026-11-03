@@ -27,10 +27,19 @@ export interface NotaPendiente {
   fecha_captura_nc: string;
 }
 
+export const NOTAS_PENDIENTES_UPDATED_EVENT = 'croply:notas-pendientes-updated';
+
+function notificarCambioNotas() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(NOTAS_PENDIENTES_UPDATED_EVENT));
+  }
+}
+
 export function guardarNotaPendiente(nota: NotaPendiente) {
   const pendientes = listarNotasPendientes();
   pendientes.push(nota);
   localStorage.setItem('notas_pendientes', JSON.stringify(pendientes));
+  notificarCambioNotas();
 }
 
 export function listarNotasPendientes(): NotaPendiente[] {
@@ -44,5 +53,6 @@ export function eliminarNotaPendiente(idLocal: string) {
   if (index !== -1) {
     pendientes.splice(index, 1);
     localStorage.setItem('notas_pendientes', JSON.stringify(pendientes));
+    notificarCambioNotas();
   }
 }

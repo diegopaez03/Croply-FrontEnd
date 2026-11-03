@@ -7,28 +7,40 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { useMiFincaResumenQuery, useParcelaResumenDynamicQuery } from '../../hooks/useFincas';
-import { useFincaActiva } from '@/contexts/FincaActivaContext';
+import { useFincaActiva } from '@/context/FincaActivaContext';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowRight01Icon, Plant01Icon, NoteAddIcon } from '@hugeicons/core-free-icons';
+import { ArrowRight01Icon, Plant01Icon } from '@hugeicons/core-free-icons';
 import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
 import { MensajePendienteFinca } from '../../components/shared/MensajePendienteFinca';
-import { CapturarNotaModal } from './components/CapturarNotaModal';
-import { VerNotasModal } from './components/VerNotasModal';
+import { CuadernoNotasCard } from './components/CuadernoNotasCard';
 import { ResumenCostosDashboard } from './components/ResumenCostosDashboard';
 import { useAuth } from '../../context/AuthContext';
+import { isNetworkOrTimeoutError } from '../../utils/errorHandler';
 
 export default function DashboardAdminFincaPage() {
   const navigate = useNavigate();
   const { usuario } = useAuth();
   
   // 1. Selector data compartida
-  const { fincaActivaId: selectedFincaId, setFincaActivaId: setSelectedFincaId, fincas, isLoading: loadingFincas } = useFincaActiva();
-  
-  const [isNotaModalOpen, setIsNotaModalOpen] = useState(false);
-  const [isVerNotasModalOpen, setIsVerNotasModalOpen] = useState(false);
+  const { 
+    fincaActivaId: selectedFincaId, 
+    setFincaActivaId: setSelectedFincaId, 
+    fincas, 
+    isLoading: loadingFincas,
+    error: errorFincas,
+    refetch: refetchFincas,
+    isFetching: isFetchingFincas,
+  } = useFincaActiva();
   
   // 2. Croquis data
-  const { data: fincaResumen, isLoading: loadingFinca, isError: errorFincaResumen } = useMiFincaResumenQuery(selectedFincaId);
+  const { 
+    data: fincaResumen, 
+    isLoading: loadingFinca, 
+    isError: errorFincaResumen,
+    error: errorFincaResumenObj,
+    refetch: refetchFincaResumen,
+    isFetching: isFetchingFincaResumen,
+  } = useMiFincaResumenQuery(selectedFincaId);
   const parcelas = fincaResumen?.parcelas ?? [];
 
   const [selectedParcelaId, setSelectedParcelaId] = useState<number | null>(null);
@@ -46,8 +58,39 @@ export default function DashboardAdminFincaPage() {
   // 3. Dynamic card data
   const { data: parcelaResumen, isLoading: loadingParcela } = useParcelaResumenDynamicQuery(selectedParcelaId);
 
+  // Error de conexión / timeout / servidor caído (sin respuesta HTTP)
+  const isConnectionError = isNetworkOrTimeoutError(errorFincas) || isNetworkOrTimeoutError(errorFincaResumenObj);
+  const isRetrying = isFetchingFincas || (!!selectedFincaId && isFetchingFincaResumen);
+
+  const handleReintentar = () => {
+    refetchFincas();
+    if (selectedFincaId) {
+      refetchFincaResumen();
+    }
+  };
+
+  if (isConnectionError) {
+    return (
+      <div className="w-full max-w-screen-xl mx-auto space-y-6 pb-20 pt-10 text-center">
+        <h1 className="text-3xl font-bold text-foreground">Mis Fincas</h1>
+        <p className="text-lg text-foreground font-semibold mt-6">No se pudo conectar con el servidor</p>
+        <p className="text-sm text-muted-foreground mt-2">Revisá tu conexión e intentá nuevamente.</p>
+        <div className="mt-8">
+          <Button 
+            variant="outline"
+            onClick={handleReintentar}
+            disabled={isRetrying}
+            className="font-semibold px-6 rounded-xl"
+          >
+            {isRetrying ? 'Reintentando...' : 'Reintentar'}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Global 403 / No fincas check
-  const isFirstTimeUser = (usuario?.fincas?.length ?? 0) === 0 && !loadingFincas && fincas.length === 0;
+  const isFirstTimeUser = (usuario?.fincas?.length ?? 0) === 0 && !loadingFincas && !errorFincas && fincas.length === 0;
 
   if (isFirstTimeUser) {
     return (
@@ -57,7 +100,7 @@ export default function DashboardAdminFincaPage() {
     );
   }
 
-  const isFincaNotAvailable = (!loadingFincas && fincas.length === 0) || errorFincaResumen;
+  const isFincaNotAvailable = (!loadingFincas && !errorFincas && fincas.length === 0) || (errorFincaResumen && !isNetworkOrTimeoutError(errorFincaResumenObj));
 
   if (isFincaNotAvailable) {
     return (
@@ -145,21 +188,7 @@ export default function DashboardAdminFincaPage() {
             )}
           </Card>
           {/* Cuaderno de notas */}
-          <Card className="bg-card border-border shadow-sm p-6">
-            <div className="flex items-start sm:items-center gap-4 mb-5">
-              <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <HugeiconsIcon icon={NoteAddIcon} className="size-6 text-primary"/>
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-primary">¿Alguna observación hoy?</h3>
-                <p className="text-sm text-muted-foreground mt-1">Ingresa una nota con tu observación o mira las notas que has ingresado</p>
-              </div>
-            </div>
-            <div className="flex justify-center items-center gap-3">
-              <Button onClick={() => setIsNotaModalOpen(true)}>Capturar Nota</Button>
-              <Button variant="outline" className="text-primary hover:text-primary hover:bg-primary/5" onClick={() => setIsVerNotasModalOpen(true)}>Ver notas</Button>
-            </div>
-          </Card>
+          <CuadernoNotasCard idFinca={selectedFincaId} />
         </div>
 
         {/* COLUMNA DERECHA */}
@@ -240,17 +269,6 @@ export default function DashboardAdminFincaPage() {
       </div>
 
       <ResumenCostosDashboard idFinca={selectedFincaId} />
-      
-      <CapturarNotaModal 
-        open={isNotaModalOpen} 
-        onOpenChange={setIsNotaModalOpen} 
-        idFincaInicial={selectedFincaId} 
-      />
-      <VerNotasModal 
-        open={isVerNotasModalOpen}
-        onOpenChange={setIsVerNotasModalOpen}
-        idFinca={selectedFincaId}
-      />
     </div>
   );
 }

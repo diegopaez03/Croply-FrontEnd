@@ -190,6 +190,7 @@ export const costosService = {
 
     const response = await apiClient.post<Blob>(`/fincas/${id_finca}/gastos/exportar`, data, {
       responseType: 'blob',
+      timeout: 60000,
     });
     return response.data;
   },

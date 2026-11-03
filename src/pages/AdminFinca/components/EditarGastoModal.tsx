@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useEditarGastoMutation } from '@/hooks/useCostos';
-import { useFincaActiva } from '@/contexts/FincaActivaContext';
+import { useFincaActiva } from '@/context/FincaActivaContext';
 import { usuariosService } from '@/services/usuarios.service';
 import { useQuery } from '@tanstack/react-query';
 import { GastoProduccion } from '@/types/costos.types';
