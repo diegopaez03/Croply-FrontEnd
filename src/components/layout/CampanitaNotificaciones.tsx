@@ -8,7 +8,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ROUTES } from '@/constants/routes';
-import { useFincaActiva } from '@/contexts/FincaActivaContext';
+import { useFincaActiva } from '@/context/FincaActivaContext';
 import { useNotificaciones } from '@/hooks/useNotificaciones';
 import { Notificacion } from '@/types/notificaciones.types';
 

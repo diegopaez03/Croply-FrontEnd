@@ -37,6 +37,8 @@ import { usePlanAccionQuery } from '@/hooks/usePlanesAccion';
 import { useTiposTarea } from '@/hooks/useTiposTarea';
 import { usuariosService } from '@/services/usuarios.service';
 import { useConvertirNotaCampo } from '@/hooks/useNotasCampo';
+import { formatDosis, obtenerOpcionesUnidades, UNIDAD_DOSIS_DEFAULT } from '@/constants/agroquimicos';
+import { handleFormError } from '@/utils/errorHandler';
 
 const SIN_RESPONSABLE = '__none__';
 
@@ -45,20 +47,67 @@ const fromDatetimeLocal = (val?: string | null) => {
   return new Date(val).toISOString();
 };
 
-const convertirNotaSchema = z.object({
-  id_parcela: z.coerce.number().min(1, 'Requerido'),
-  id_hito_real: z.coerce.number().min(1, 'Requerido'),
-  nombre_tarea: z.string().min(1, 'Requerido'),
-  descripcion_tarea: z.string().min(1, 'Requerido'),
-  fecha_planificada_tarea: z.string().min(1, 'Requerido'),
-  id_tipo_tarea: z.coerce.number().min(1, 'Requerido'),
-  id_responsable: z.coerce.number().nullable().optional(),
-  nombre_producto_aa: z.string().nullable().optional(),
-  dosis_aa: z.string().nullable().optional(),
-  fecha_hora_aplicacion_aa: z.string().nullable().optional(),
-}).superRefine(() => {
-  // Aquí la lógica extra podría venir del hook, pero para evitar deps pasamos un validador suelto o lo manejamos en el submit
-});
+const crearConvertirNotaSchema = (esAgro: boolean) =>
+  z
+    .object({
+      id_parcela: z.coerce.number().min(1, 'La parcela es obligatoria'),
+      id_hito_real: z.coerce.number().min(1, 'El hito es obligatorio'),
+      nombre_tarea: z.string().min(1, 'El nombre es obligatorio').max(120),
+      descripcion_tarea: z.string().min(1, 'La descripción es obligatoria'),
+      fecha_planificada_tarea: z.string().min(1, 'La fecha planificada es obligatoria'),
+      id_tipo_tarea: z.coerce.number().min(1, 'El tipo de tarea es obligatorio'),
+      id_responsable: z.coerce.number().nullable().optional(),
+      nombre_producto_aa: z.string().nullable().optional(),
+      dosis: z.preprocess(
+        (val) => (val === '' || val === undefined || val === null ? null : Number(val)),
+        z.number({ invalid_type_error: 'La dosis debe ser un número válido' }).nullable().optional(),
+      ),
+      unidad_dosis: z.string().optional().nullable(),
+      fecha_hora_aplicacion_aa: z.string().nullable().optional(),
+    })
+    .superRefine((data, ctx) => {
+      if (!esAgro) return;
+      if (!data.nombre_producto_aa?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'El producto es obligatorio',
+          path: ['nombre_producto_aa'],
+        });
+      }
+      if (data.dosis == null || isNaN(data.dosis) || data.dosis <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'La dosis debe ser mayor a 0',
+          path: ['dosis'],
+        });
+      }
+      if (!data.unidad_dosis?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'La unidad es obligatoria',
+          path: ['unidad_dosis'],
+        });
+      }
+      if (!data.fecha_hora_aplicacion_aa?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'La fecha y hora de aplicación es obligatoria',
+          path: ['fecha_hora_aplicacion_aa'],
+        });
+      }
+      if (data.dosis != null && data.dosis > 0 && data.unidad_dosis?.trim()) {
+        const combinado = `${data.dosis} ${data.unidad_dosis.trim()}`;
+        if (combinado.length > 80) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'La dosis no puede superar los 80 caracteres',
+            path: ['dosis'],
+          });
+        }
+      }
+    });
+
+type ConvertirNotaFormValues = z.infer<ReturnType<typeof crearConvertirNotaSchema>>;
 
 interface ConvertirNotaModalProps {
   open: boolean;
@@ -78,8 +127,12 @@ export function ConvertirNotaModal({
   const { data: parcelasData } = useParcelasPorFinca(idFincaInicial);
   const { query: { data: tiposData } } = useTiposTarea();
 
-  const form = useForm<z.infer<typeof convertirNotaSchema>>({
-    resolver: zodResolver(convertirNotaSchema),
+  const form = useForm<ConvertirNotaFormValues>({
+    resolver: (values, context, options) => {
+      const tipo = tiposData?.tipos_tarea.find((t) => t.id_tipo_tarea === Number(values.id_tipo_tarea));
+      const esAgroResolver = tipo?.es_tipo_agroquimico ?? false;
+      return zodResolver(crearConvertirNotaSchema(esAgroResolver))(values, context, options);
+    },
     defaultValues: {
       id_parcela: undefined,
       id_hito_real: undefined,
@@ -89,7 +142,8 @@ export function ConvertirNotaModal({
       id_tipo_tarea: undefined,
       id_responsable: null,
       nombre_producto_aa: null,
-      dosis_aa: null,
+      dosis: null,
+      unidad_dosis: UNIDAD_DOSIS_DEFAULT,
       fecha_hora_aplicacion_aa: null,
     },
   });
@@ -124,8 +178,10 @@ export function ConvertirNotaModal({
     () => onOpenChange(false),
     (err) => {
       if (err.response?.data?.errorCode === 'PARCEL_WITHOUT_ACTION_PLAN') {
-         setErrorLocal('La parcela seleccionada no tiene un plan de acción generado. No es posible convertir la nota en tarea.');
+        setErrorLocal('La parcela seleccionada no tiene un plan de acción generado. No es posible convertir la nota en tarea.');
+        return;
       }
+      handleFormError(err);
     }
   );
 
@@ -140,7 +196,8 @@ export function ConvertirNotaModal({
         id_tipo_tarea: undefined,
         id_responsable: null,
         nombre_producto_aa: null,
-        dosis_aa: null,
+        dosis: null,
+        unidad_dosis: UNIDAD_DOSIS_DEFAULT,
         fecha_hora_aplicacion_aa: null,
       });
       setErrorLocal(null);
@@ -153,15 +210,6 @@ export function ConvertirNotaModal({
   }, [watchIdParcela, form]);
 
   const handleSubmit = form.handleSubmit((values) => {
-    if (esAgro) {
-      if (!values.nombre_producto_aa || !values.dosis_aa || !values.fecha_hora_aplicacion_aa) {
-        form.setError('nombre_producto_aa', { type: 'manual', message: 'Falta producto' });
-        form.setError('dosis_aa', { type: 'manual', message: 'Falta dosis' });
-        form.setError('fecha_hora_aplicacion_aa', { type: 'manual', message: 'Falta fecha' });
-        return;
-      }
-    }
-
     const payload: ConvertirNotaPayload = {
       id_parcela: Number(values.id_parcela),
       id_hito_real: Number(values.id_hito_real),
@@ -171,7 +219,7 @@ export function ConvertirNotaModal({
       id_tipo_tarea: Number(values.id_tipo_tarea),
       id_responsable: values.id_responsable ?? undefined,
       nombre_producto_aa: esAgro ? values.nombre_producto_aa?.trim() ?? undefined : undefined,
-      dosis_aa: esAgro ? values.dosis_aa?.trim() ?? undefined : undefined,
+      dosis_aa: esAgro ? formatDosis(values.dosis, values.unidad_dosis) ?? undefined : undefined,
       fecha_hora_aplicacion_aa: esAgro ? fromDatetimeLocal(values.fecha_hora_aplicacion_aa) ?? undefined : undefined,
     };
 
@@ -372,19 +420,57 @@ export function ConvertirNotaModal({
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="dosis_aa"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Dosis</FormLabel>
-                      <FormControl>
-                        <Input {...field} value={field.value ?? ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-[2fr_1fr] gap-2">
+                  <FormField
+                    control={form.control}
+                    name="dosis"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dosis</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="Ej. 2.5"
+                            value={field.value ?? ''}
+                            onChange={(e) => field.onChange(e.target.value)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="unidad_dosis"
+                    render={({ field }) => {
+                      const opciones = obtenerOpcionesUnidades(field.value);
+                      return (
+                        <FormItem>
+                          <FormLabel>Unidad</FormLabel>
+                          <Select
+                            value={field.value ?? UNIDAD_DOSIS_DEFAULT}
+                            onValueChange={field.onChange}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Unidad" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {opciones.map((u) => (
+                                <SelectItem key={u} value={u}>
+                                  {u}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
+                </div>
                 <FormField
                   control={form.control}
                   name="fecha_hora_aplicacion_aa"

@@ -3,8 +3,9 @@ import { AxiosError } from 'axios';
 import {
   ActualizarEstadoRequest, ActualizarEstadoResponse,
   ActualizarPerfilRequest, ActualizarPerfilResponse,
-  GetUsuariosRequest, GetUsuariosResponse,
-  UsuarioListado, PerfilResponse
+  GetUsuariosRequest, GetUsuariosResponse, GetUsuariosFincaResponse,
+  UsuarioListado, UsuarioFincaListado, PerfilResponse,
+  esUsuarioReal
 } from '../types/usuarios.types';
 
 // ============================================================================
@@ -28,25 +29,29 @@ export const mockUsuariosCroply: UsuarioListado[] = [
   { id_usuario: 14, nombre: "Silvia", apellido: "Ponce", email: "sponce@fincas.com", telefono: "+54 112233-4455", rol: { id_rol: 3, nombre_rol: "Administrador de Finca" }, estado: "Activo" }
 ];
 
-const mockUsuariosFincas: Record<number, UsuarioListado[]> = {
+const mockUsuariosFincas: Record<number, UsuarioFincaListado[]> = {
   12: [
     { id_usuario: 101, id_usuario_finca: 1001, nombre: "José", apellido: "García", email: "jgarcia@finca.com", telefono: "+54 223344-5566", rol: { id_rol: 1, nombre_rol: "Encargado de Riego" }, estado: "Activo" },
     { id_usuario: 102, id_usuario_finca: 1002, nombre: "Marta", apellido: "Lopez", email: "mlopez@finca.com", telefono: "+54 224455-6677", rol: { id_rol: 1, nombre_rol: "Encargado de Riego" }, estado: "Activo" },
     { id_usuario: 103, id_usuario_finca: 1003, nombre: "Jorge", apellido: "Fernandez", email: "jfernandez@finca.com", telefono: "+54 225566-7788", rol: { id_rol: 1, nombre_rol: "Encargado de Riego" }, estado: "Inactivo" },
     { id_usuario: 104, id_usuario_finca: 1004, nombre: "Esteban", apellido: "Quito", email: "equito@finca.com", telefono: "+54 226677-8899", rol: { id_rol: 2, nombre_rol: "Cosechador" }, estado: "Pendiente" },
-    { id_usuario: 105, id_usuario_finca: 1005, nombre: "Maria", apellido: "Gomez", email: "mgomez@finca.com", telefono: "+54 227788-9900", rol: { id_rol: 2, nombre_rol: "Cosechador" }, estado: "Activo" }
+    { id_usuario: 105, id_usuario_finca: 1005, nombre: "Maria", apellido: "Gomez", email: "mgomez@finca.com", telefono: "+54 227788-9900", rol: { id_rol: 2, nombre_rol: "Cosechador" }, estado: "Activo" },
+    { id_usuario: null, id_usuario_finca: null, id_invitacion_finca: 2001, nombre: null, apellido: null, telefono: null, email: "invitado.pendiente@finca.com", rol: { id_rol: 2, nombre_rol: "Cosechador" }, estado: "Pendiente" }
   ]
 };
 
-function filterAndPaginate(data: UsuarioListado[], params: GetUsuariosRequest): GetUsuariosResponse {
+function filterAndPaginate<T extends UsuarioFincaListado>(
+  data: T[],
+  params: GetUsuariosRequest
+): { usuarios: T[]; pagination: GetUsuariosResponse['pagination'] } {
   let filtered = [...data];
 
   // Filtro de búsqueda (nombre, apellido, email)
   if (params.search && params.search.trim() !== '') {
     const s = params.search.toLowerCase();
     filtered = filtered.filter(u => 
-      u.nombre.toLowerCase().includes(s) || 
-      u.apellido.toLowerCase().includes(s) || 
+      (u.nombre ?? '').toLowerCase().includes(s) || 
+      (u.apellido ?? '').toLowerCase().includes(s) || 
       u.email.toLowerCase().includes(s)
     );
   }
@@ -121,7 +126,7 @@ export const usuariosService = {
   /**
    * Obtiene la lista paginada de usuarios de una Finca (Empleados).
    */
-  getUsuariosFinca: async (idFinca: number, params: GetUsuariosRequest): Promise<GetUsuariosResponse> => {
+  getUsuariosFinca: async (idFinca: number, params: GetUsuariosRequest): Promise<GetUsuariosFincaResponse> => {
     if (import.meta.env.VITE_USE_MOCKS === 'true') {
       return new Promise((resolve) => {
         setTimeout(() => {
@@ -130,7 +135,7 @@ export const usuariosService = {
         }, 800);
       });
     }
-    const response = await apiClient.get<GetUsuariosResponse>(`/fincas/${idFinca}/usuarios`, {
+    const response = await apiClient.get<GetUsuariosFincaResponse>(`/fincas/${idFinca}/usuarios`, {
       params: limpiarFiltros(params),
     });
     return response.data;
@@ -166,7 +171,7 @@ export const usuariosService = {
   /**
    * Helper exclusivo de testing para buscar un usuario por email en la finca.
    */
-  _mockGetUsuarioFincaByEmail: (id_finca: number, email: string): UsuarioListado | undefined => {
+  _mockGetUsuarioFincaByEmail: (id_finca: number, email: string): UsuarioFincaListado | undefined => {
     if (!mockUsuariosFincas[id_finca]) return undefined;
     return mockUsuariosFincas[id_finca].find(u => u.email.toLowerCase() === email.toLowerCase());
   },
@@ -200,7 +205,7 @@ export const usuariosService = {
     if (userCroply) aplicarEstado(userCroply);
 
     Object.values(mockUsuariosFincas).forEach(fincaUsers => {
-      const userFinca = fincaUsers.find(u => u.id_usuario === id_usuario);
+      const userFinca = fincaUsers.filter(esUsuarioReal).find(u => u.id_usuario === id_usuario);
       if (userFinca) aplicarEstado(userFinca);
     });
   },
@@ -232,7 +237,7 @@ export const usuariosService = {
           let userMock = mockUsuariosCroply.find(u => u.id_usuario === id_usuario);
           if (!userMock) {
             for (const fincaUsers of Object.values(mockUsuariosFincas)) {
-              const u = fincaUsers.find(u => u.id_usuario === id_usuario);
+              const u = fincaUsers.filter(esUsuarioReal).find(u => u.id_usuario === id_usuario);
               if (u) {
                 userMock = u;
                 break;

@@ -10,6 +10,33 @@ export interface UsuarioListado {
   fecha_baja?: string | null;
 }
 
+/**
+ * Fila de invitación pendiente que devuelve GET /fincas/:id_finca/usuarios.
+ * Todavía no existe usuario, por eso los datos personales e ids vienen en null.
+ */
+export interface InvitacionPendienteListado {
+  id_usuario: null;
+  id_usuario_finca: null;
+  id_invitacion_finca: number;
+  nombre: null;
+  apellido: null;
+  telefono: null;
+  email: string;
+  rol: { id_rol: number; nombre_rol: string } | null;
+  estado: "Pendiente";
+}
+
+/** Fila del listado de usuarios de una finca: usuario real o invitación pendiente. */
+export type UsuarioFincaListado = UsuarioListado | InvitacionPendienteListado;
+
+export function esInvitacionPendiente(u: UsuarioFincaListado): u is InvitacionPendienteListado {
+  return u.id_usuario === null;
+}
+
+export function esUsuarioReal(u: UsuarioFincaListado): u is UsuarioListado {
+  return u.id_usuario !== null;
+}
+
 export interface GetUsuariosRequest {
   page?: number;
   pageSize?: number;
@@ -26,6 +53,11 @@ export interface GetUsuariosResponse {
     totalItems: number;
     totalPages: number;
   };
+}
+
+export interface GetUsuariosFincaResponse {
+  usuarios: UsuarioFincaListado[];
+  pagination: GetUsuariosResponse['pagination'];
 }
 
 export interface ActualizarEstadoRequest {

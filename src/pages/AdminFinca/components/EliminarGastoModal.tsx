@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useEliminarGastoMutation } from '@/hooks/useCostos';
 import { GastoProduccion } from '@/types/costos.types';
-import { useFincaActiva } from '@/contexts/FincaActivaContext';
+import { useFincaActiva } from '@/context/FincaActivaContext';
 
 interface EliminarGastoModalProps {
   open: boolean;

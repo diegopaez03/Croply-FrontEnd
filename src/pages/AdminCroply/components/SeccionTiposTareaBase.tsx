@@ -100,6 +100,7 @@ export function SeccionTiposTareaBase() {
   const items = data?.tipos_tarea.map((t) => ({
     id: t.id_tipo_tarea,
     label: t.nombre_tipo_tarea,
+    protegido: t.protegido,
   })) || [];
 
   return (

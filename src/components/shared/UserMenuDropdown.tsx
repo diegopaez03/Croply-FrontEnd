@@ -8,6 +8,7 @@ import {
 } from '../ui/dropdown-menu';
 
 import { useAuth } from '../../context/AuthContext';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 
 interface UserMenuDropdownProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ interface UserMenuDropdownProps {
 export function UserMenuDropdown({ children }: UserMenuDropdownProps) {
   const navigate = useNavigate();
   const { logoutState } = useAuth();
+  const isOnline = useOnlineStatus();
 
   const handleCerrarSesion = () => {
     logoutState();
@@ -23,6 +25,7 @@ export function UserMenuDropdown({ children }: UserMenuDropdownProps) {
   };
 
   const handleMiCuenta = () => {
+    if (!isOnline) return;
     navigate('/perfil');
   };
 
@@ -34,7 +37,9 @@ export function UserMenuDropdown({ children }: UserMenuDropdownProps) {
       <DropdownMenuContent align="end" className="w-48 bg-card border-border">
         <DropdownMenuItem 
           onClick={handleMiCuenta}
-          className="cursor-pointer text-foreground focus:bg-muted focus:text-foreground hover:bg-muted"
+          disabled={!isOnline}
+          title={!isOnline ? "Requiere conexión" : undefined}
+          className="cursor-pointer text-foreground focus:bg-muted focus:text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Mi cuenta
         </DropdownMenuItem>

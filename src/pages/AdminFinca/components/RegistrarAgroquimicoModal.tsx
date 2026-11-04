@@ -29,6 +29,8 @@ import { useQuery } from '@tanstack/react-query';
 import { planesAccionService } from '@/services/planesAccion.service';
 import { DateTimePicker } from '@/components/ui/date-picker';
 import { preventAccidentalDialogDismiss } from '@/utils/dialog-dismiss';
+import { UNIDADES_DOSIS } from '@/constants/agroquimicos';
+import { handleFormError } from '@/utils/errorHandler';
 
 const formSchema = z.object({
   fecha_hora_aplicacion_aa: z.string().min(1, 'La fecha y hora son obligatorias'),
@@ -42,8 +44,6 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
-
-const UNIDADES_DOSIS = ['L/ha', 'kg/ha', 'cc/ha', 'ml/ha'];
 
 interface RegistrarAgroquimicoModalProps {
   open: boolean;
@@ -115,8 +115,8 @@ export function RegistrarAgroquimicoModal({
           toast.success('Aplicación registrada correctamente.');
           handleClose();
         },
-        onError: () => {
-          toast.error('No se pudo registrar la aplicación. Revisá tu conexión e intentá de nuevo.');
+        onError: (error) => {
+          handleFormError(error);
         },
       }
     );

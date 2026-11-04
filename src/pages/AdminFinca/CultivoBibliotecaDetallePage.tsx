@@ -13,7 +13,9 @@ import {
 import { useCultivoBase } from '@/hooks/useCultivosBase';
 import { usePlantillaBase } from '@/hooks/usePlantillasBase';
 import { formatFormaSiembra } from '@/utils/formatters';
-import { handleFormError } from '@/utils/errorHandler';
+import { handleFormError, isNetworkOrTimeoutError } from '@/utils/errorHandler';
+import { Button } from '@/components/ui/button';
+import { ErrorConexionServidor } from '@/components/shared/ErrorConexionServidor';
 import { idPlantillaParaVariedad } from '@/utils/resolver-plantilla';
 import { CultivoImagen } from '@/components/shared/CultivoImagen';
 import { DEFAULT_BANNER_CULTIVO, urlBannerCultivo } from '@/utils/imagen-cultivo';
@@ -44,12 +46,12 @@ export default function CultivoBibliotecaDetallePage() {
   const location = useLocation();
   const [idVariedad, setIdVariedad] = useState<number | null>(null);
 
-  const { data: detalle, isLoading, error } = useCultivoBase(
+  const { data: detalle, isLoading, error, refetch, isFetching } = useCultivoBase(
     Number.isFinite(idCultivo) ? idCultivo : null,
   );
 
   useEffect(() => {
-    if (error) {
+    if (error && !isNetworkOrTimeoutError(error)) {
       handleFormError(error, undefined, {
         onNotFoundRedirect: () => navigate(ROUTES.FINCA.BIBLIOTECA),
       });
@@ -82,11 +84,29 @@ export default function CultivoBibliotecaDetallePage() {
     );
   };
 
-  if (isLoading || !detalle) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center py-16 text-muted-foreground">
         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-3" />
         Cargando...
+      </div>
+    );
+  }
+
+  if (isNetworkOrTimeoutError(error)) {
+    return (
+      <ErrorConexionServidor
+        onReintentar={() => refetch()}
+        isReintentando={isFetching}
+      />
+    );
+  }
+
+  if (!detalle) {
+    return (
+      <div className="text-center py-16">
+        <h2 className="text-2xl font-bold mb-4 text-foreground">Cultivo no encontrado</h2>
+        <Button onClick={() => navigate(ROUTES.FINCA.BIBLIOTECA)}>Volver a la biblioteca</Button>
       </div>
     );
   }

@@ -1,6 +1,6 @@
 import { UseFormSetError } from "react-hook-form";
 import { toast } from "@/components/ui/sonner";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 export interface ApiErrorResponse {
   statusCode: number;
@@ -15,6 +15,14 @@ export interface ErrorHandlerOptions {
   onNotFoundRedirect?: () => void;
   /** HU-BC-02 ERR-07: resaltar la variedad conflictiva */
   onVarietyAlreadyAssigned?: (id_variedad?: number) => void;
+}
+
+/**
+ * Determina si un error corresponde a una falla de red, timeout o servidor no disponible
+ * (error de Axios sin respuesta HTTP).
+ */
+export function isNetworkOrTimeoutError(error: unknown): error is AxiosError {
+  return axios.isAxiosError(error) && !error.response;
 }
 
 /**
@@ -91,6 +99,30 @@ export const handleFormError = (
 
     toast.error(data.message || "Ha ocurrido un error inesperado.");
   } else {
-    toast.error("Error de conexión. Verifique su internet e intente nuevamente.");
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      toast.error("Sin conexión a internet. Verificá tu red e intentá nuevamente.");
+      return;
+    }
+
+    if (
+      isNetworkOrTimeoutError(error) &&
+      (error.code === "ECONNABORTED" ||
+        error.code === "ETIMEDOUT" ||
+        error.message?.toLowerCase().includes("timeout"))
+    ) {
+      toast.error(
+        "Tiempo de espera agotado. El servidor tardó demasiado en responder, por favor intentá nuevamente."
+      );
+      return;
+    }
+
+    if (isNetworkOrTimeoutError(error)) {
+      toast.error(
+        "No se pudo conectar con el servidor. Revisá tu conexión o intentá nuevamente más tarde."
+      );
+      return;
+    }
+
+    toast.error("Ha ocurrido un error inesperado.");
   }
 };

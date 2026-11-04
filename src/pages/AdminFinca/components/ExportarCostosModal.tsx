@@ -4,10 +4,82 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFincaActiva } from '@/contexts/FincaActivaContext';
+import { useFincaActiva } from '@/context/FincaActivaContext';
 import { useGastosQuery, useEvolucionMensualQuery, useExportarGastosMutation } from '@/hooks/useCostos';
 import { BarChart, Bar, XAxis, Cell } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+
+function copiarEstilosResueltos(source: Element, target: Element) {
+  try {
+    const computed = window.getComputedStyle(source);
+
+    const propsToCopy = [
+      'fill',
+      'stroke',
+      'stroke-width',
+      'opacity',
+      'fill-opacity',
+      'stroke-opacity',
+      'font-family',
+      'font-size',
+      'font-weight',
+      'color',
+    ] as const;
+
+    for (const prop of propsToCopy) {
+      const val = computed.getPropertyValue(prop);
+      if (val) {
+        (target as HTMLElement | SVGElement).style?.setProperty(prop, val);
+      }
+    }
+
+    const computedFill = computed.getPropertyValue('fill');
+    if (computedFill && !computedFill.includes('var(')) {
+      target.setAttribute('fill', computedFill);
+    }
+
+    const computedStroke = computed.getPropertyValue('stroke');
+    if (computedStroke && !computedStroke.includes('var(')) {
+      target.setAttribute('stroke', computedStroke);
+    }
+  } catch {
+    // Si falla el cálculo o seteo en un nodo específico, continuar sin romper la exportación
+  }
+
+  // Recorrer hijos en paralelo con salvaguarda por si los árboles difieren
+  const sourceChildren = Array.from(source.children);
+  const targetChildren = Array.from(target.children);
+  const minCount = Math.min(sourceChildren.length, targetChildren.length);
+
+  for (let i = 0; i < minCount; i++) {
+    copiarEstilosResueltos(sourceChildren[i], targetChildren[i]);
+  }
+}
+
+function clonarSvgConEstilosResueltos(svgElement: SVGSVGElement): SVGSVGElement {
+  const clone = svgElement.cloneNode(true) as SVGSVGElement;
+
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  const width = svgElement.clientWidth || parseFloat(svgElement.getAttribute('width') || '0');
+  const height = svgElement.clientHeight || parseFloat(svgElement.getAttribute('height') || '0');
+
+  if (width > 0) {
+    clone.setAttribute('width', String(width));
+  }
+  if (height > 0) {
+    clone.setAttribute('height', String(height));
+  }
+
+  const originalViewBox = svgElement.getAttribute('viewBox');
+  if (originalViewBox) {
+    clone.setAttribute('viewBox', originalViewBox);
+  } else if (width > 0 && height > 0) {
+    clone.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  }
+
+  copiarEstilosResueltos(svgElement, clone);
+  return clone;
+}
 
 interface ExportarCostosModalProps {
   open: boolean;
@@ -61,7 +133,8 @@ export function ExportarCostosModal({ open, onOpenChange }: ExportarCostosModalP
     if (chartRef.current) {
       const svgElement = chartRef.current.querySelector('svg');
       if (svgElement) {
-        const svgString = new XMLSerializer().serializeToString(svgElement);
+        const svgClonado = clonarSvgConEstilosResueltos(svgElement);
+        const svgString = new XMLSerializer().serializeToString(svgClonado);
         const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(svgBlob);
         

@@ -21,6 +21,8 @@ import { RecomendacionIaCard } from './components/RecomendacionIaCard';
 import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
 import { CapturarNotaModal } from './components/CapturarNotaModal';
 import { VerNotasModal } from './components/VerNotasModal';
+import { isNetworkOrTimeoutError } from '../../utils/errorHandler';
+import { ErrorConexionServidor } from '../../components/shared/ErrorConexionServidor';
 
 export default function ParcelaDetallePage() {
   const [activeTab, setActiveTab] = useState<'cultivo' | 'historial'>('cultivo');
@@ -51,7 +53,7 @@ export default function ParcelaDetallePage() {
   const navigate = useNavigate();
   
   const idParcela = id ? Number(id) : null;
-  const { data: parcela, isLoading } = useParcelaQuery(idParcela);
+  const { data: parcela, isLoading, error: errorParcela, refetch: refetchParcela, isFetching: isFetchingParcela } = useParcelaQuery(idParcela);
   const fincaId = parcela?.id_finca;
   const { data: fincaDetalle } = useFincaQuery(fincaId || null);
   const { data: historialRes, isLoading: loadingHistorial } = useHistorialCultivosQuery(activeTab === 'historial' ? idParcela : null);
@@ -62,6 +64,15 @@ export default function ParcelaDetallePage() {
         <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-primary mr-3" />
         Cargando parcela...
       </div>
+    );
+  }
+
+  if (isNetworkOrTimeoutError(errorParcela)) {
+    return (
+      <ErrorConexionServidor
+        onReintentar={() => refetchParcela()}
+        isReintentando={isFetchingParcela}
+      />
     );
   }
 

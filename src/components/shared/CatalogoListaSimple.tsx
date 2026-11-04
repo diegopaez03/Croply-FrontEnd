@@ -7,6 +7,7 @@ export interface CatalogoListaSimpleItem {
   id: number | string;
   label: string;
   pillColor?: string; // Optional class for specific colors like 'text-blue-600 bg-blue-100'
+  protegido?: boolean;
 }
 
 export interface CatalogoListaSimpleProps {
@@ -70,20 +71,26 @@ export function CatalogoListaSimple({
                   {item.label}
                 </div>
                 <div className="flex items-center gap-3">
-                  <button 
+                  <Button 
+                    variant="ghost"
+                    size="icon"
                     onClick={() => onEditar(item.id)}
-                    className="p-1.5 text-blue-500 hover:bg-blue-50 transition-colors rounded-md"
+                    className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
                     title="Editar"
                   >
                     <HugeiconsIcon icon={PencilEdit01Icon} className="size-4" />
-                  </button>
-                  <button 
-                    onClick={() => onEliminar(item.id)}
-                    className="p-1.5 text-red-500 hover:bg-red-50 transition-colors rounded-md"
-                    title="Eliminar"
-                  >
-                    <HugeiconsIcon icon={Delete02Icon} className="size-4" />
-                  </button>
+                  </Button>
+                  {!item.protegido && (
+                    <Button 
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEliminar(item.id)}
+                      className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                      title="Eliminar"
+                    >
+                      <HugeiconsIcon icon={Delete02Icon} className="size-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}

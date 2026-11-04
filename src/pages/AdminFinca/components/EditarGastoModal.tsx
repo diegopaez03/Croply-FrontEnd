@@ -21,8 +21,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useEditarGastoMutation } from '@/hooks/useCostos';
-import { useFincaActiva } from '@/contexts/FincaActivaContext';
+import { useFincaActiva } from '@/context/FincaActivaContext';
 import { usuariosService } from '@/services/usuarios.service';
+import { esUsuarioReal } from '@/types/usuarios.types';
 import { useQuery } from '@tanstack/react-query';
 import { GastoProduccion } from '@/types/costos.types';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -156,7 +157,7 @@ export function EditarGastoModal({ open, onOpenChange, gasto }: EditarGastoModal
                   El responsable original podría estar inactivo, pero el requerimiento de HU-GC-01 indica que 
                   no es elegible si está inactivo. Así que solo listamos los activos.
                 */}
-                {usuariosData?.usuarios?.map(u => {
+                {usuariosData?.usuarios?.filter(esUsuarioReal).map(u => {
                   const val = u.id_usuario_finca ? u.id_usuario_finca.toString() : u.id_usuario.toString();
                   return (
                     <SelectItem key={val} value={val}>

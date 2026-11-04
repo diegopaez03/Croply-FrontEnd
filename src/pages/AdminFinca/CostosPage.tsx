@@ -3,7 +3,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { PlusSignIcon, Download04Icon, Coins01Icon, Edit01Icon, Delete01Icon } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
-import { useFincaActiva } from '@/contexts/FincaActivaContext';
+import { useFincaActiva } from '@/context/FincaActivaContext';
 import { useAuth } from '@/context/AuthContext';
 import { PERMISO_FINCA } from '@/constants/permisos';
 import { RegistrarGastoModal } from './components/RegistrarGastoModal';

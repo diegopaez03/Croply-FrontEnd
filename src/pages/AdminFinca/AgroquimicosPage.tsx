@@ -6,7 +6,7 @@ import { RegistrarAgroquimicoModal } from './components/RegistrarAgroquimicoModa
 import { EditarAgroquimicoModal } from './components/EditarAgroquimicoModal';
 import { ExportarAgroquimicosModal } from './components/ExportarAgroquimicosModal';
 import { useMiFincaResumenQuery } from '@/hooks/useFincas';
-import { useFincaActiva } from '@/contexts/FincaActivaContext';
+import { useFincaActiva } from '@/context/FincaActivaContext';
 import { useAplicacionesQuery } from '@/hooks/useAgroquimicos';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -18,6 +18,7 @@ import { AplicacionAgroquimicoDetalle } from '@/types/agroquimicos.types';
 
 export function AgroquimicosPage() {
   const { fincaActivaId: selectedFincaId, fincas } = useFincaActiva();
+  const fincaActiva = fincas.find(f => f.id_finca === selectedFincaId);
   
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEditApp, setSelectedEditApp] = useState<AplicacionAgroquimicoDetalle | null>(null);
@@ -173,7 +174,11 @@ export function AgroquimicosPage() {
         {selectedFincaId ? (
           <>
             {/* Barra de Filtros */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 bg-card p-4 rounded-xl border border-border">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 bg-card p-4 rounded-xl border border-border">
+              {/* Indicador de finca activa - Visualmente como un Select disabled pero solo informativo */}
+              <div className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground opacity-70">
+                <span>{fincaActiva?.nombre_finca || 'Cargando finca...'}</span>
+              </div>
               <Select value={filterParcela} onValueChange={handleParcelaChange}>
                 <SelectTrigger className="bg-background border-input">
                   <SelectValue placeholder="Todas las parcelas" />

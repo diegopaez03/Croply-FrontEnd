@@ -7,12 +7,16 @@ interface FincaActivaContextType {
   setFincaActivaId: (id: number) => void;
   fincas: any[];
   isLoading: boolean;
+  isError: boolean;
+  error: unknown;
+  refetch: () => Promise<any>;
+  isFetching: boolean;
 }
 
 const FincaActivaContext = createContext<FincaActivaContextType | undefined>(undefined);
 
 export function FincaActivaProvider({ children }: { children: React.ReactNode }) {
-  const { data: fincasRes, isLoading } = useMiFincaListQuery();
+  const { data: fincasRes, isLoading, isError, error, refetch, isFetching } = useMiFincaListQuery();
   const fincas = fincasRes?.fincas || [];
   
   const [fincaActivaId, setFincaActivaIdState] = useState<number | null>(() => {
@@ -40,7 +44,7 @@ export function FincaActivaProvider({ children }: { children: React.ReactNode })
   }, [isLoading, fincas, fincaActivaId]);
 
   return (
-    <FincaActivaContext.Provider value={{ fincaActivaId, setFincaActivaId, fincas, isLoading }}>
+    <FincaActivaContext.Provider value={{ fincaActivaId, setFincaActivaId, fincas, isLoading, isError, error, refetch, isFetching }}>
       {children}
     </FincaActivaContext.Provider>
   );

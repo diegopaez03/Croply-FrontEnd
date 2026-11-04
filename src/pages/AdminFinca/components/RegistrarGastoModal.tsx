@@ -20,8 +20,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCrearGastoMutation } from '@/hooks/useCostos';
-import { useFincaActiva } from '@/contexts/FincaActivaContext';
+import { useFincaActiva } from '@/context/FincaActivaContext';
 import { usuariosService } from '@/services/usuarios.service';
+import { esUsuarioReal } from '@/types/usuarios.types';
 import { useQuery } from '@tanstack/react-query';
 import { DatePicker } from '@/components/ui/date-picker';
 
@@ -138,7 +139,7 @@ export function RegistrarGastoModal({ open, onOpenChange }: RegistrarGastoModalP
                 <SelectValue placeholder={loadingUsuarios ? "Cargando..." : "Seleccionar responsable"} />
               </SelectTrigger>
               <SelectContent>
-                {usuariosData?.usuarios?.map(u => {
+                {usuariosData?.usuarios?.filter(esUsuarioReal).map(u => {
                   const val = u.id_usuario_finca ? u.id_usuario_finca.toString() : u.id_usuario.toString();
                   return (
                     <SelectItem key={val} value={val}>
