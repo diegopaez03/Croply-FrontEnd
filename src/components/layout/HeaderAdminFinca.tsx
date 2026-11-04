@@ -27,19 +27,18 @@ export function HeaderAdminFinca() {
 
       <div className="flex items-center gap-2">
         {/* Notifications Icon */}
-        <button 
+        <button
           disabled={!isOnline}
           title={!isOnline ? "Requiere conexión" : undefined}
           className="flex items-center justify-center size-6 rounded-lg hover:bg-muted text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <HugeiconsIcon icon={Notification01Icon} className="size-5" />
+          <CampanitaNotificaciones />
         </button>
-        <CampanitaNotificaciones />
-        
+
         <div className="px-2 mx-1">
           <div className="h-8 w-px bg-border" />
         </div>
-        
+
         {/* Profile Info */}
         <UserMenuDropdown>
           <button className="flex items-center gap-1 size-12 rounded-lg text-foreground hover:bg-muted justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
