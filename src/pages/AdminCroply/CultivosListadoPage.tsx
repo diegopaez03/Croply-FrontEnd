@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ROUTES } from '../../constants/routes';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon, PlusSignIcon } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
@@ -89,7 +90,7 @@ export default function CultivosListadoPage() {
   return (
     <div className="w-full max-w-screen-xl mx-auto px-6 py-8">
       <Link
-        to="/admin-croply/catalogos-base"
+        to={ROUTES.CROPLY.CATALOGOS_BASE}
         className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline mb-6"
       >
         <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />

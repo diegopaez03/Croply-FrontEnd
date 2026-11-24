@@ -15,3 +15,5 @@
  *   export type { Farm } from './farm.types'
  *   export type { ApiResponse, PaginatedResponse } from './api.types'
  */
+export * from './tiposTarea.types';
+export * from './estadosTarea.types';

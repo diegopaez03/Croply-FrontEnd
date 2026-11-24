@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
+import { ROUTES } from '../../constants/routes';
 import { format } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -18,6 +19,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -73,7 +75,7 @@ export default function GenerarPlanAccionPage() {
       if (idParcela) queryClient.invalidateQueries({ queryKey: ['parcela', idParcela] });
       queryClient.invalidateQueries({ queryKey: ['planPreview'] });
       showSuccessToast({ message: msg });
-      navigate(`/admin-finca/parcelas/${idParcela}`);
+      navigate(ROUTES.FINCA.parcelaDetalle(idParcela));
     },
     (err: any) => {
       if (err?.response?.data?.field === 'superficie_asignada') {
@@ -120,7 +122,7 @@ export default function GenerarPlanAccionPage() {
   useEffect(() => {
     if (error) {
       handleFormError(error, undefined, {
-        onNotFoundRedirect: () => navigate('/admin-finca/biblioteca'),
+        onNotFoundRedirect: () => navigate(ROUTES.FINCA.BIBLIOTECA),
       });
     }
   }, [error, navigate]);
@@ -189,6 +191,14 @@ export default function GenerarPlanAccionPage() {
     });
   };
 
+  useEffect(() => {
+    if (!loadingCultivo && !loadingFincas && detalle) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }, 0);
+    }
+  }, [loadingCultivo, loadingFincas, detalle]);
+
   if (loadingCultivo || !detalle || loadingFincas) {
     return (
       <div className="flex justify-center items-center py-16 text-muted-foreground">
@@ -221,7 +231,7 @@ export default function GenerarPlanAccionPage() {
         <Button 
           type="button"
           variant="outline" 
-          onClick={() => navigate(`/admin-finca/biblioteca/${idCultivo}${location.search}`)}
+          onClick={() => navigate(`${ROUTES.FINCA.cultivoBibliotecaDetalle(idCultivo)}${location.search}`)}
           className="rounded-full gap-2 text-sm font-medium border-border shadow-sm mb-6 h-9 px-4 bg-background"
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
@@ -495,7 +505,11 @@ export default function GenerarPlanAccionPage() {
                 render={({ field }) => (
                   <FormItem className="mb-4">
                     <FormControl>
-                      <Input type="date" className="h-11 bg-background block w-full justify-between [&::-webkit-calendar-picker-indicator]:ml-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60" {...field} />
+                      <DatePicker
+                        value={field.value ?? ''}
+                        onChange={field.onChange}
+                        className="h-11"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -559,7 +573,7 @@ export default function GenerarPlanAccionPage() {
                   type="button" 
                   variant="outline" 
                   className="rounded-full px-6 bg-background h-10 border-border/80 text-foreground font-semibold" 
-                  onClick={() => navigate(`/admin-finca/biblioteca/${idCultivo}${location.search}`)}
+                  onClick={() => navigate(`${ROUTES.FINCA.cultivoBibliotecaDetalle(idCultivo)}${location.search}`)}
                 >
                   Cancelar
                 </Button>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ROUTES } from '../../constants/routes';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -41,7 +42,8 @@ import {
   PlusSignIcon,
   Delete02Icon
 } from '@hugeicons/core-free-icons';
-import { handleFormError } from '../../utils/errorHandler';
+import { handleFormError, isNetworkOrTimeoutError } from '../../utils/errorHandler';
+import { ErrorConexionServidor } from '../../components/shared/ErrorConexionServidor';
 import { CrearEditarParcelaForm } from './components/CrearEditarParcelaForm';
 
 const formSchema = z.object({
@@ -84,7 +86,7 @@ export default function FincaDetallePage() {
     defaultValues: { nombre_finca: '', superficie_finca: 0, descripcion_finca: '', id_usuario_propietario: 'none' },
   });
 
-  const { data: finca, isLoading } = useFincaQuery(Number(id));
+  const { data: finca, isLoading, error: errorFinca, refetch: refetchFinca, isFetching: isFetchingFinca } = useFincaQuery(Number(id));
   const { data: administradoresRes, isLoading: loadingAdmins } = useAdministradoresFincaDisponiblesQuery();
   const administradores = administradoresRes?.usuarios || [];
 
@@ -165,11 +167,20 @@ export default function FincaDetallePage() {
     );
   }
 
+  if (isNetworkOrTimeoutError(errorFinca)) {
+    return (
+      <ErrorConexionServidor
+        onReintentar={() => refetchFinca()}
+        isReintentando={isFetchingFinca}
+      />
+    );
+  }
+
   if (!finca) {
     return (
       <div className="text-center py-16">
         <h2 className="text-xl font-semibold">Finca no encontrada</h2>
-        <Button variant="outline" className="mt-4" onClick={() => navigate('/admin-croply/fincas')}>
+        <Button variant="outline" className="mt-4" onClick={() => navigate(ROUTES.CROPLY.FINCAS)}>
           Volver al listado
         </Button>
       </div>
@@ -188,7 +199,7 @@ export default function FincaDetallePage() {
       {/* Header con Breadcrumbs y Título */}
       <div className="flex flex-col mt-2">
         <div className="flex items-center text-sm text-muted-foreground gap-2 mb-3">
-          <Link to="/admin-croply/fincas" className="hover:text-foreground transition-colors font-medium">
+          <Link to={ROUTES.CROPLY.FINCAS} className="hover:text-foreground transition-colors font-medium">
             Fincas e Infraestructura
           </Link>
           <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" strokeWidth={2} />

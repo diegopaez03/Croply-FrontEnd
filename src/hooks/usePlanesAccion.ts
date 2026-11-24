@@ -3,7 +3,6 @@ import { planesAccionService } from '../services/planesAccion.service';
 import {
   CrearPlanAccionRequest,
   EstadoPlanAccionManual,
-  EstadoTareaPlan,
   TareaPlanPayload,
 } from '../types/planesAccion.types';
 import { showSuccessToast } from '../utils/successHandler';
@@ -33,10 +32,13 @@ export function useCrearPlanAccion(
   });
 }
 
-export function usePlanAccionQuery(id_plan_accion: number | null) {
+export function usePlanAccionQuery(
+  id_plan_accion: number | null,
+  filters?: { id_estado_tarea?: string; fecha?: string }
+) {
   return useQuery({
-    queryKey: ['planAccion', id_plan_accion],
-    queryFn: () => planesAccionService.obtenerPlanAccion(id_plan_accion as number),
+    queryKey: ['planAccion', id_plan_accion, filters],
+    queryFn: () => planesAccionService.obtenerPlanAccion(id_plan_accion as number, filters),
     enabled: id_plan_accion != null,
   });
 }
@@ -101,11 +103,11 @@ export function useCambiarEstadoTareaPlan(id_plan_accion: number, id_parcela?: n
   return useMutation({
     mutationFn: ({
       id_tarea,
-      estado,
+      id_estado_tarea,
     }: {
       id_tarea: number;
-      estado: EstadoTareaPlan;
-    }) => planesAccionService.cambiarEstadoTarea(id_plan_accion, id_tarea, estado),
+      id_estado_tarea: number;
+    }) => planesAccionService.cambiarEstadoTarea(id_plan_accion, id_tarea, id_estado_tarea),
     onSuccess: (res) => {
       showSuccessToast(res);
       invalidatePlan(queryClient, id_plan_accion, id_parcela);
@@ -132,6 +134,19 @@ export function useCambiarEstadoPlanAccion(id_plan_accion: number, id_parcela?: 
   return useMutation({
     mutationFn: (estado: EstadoPlanAccionManual) =>
       planesAccionService.cambiarEstadoPlan(id_plan_accion, estado),
+    onSuccess: (res) => {
+      showSuccessToast(res);
+      invalidatePlan(queryClient, id_plan_accion, id_parcela);
+    },
+    onError: (error) => handleFormError(error),
+  });
+}
+
+export function useReprogramarTarea(id_plan_accion: number, id_parcela?: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id_tarea, fecha_planificada_tarea }: { id_tarea: number, fecha_planificada_tarea: string }) =>
+      planesAccionService.reprogramarTarea(id_plan_accion, id_tarea, { fecha_planificada_tarea }),
     onSuccess: (res) => {
       showSuccessToast(res);
       invalidatePlan(queryClient, id_plan_accion, id_parcela);

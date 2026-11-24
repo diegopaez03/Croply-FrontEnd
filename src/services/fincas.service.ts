@@ -10,6 +10,7 @@ import {
   AsignarPropietarioPayload,
   CrearEditarParcelaPayload,
   ParcelaResumen,
+  ParcelaResumenDynamic,
   ParcelaByIdResponse,
   HistorialCultivosResponse,
   QRGenerarResponse,
@@ -26,7 +27,7 @@ import { mockTiposSensor } from './tiposSensor.service';
 
 export let mockFincas: FincaDetalle[] = [
   {
-    id_finca: 1,
+    id_finca: 12,
     nombre_finca: 'Finca La Esperanza',
     provincia: 'Mendoza',
     departamento: 'Capital',
@@ -160,9 +161,9 @@ export const fincasService = {
     return response.data;
   },
 
-  getParcelaResumenDynamic: async (id_parcela: number) => {
+  getParcelaResumenDynamic: async (id_parcela: number): Promise<ParcelaResumenDynamic> => {
     if (import.meta.env.VITE_USE_MOCKS === 'true') {
-      return new Promise<any>((resolve, reject) => {
+      return new Promise<ParcelaResumenDynamic>((resolve, reject) => {
         setTimeout(() => {
           let foundParcela: any = null;
           for (const f of mockFincas) {
@@ -182,14 +183,16 @@ export const fincasService = {
             cultivo: cultivoActual ? {
               nombre_cultivo_base: cultivoActual.nombre_cultivo_base,
               nombre_variedad: cultivoActual.nombre_variedad,
-              superficie_ocupada_pa: cultivoActual.superficie_asignada
+              superficie_ocupada_pa: cultivoActual.superficie_asignada,
+              fecha_inicio_pa: cultivoActual.fecha_inicio ?? null,
+              fecha_estimada_cosecha: null,
             } : null,
             recomendacion_ia_resumen: null
           });
         }, 500);
       });
     }
-    const response = await apiClient.get(`/parcelas/${id_parcela}/resumen`);
+    const response = await apiClient.get<ParcelaResumenDynamic>(`/parcelas/${id_parcela}/resumen`);
     return response.data;
   },
 
@@ -566,7 +569,7 @@ export const fincasService = {
           const nuevaParcela: ParcelaResumen = {
             id_parcela: Date.now(),
             nombre_parcela: data.nombre_parcela,
-            estado_parcela: 'Activo',
+            estado_parcela: 'Activa',
             superficie_parcela: data.superficie_parcela,
             controladores: (data.controladores || []).map(c => ({
               id_controlador_sensor: Date.now() + Math.floor(Math.random() * 1000),
@@ -684,7 +687,7 @@ export const fincasService = {
 
           const parcela = finca.parcelas.find(p => p.id_parcela === id_parcela);
           if (parcela) {
-            parcela.estado_parcela = 'Inactivo';
+            parcela.estado_parcela = 'Inactiva';
             finca.cantidad_parcelas = Math.max(0, finca.cantidad_parcelas - 1);
           }
           resolve({ message: 'Parcela dada de baja correctamente. Las tareas pendientes fueron canceladas y el cultivo activo fue inactivado.' });
@@ -823,7 +826,9 @@ export const fincasService = {
             found.controladores.forEach((c: any) => {
               c.sensores.forEach((s: any) => {
                 sensores.push({
-                  id_sensor: s.id_sensor,
+                  id_controlador_sensor: c.id_controlador_sensor,
+                    nombre_controlador: c.nombre_controlador,
+                    id_sensor: s.id_sensor,
                   nombre_tipo_sensor: s.nombre_tipo_sensor,
                   unidad_medida_ts: s.codigo_tipo_sensor === 'PH' ? 'pH' : (s.codigo_tipo_sensor === 'HUM' ? '%' : ''),
                   ultimo_valor: s.ultimo_valor,

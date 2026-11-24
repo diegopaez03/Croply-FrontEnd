@@ -21,6 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { DatePicker, DateTimePicker } from '@/components/ui/date-picker';
 import {
   Select,
   SelectContent,
@@ -28,13 +29,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { tareaPlanSchema, TareaPlanFormValues } from '@/utils/validators';
+import { crearTareaPlanSchema, TareaPlanFormValues } from '@/utils/validators';
+import { parseDosis, formatDosis, obtenerOpcionesUnidades, UNIDAD_DOSIS_DEFAULT } from '@/constants/agroquimicos';
 import { TareaPlanAccion, TareaPlanPayload } from '@/types/planesAccion.types';
-import {
-  esAplicacionAgroquimico,
-  TIPO_TAREA_CATALOG,
-} from '@/utils/tipo-tarea.catalog';
 import { usuariosService } from '@/services/usuarios.service';
+import { useTiposTarea } from '@/hooks/useTiposTarea';
 
 interface TareaPlanModalProps {
   open: boolean;
@@ -55,13 +54,19 @@ export function TareaPlanModal({
   isPending,
   onSubmit,
 }: TareaPlanModalProps) {
+  const { query: { data: tiposData } } = useTiposTarea();
   const form = useForm<TareaPlanFormValues>({
-    resolver: zodResolver(tareaPlanSchema),
+    resolver: (values, context, options) => {
+      const tipo = tiposData?.tipos_tarea.find((t) => t.id_tipo_tarea === Number(values.id_tipo_tarea));
+      const esAgroResolver = tipo?.es_tipo_agroquimico ?? false;
+      return zodResolver(crearTareaPlanSchema(esAgroResolver))(values, context, options);
+    },
     defaultValues: valoresIniciales(tarea),
   });
 
   const idTipo = Number(form.watch('id_tipo_tarea'));
-  const esAgro = esAplicacionAgroquimico(idTipo);
+  const tipoElegido = tiposData?.tipos_tarea.find(t => t.id_tipo_tarea === idTipo);
+  const esAgro = tipoElegido?.es_tipo_agroquimico ?? false;
 
   const { data: usuariosData } = useQuery({
     queryKey: ['usuariosFinca', idFinca, 'responsables'],
@@ -88,7 +93,7 @@ export function TareaPlanModal({
       id_tipo_tarea: Number(values.id_tipo_tarea),
       id_responsable: values.id_responsable ?? null,
       nombre_producto_aa: esAgro ? values.nombre_producto_aa?.trim() ?? null : null,
-      dosis_aa: esAgro ? values.dosis_aa?.trim() ?? null : null,
+      dosis_aa: esAgro ? formatDosis(values.dosis, values.unidad_dosis) : null,
       fecha_hora_aplicacion_aa: esAgro
         ? fromDatetimeLocal(values.fecha_hora_aplicacion_aa)
         : null,
@@ -103,7 +108,7 @@ export function TareaPlanModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{tarea ? 'Editar tarea' : 'Agregar tarea'}</DialogTitle>
           <DialogDescription>
@@ -111,7 +116,7 @@ export function TareaPlanModal({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
             <FormField
               control={form.control}
               name="nombre_tarea"
@@ -146,7 +151,10 @@ export function TareaPlanModal({
                   <FormItem>
                     <FormLabel>Fecha planificada</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker
+                        value={field.value ?? ''}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -168,7 +176,7 @@ export function TareaPlanModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {TIPO_TAREA_CATALOG.map((tipo) => (
+                        {tiposData?.tipos_tarea.map((tipo) => (
                           <SelectItem
                             key={tipo.id_tipo_tarea}
                             value={String(tipo.id_tipo_tarea)}
@@ -236,19 +244,57 @@ export function TareaPlanModal({
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="dosis_aa"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Dosis</FormLabel>
-                      <FormControl>
-                        <Input {...field} value={field.value ?? ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-[2fr_1fr] gap-2">
+                  <FormField
+                    control={form.control}
+                    name="dosis"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dosis</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="Ej. 2.5"
+                            value={field.value ?? ''}
+                            onChange={(e) => field.onChange(e.target.value)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="unidad_dosis"
+                    render={({ field }) => {
+                      const opciones = obtenerOpcionesUnidades(field.value);
+                      return (
+                        <FormItem>
+                          <FormLabel>Unidad</FormLabel>
+                          <Select
+                            value={field.value ?? UNIDAD_DOSIS_DEFAULT}
+                            onValueChange={field.onChange}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Unidad" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {opciones.map((u) => (
+                                <SelectItem key={u} value={u}>
+                                  {u}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
+                </div>
                 <FormField
                   control={form.control}
                   name="fecha_hora_aplicacion_aa"
@@ -256,7 +302,10 @@ export function TareaPlanModal({
                     <FormItem>
                       <FormLabel>Fecha y hora de aplicación</FormLabel>
                       <FormControl>
-                        <Input type="datetime-local" {...field} value={field.value ?? ''} />
+                        <DateTimePicker
+                          value={field.value ?? ''}
+                          onChange={field.onChange}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -280,13 +329,15 @@ export function TareaPlanModal({
 }
 
 function valoresIniciales(tarea?: TareaPlanAccion | null): TareaPlanFormValues {
+  const { dosis, unidad_dosis } = parseDosis(tarea?.dosis_aa);
   return {
     nombre_tarea: tarea?.nombre_tarea ?? '',
     descripcion_tarea: tarea?.descripcion_tarea ?? '',
     fecha_planificada_tarea: tarea?.fecha_planificada_tarea ?? '',
     id_tipo_tarea: tarea?.id_tipo_tarea ?? 2,
     nombre_producto_aa: tarea?.nombre_producto_aa ?? '',
-    dosis_aa: tarea?.dosis_aa ?? '',
+    dosis: dosis ?? null,
+    unidad_dosis: unidad_dosis || UNIDAD_DOSIS_DEFAULT,
     fecha_hora_aplicacion_aa: toDatetimeLocal(tarea?.fecha_hora_aplicacion_aa),
     id_responsable: tarea?.id_responsable ?? null,
   };

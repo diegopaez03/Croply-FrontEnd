@@ -13,3 +13,5 @@
  *   export { useAuth } from './useAuth'
  *   export { useFarms } from './useFarms'
  */
+export * from './useTiposTarea';
+export * from './useEstadosTarea';

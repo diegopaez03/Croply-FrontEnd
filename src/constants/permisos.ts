@@ -3,6 +3,7 @@ export const PERMISO_SISTEMA = {
   FINCAS_INFRAESTRUCTURA: 'Fincas e Infraestructura',
   CATALOGOS_BASE: 'Catálogos Base',
   SOLICITUDES_DIGITALIZACION: 'Solicitudes de digitalización',
+  SOPORTE: 'Soporte',
 } as const;
 
 export const PERMISO_FINCA = {
@@ -10,6 +11,7 @@ export const PERMISO_FINCA = {
   REPORTES: 'Reportes',
   GESTION_TRABAJADORES: 'Gestión de trabajadores',
   TAREAS_CAMPO: 'Tareas de campo',
+  COSTOS: 'Costos',
 } as const;
 
 export const PERMISOS_SISTEMA = Object.values(PERMISO_SISTEMA);

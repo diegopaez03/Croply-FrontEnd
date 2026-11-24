@@ -1,4 +1,6 @@
 export interface SensorMonitoreo {
+  id_controlador_sensor: number;
+  nombre_controlador: string;
   id_sensor: number;
   nombre_tipo_sensor: string;
   unidad_medida_ts: string;

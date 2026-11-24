@@ -12,5 +12,6 @@
  *
  * Example exports:
  *   export { apiClient } from './api'
- *   export { authService } from './auth.service'
  */
+export * from './tiposTarea.service';
+export * from './estadosTarea.service';

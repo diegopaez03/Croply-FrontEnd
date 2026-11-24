@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Note01Icon, PlusSignIcon } from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
+import { ROUTES } from '../../../constants/routes';
 import { useCultivosBase } from '@/hooks/useCultivosBase';
 import { usePlantillasBase } from '@/hooks/usePlantillasBase';
 import { nombresCultivosDePlantilla } from '@/utils/plantilla-form.mapper';
@@ -35,7 +36,7 @@ export function SeccionPlantillasAccion() {
             </div>
           </div>
           <Button
-            onClick={() => navigate('/admin-croply/plantillas/nueva')}
+            onClick={() => navigate(ROUTES.CROPLY.PLANTILLA_NUEVA)}
             className="shrink-0 rounded-full px-5 bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <HugeiconsIcon icon={PlusSignIcon} className="size-4 mr-2" />
@@ -59,7 +60,7 @@ export function SeccionPlantillasAccion() {
                 key={plantilla.id_plantilla_base}
                 plantilla={plantilla}
                 nombresCultivos={nombresCultivosDePlantilla(plantilla, cultivos)}
-                onVer={() => navigate(`/admin-croply/plantillas/${plantilla.id_plantilla_base}`)}
+                onVer={() => navigate(ROUTES.CROPLY.plantillaDetalle(plantilla.id_plantilla_base))}
                 onEliminar={() => setIdAEliminar(plantilla.id_plantilla_base)}
               />
             ))
@@ -68,7 +69,7 @@ export function SeccionPlantillasAccion() {
 
         <div className="bg-[#F2F7F4] px-6 py-4 border-t border-border/50">
           <Link
-            to="/admin-croply/plantillas"
+            to={ROUTES.CROPLY.PLANTILLAS}
             className="text-sm font-bold text-[#1A7B48] hover:underline"
           >
             Ver todas las plantillas ({total})

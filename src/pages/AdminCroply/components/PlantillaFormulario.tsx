@@ -6,7 +6,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Add01Icon, Delete02Icon } from '@hugeicons/core-free-icons';
 import { plantillaBaseSchema, PlantillaBaseFormValues } from '@/utils/validators';
 import { mapFormularioARequest } from '@/utils/plantilla-form.mapper';
-import { TIPO_TAREA_CATALOG, esAplicacionAgroquimico } from '@/utils/tipo-tarea.catalog';
+import { useTiposTarea } from '@/hooks/useTiposTarea';
 import { useCultivosBase, cultivoBaseQueryKey } from '@/hooks/useCultivosBase';
 import { cultivosService } from '@/services/cultivos.service';
 import { CrearPlantillaBaseRequest } from '@/types/plantillas.types';
@@ -52,6 +52,9 @@ export function PlantillaFormulario({
   
   const { data: cultivosData } = useCultivosBase();
   const cultivosDisponibles = cultivosData?.cultivos ?? [];
+
+  const { query: tiposTareaQuery } = useTiposTarea();
+  const tiposTarea = tiposTareaQuery.data?.tipos_tarea ?? [];
 
   const form = useForm<PlantillaBaseFormValues>({
     resolver: zodResolver(plantillaBaseSchema),
@@ -115,7 +118,7 @@ export function PlantillaFormulario({
   const submit = async (values: PlantillaBaseFormValues) => {
     setVariedadConflictiva(null);
     try {
-      await onGuardar(mapFormularioARequest(values));
+      await onGuardar(mapFormularioARequest(values, tiposTarea));
     } catch (error) {
       handleFormError(error, form.setError, {
         onVarietyAlreadyAssigned: (id_variedad) => {
@@ -366,19 +369,25 @@ export function PlantillaFormulario({
                 key={hito.id}
                 form={form}
                 hitoIndex={hitoIndex}
+                tiposTarea={tiposTarea}
                 onRemove={() => removeHito(hitoIndex)}
                 disabled={isPending}
               />
             ))}
+            {hitosFields.length === 0 && (
+              <p className="text-sm text-muted-foreground italic text-center py-4">
+                No hay hitos definidos.
+              </p>
+            )}
           </div>
         </section>
 
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>
+        <div className="flex justify-end gap-3 pt-4 border-t border-border">
+          <Button type="button" variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
           <Button type="submit" disabled={isPending}>
-            {isPending ? 'Guardando...' : textoSubmit}
+            {textoSubmit}
           </Button>
         </div>
       </form>
@@ -389,11 +398,13 @@ export function PlantillaFormulario({
 function HitoEditor({
   form,
   hitoIndex,
+  tiposTarea,
   onRemove,
   disabled,
 }: {
   form: UseFormReturn<PlantillaBaseFormValues>;
   hitoIndex: number;
+  tiposTarea: { id_tipo_tarea: number, es_tipo_agroquimico: boolean, nombre_tipo_tarea: string }[];
   onRemove: () => void;
   disabled: boolean;
 }) {
@@ -444,7 +455,7 @@ function HitoEditor({
 
       {fields.map((tarea, tareaIndex) => {
         const idTipo = Number(tareas[tareaIndex]?.id_tipo_tarea);
-        const agroquimico = esAplicacionAgroquimico(idTipo);
+        const agroquimico = tiposTarea.find(t => t.id_tipo_tarea === idTipo)?.es_tipo_agroquimico ?? false;
         return (
           <div
             key={tarea.id}
@@ -472,7 +483,7 @@ function HitoEditor({
                   <FormControl>
                     <select className={SELECT_CLASS} {...field} value={field.value ?? ''}>
                       <option value="">Seleccioná un tipo</option>
-                      {TIPO_TAREA_CATALOG.map((tipo) => (
+                      {tiposTarea.map((tipo) => (
                         <option key={tipo.id_tipo_tarea} value={tipo.id_tipo_tarea}>
                           {tipo.nombre_tipo_tarea}
                         </option>

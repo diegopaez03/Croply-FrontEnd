@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { ROUTES } from '../../constants/routes';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ArrowLeft01Icon,
@@ -12,7 +13,9 @@ import {
 import { useCultivoBase } from '@/hooks/useCultivosBase';
 import { usePlantillaBase } from '@/hooks/usePlantillasBase';
 import { formatFormaSiembra } from '@/utils/formatters';
-import { handleFormError } from '@/utils/errorHandler';
+import { handleFormError, isNetworkOrTimeoutError } from '@/utils/errorHandler';
+import { Button } from '@/components/ui/button';
+import { ErrorConexionServidor } from '@/components/shared/ErrorConexionServidor';
 import { idPlantillaParaVariedad } from '@/utils/resolver-plantilla';
 import { CultivoImagen } from '@/components/shared/CultivoImagen';
 import { DEFAULT_BANNER_CULTIVO, urlBannerCultivo } from '@/utils/imagen-cultivo';
@@ -43,14 +46,14 @@ export default function CultivoBibliotecaDetallePage() {
   const location = useLocation();
   const [idVariedad, setIdVariedad] = useState<number | null>(null);
 
-  const { data: detalle, isLoading, error } = useCultivoBase(
+  const { data: detalle, isLoading, error, refetch, isFetching } = useCultivoBase(
     Number.isFinite(idCultivo) ? idCultivo : null,
   );
 
   useEffect(() => {
-    if (error) {
+    if (error && !isNetworkOrTimeoutError(error)) {
       handleFormError(error, undefined, {
-        onNotFoundRedirect: () => navigate('/admin-finca/biblioteca'),
+        onNotFoundRedirect: () => navigate(ROUTES.FINCA.BIBLIOTECA),
       });
     }
   }, [error, navigate]);
@@ -77,15 +80,33 @@ export default function CultivoBibliotecaDetallePage() {
     const params = new URLSearchParams(location.search);
     if (idVariedad) params.set('variedad', String(idVariedad));
     navigate(
-      `/admin-finca/biblioteca/${detalle.id_cultivo_base}/generar-plan?${params.toString()}`,
+      `${ROUTES.FINCA.generarPlanAccion(detalle.id_cultivo_base)}?${params.toString()}`,
     );
   };
 
-  if (isLoading || !detalle) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center py-16 text-muted-foreground">
         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-3" />
         Cargando...
+      </div>
+    );
+  }
+
+  if (isNetworkOrTimeoutError(error)) {
+    return (
+      <ErrorConexionServidor
+        onReintentar={() => refetch()}
+        isReintentando={isFetching}
+      />
+    );
+  }
+
+  if (!detalle) {
+    return (
+      <div className="text-center py-16">
+        <h2 className="text-2xl font-bold mb-4 text-foreground">Cultivo no encontrado</h2>
+        <Button onClick={() => navigate(ROUTES.FINCA.BIBLIOTECA)}>Volver a la biblioteca</Button>
       </div>
     );
   }
@@ -119,7 +140,7 @@ export default function CultivoBibliotecaDetallePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-black/20" />
 
         <Link
-          to={`/admin-finca/biblioteca${location.search}`}
+          to={`${ROUTES.FINCA.BIBLIOTECA}${location.search}`}
           className="absolute top-5 left-5 inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-white"
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />

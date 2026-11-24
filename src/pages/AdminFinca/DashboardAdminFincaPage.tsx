@@ -1,34 +1,111 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import { ROUTES } from '../../constants/routes';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { useMiFincaListQuery, useMiFincaResumenQuery, useParcelaResumenDynamicQuery } from '../../hooks/useFincas';
+import { useMiFincaResumenQuery, useParcelaResumenDynamicQuery } from '../../hooks/useFincas';
+import { useFincaActiva } from '@/context/FincaActivaContext';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowRight01Icon, Plant01Icon } from '@hugeicons/core-free-icons';
+import { ArrowRight01Icon, Calendar01Icon, CheckmarkCircle01Icon, FlowSquareIcon, NoteAddIcon, Plant01Icon } from '@hugeicons/core-free-icons';
 import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
+import { AlertasClimaticasBanner } from './components/AlertasClimaticasBanner';
+import { RecomendacionIaCard } from './components/RecomendacionIaCard';
+import { CultivoResumenParcela } from '@/types/fincas.types';
 import { MensajePendienteFinca } from '../../components/shared/MensajePendienteFinca';
+import { CuadernoNotasCard } from './components/CuadernoNotasCard';
+import { ResumenCostosDashboard } from './components/ResumenCostosDashboard';
 import { useAuth } from '../../context/AuthContext';
+import { isNetworkOrTimeoutError } from '../../utils/errorHandler';
+
+function formatFechaParcela(fecha?: string | null): string {
+  if (!fecha) return '---';
+  const coincidencia = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha);
+  if (!coincidencia) return '---';
+  const fechaUtc = new Date(Date.UTC(Number(coincidencia[1]), Number(coincidencia[2]) - 1, Number(coincidencia[3])));
+  const texto = fechaUtc
+    .toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+    .replace(/\./g, '');
+  return texto.replace(/(\d+)\s+([a-záéíóúñ]+)/i, (_, dia: string, mes: string) => {
+    return `${dia} ${mes.charAt(0).toUpperCase()}${mes.slice(1)}`;
+  });
+}
+
+function MetricasCultivo({ cultivo }: { cultivo: CultivoResumenParcela | null }) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <MetricaParcela
+        icono={Plant01Icon}
+        etiqueta="Cultivo"
+        valor={cultivo?.nombre_cultivo_base ?? '---'}
+      />
+      <MetricaParcela
+        icono={FlowSquareIcon}
+        etiqueta="Superficie"
+        valor={cultivo ? `${cultivo.superficie_ocupada_pa} ha` : '---'}
+      />
+      <MetricaParcela
+        icono={Calendar01Icon}
+        etiqueta="Transplante"
+        valor={formatFechaParcela(cultivo?.fecha_inicio_pa)}
+      />
+      <MetricaParcela
+        icono={CheckmarkCircle01Icon}
+        etiqueta="Est. Cosecha"
+        valor={formatFechaParcela(cultivo?.fecha_estimada_cosecha)}
+      />
+    </div>
+  );
+}
+
+function MetricaParcela({
+  icono,
+  etiqueta,
+  valor,
+}: {
+  icono: typeof Plant01Icon;
+  etiqueta: string;
+  valor: string;
+}) {
+  return (
+    <div className="flex items-start gap-2">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <HugeiconsIcon icon={icono} className="size-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">{etiqueta}</p>
+        <p className="text-sm font-semibold text-foreground">{valor}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardAdminFincaPage() {
   const navigate = useNavigate();
   const { usuario } = useAuth();
   
-  // 1. Selector data
-  const { data: fincasRes, isLoading: loadingFincas, isError: errorFincas } = useMiFincaListQuery();
-  const fincas = fincasRes?.fincas || [];
-  
-  const [selectedFincaId, setSelectedFincaId] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (fincas.length > 0 && !selectedFincaId) {
-      setSelectedFincaId(fincas[0].id_finca);
-    }
-  }, [fincas, selectedFincaId]);
+  // 1. Selector data compartida
+  const { 
+    fincaActivaId: selectedFincaId, 
+    setFincaActivaId: setSelectedFincaId, 
+    fincas, 
+    isLoading: loadingFincas,
+    error: errorFincas,
+    refetch: refetchFincas,
+    isFetching: isFetchingFincas,
+  } = useFincaActiva();
   
   // 2. Croquis data
-  const { data: fincaResumen, isLoading: loadingFinca, isError: errorFincaResumen } = useMiFincaResumenQuery(selectedFincaId);
+  const { 
+    data: fincaResumen, 
+    isLoading: loadingFinca, 
+    isError: errorFincaResumen,
+    error: errorFincaResumenObj,
+    refetch: refetchFincaResumen,
+    isFetching: isFetchingFincaResumen,
+  } = useMiFincaResumenQuery(selectedFincaId);
   const parcelas = fincaResumen?.parcelas ?? [];
 
   const [selectedParcelaId, setSelectedParcelaId] = useState<number | null>(null);
@@ -46,8 +123,39 @@ export default function DashboardAdminFincaPage() {
   // 3. Dynamic card data
   const { data: parcelaResumen, isLoading: loadingParcela } = useParcelaResumenDynamicQuery(selectedParcelaId);
 
+  // Error de conexión / timeout / servidor caído (sin respuesta HTTP)
+  const isConnectionError = isNetworkOrTimeoutError(errorFincas) || isNetworkOrTimeoutError(errorFincaResumenObj);
+  const isRetrying = isFetchingFincas || (!!selectedFincaId && isFetchingFincaResumen);
+
+  const handleReintentar = () => {
+    refetchFincas();
+    if (selectedFincaId) {
+      refetchFincaResumen();
+    }
+  };
+
+  if (isConnectionError) {
+    return (
+      <div className="w-full max-w-screen-xl mx-auto space-y-6 pb-20 pt-10 text-center">
+        <h1 className="text-3xl font-bold text-foreground">Mis Fincas</h1>
+        <p className="text-lg text-foreground font-semibold mt-6">No se pudo conectar con el servidor</p>
+        <p className="text-sm text-muted-foreground mt-2">Revisá tu conexión e intentá nuevamente.</p>
+        <div className="mt-8">
+          <Button 
+            variant="outline"
+            onClick={handleReintentar}
+            disabled={isRetrying}
+            className="font-semibold px-6 rounded-xl"
+          >
+            {isRetrying ? 'Reintentando...' : 'Reintentar'}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Global 403 / No fincas check
-  const isFirstTimeUser = (usuario?.fincas?.length ?? 0) === 0 && !loadingFincas && fincas.length === 0;
+  const isFirstTimeUser = (usuario?.fincas?.length ?? 0) === 0 && !loadingFincas && !errorFincas && fincas.length === 0;
 
   if (isFirstTimeUser) {
     return (
@@ -57,7 +165,7 @@ export default function DashboardAdminFincaPage() {
     );
   }
 
-  const isFincaNotAvailable = (!loadingFincas && fincas.length === 0) || errorFincas || errorFincaResumen;
+  const isFincaNotAvailable = (!loadingFincas && !errorFincas && fincas.length === 0) || (errorFincaResumen && !isNetworkOrTimeoutError(errorFincaResumenObj));
 
   if (isFincaNotAvailable) {
     return (
@@ -106,6 +214,8 @@ export default function DashboardAdminFincaPage() {
           </div>
         )}
       </div>
+
+      <AlertasClimaticasBanner idFinca={selectedFincaId} />
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* COLUMNA IZQUIERDA */}
@@ -144,23 +254,8 @@ export default function DashboardAdminFincaPage() {
               </div>
             )}
           </Card>
-
-          {/* Cuaderno de notas (Placeholder visual) */}
-          <Card className="bg-card border-dashed border-border shadow-none">
-            <CardContent className="p-6 flex flex-col items-center justify-center text-muted-foreground min-h-[100px]">
-              <span className="font-mono text-sm">// TODO: Cuaderno de notas</span>
-            </CardContent>
-          </Card>
-
-          {/* Resumen de Costos (Placeholder visual) */}
-          <div className="pt-2">
-            <h2 className="text-xl font-bold text-foreground mb-4">Resumen de Costos</h2>
-            <Card className="bg-card border-dashed border-border shadow-none">
-              <CardContent className="p-6 flex flex-col items-center justify-center text-muted-foreground min-h-[140px]">
-                <span className="font-mono text-sm">// TODO: EP-08 / HU-GC-05 Costos de producción</span>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Cuaderno de notas */}
+          <CuadernoNotasCard idFinca={selectedFincaId} />
         </div>
 
         {/* COLUMNA DERECHA */}
@@ -193,43 +288,19 @@ export default function DashboardAdminFincaPage() {
 
             {parcelaResumen && !loadingParcela && (
               <CardContent className="flex flex-col gap-4 flex-1">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs text-muted-foreground flex items-center">
-                      Cultivo y Variedad
-                    </span>
-                    <span className="text-sm font-semibold">
-                      {parcelaResumen.cultivo 
-                        ? `${parcelaResumen.cultivo.nombre_cultivo_base} - ${parcelaResumen.cultivo.nombre_variedad}` 
-                        : '---'}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs text-muted-foreground flex items-center">
-                      Superficie Ocupada
-                    </span>
-                    <span className="text-sm font-semibold">
-                      {parcelaResumen.cultivo 
-                        ? `${parcelaResumen.cultivo.superficie_ocupada_pa} ha` 
-                        : '---'}
-                    </span>
-                  </div>
-                </div>
+                <MetricasCultivo cultivo={parcelaResumen.cultivo} />
 
-                <div className="flex flex-col gap-2 mt-auto">
-                  <div className="bg-primary/5 border border-primary/20 border-dashed rounded-lg p-4 flex flex-col items-center justify-center min-h-[70px]">
-                    <span className="text-sm font-semibold text-foreground text-center">---</span>
-                    <span className="font-mono text-[10px] text-primary/80 text-center mt-1">// TODO: EP-07 / HU-NA-03 Recomendación IA</span>
-                  </div>
-                  <div className="bg-amber-500/5 border border-amber-500/20 border-dashed rounded-lg p-4 flex flex-col items-center justify-center min-h-[70px]">
-                    <span className="text-sm font-semibold text-foreground text-center">---</span>
-                    <span className="font-mono text-[10px] text-amber-600/80 text-center mt-1">// TODO: EP-07 / HU-NA-01 Alertas automáticas</span>
-                  </div>
-                </div>
+                <RecomendacionIaCard
+                  idParcela={parcelaResumen.id_parcela}
+                  nombreParcela={parcelaResumen.nombre_parcela}
+                  consultar={Boolean(parcelaResumen.cultivo) && parcelaResumen.estado_parcela === 'Activa'}
+                  sinPlan={!parcelaResumen.cultivo}
+                  variante="embebida"
+                />
 
                 <Button 
                   className="w-full mt-2 bg-muted hover:bg-muted/80 text-foreground font-semibold"
-                  onClick={() => navigate(`/admin-finca/parcelas/${parcelaResumen.id_parcela}`)}
+                  onClick={() => navigate(ROUTES.FINCA.parcelaDetalle(parcelaResumen.id_parcela))}
                 >
                   Ver detalle parcela
                   <HugeiconsIcon icon={ArrowRight01Icon} className="size-4 ml-2" />
@@ -240,16 +311,7 @@ export default function DashboardAdminFincaPage() {
         </div>
       </div>
 
-      <div className="flex justify-end mt-4">
-        <Button 
-          variant="outline"
-          onClick={() => navigate('/digitalizar-finca')}
-          className="text-primary border-primary/20 hover:bg-primary/5 font-semibold px-6 rounded-xl"
-        >
-          Solicitar digitalización de finca
-          <HugeiconsIcon icon={ArrowRight01Icon} className="size-4 ml-2" />
-        </Button>
-      </div>
+      <ResumenCostosDashboard idFinca={selectedFincaId} />
     </div>
   );
 }

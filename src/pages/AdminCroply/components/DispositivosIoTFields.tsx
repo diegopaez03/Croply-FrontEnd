@@ -200,9 +200,9 @@ function SensoresList({ control, controladorPrefix, tiposSensor }: SensoresListP
                           <SelectValue placeholder="Tipo de sensor" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="w-[max-content] min-w-[var(--radix-select-trigger-width)]">
                         {tiposSensor.map(ts => (
-                          <SelectItem key={ts.id_tipo_sensor} value={String(ts.id_tipo_sensor)}>
+                          <SelectItem key={ts.id_tipo_sensor} value={String(ts.id_tipo_sensor)} className="whitespace-nowrap">
                             {ts.nombre_tipo_sensor} ({ts.codigo_tipo_sensor})
                           </SelectItem>
                         ))}

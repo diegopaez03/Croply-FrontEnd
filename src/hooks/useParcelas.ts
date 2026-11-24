@@ -1,10 +1,16 @@
-import { useQuery } from '@tanstack/react-query';
-import { parcelasService } from '../services/parcelas.service';
+import { useMiFincaResumenQuery } from './useFincas';
+
+export interface ParcelaResumen {
+  id_parcela: number;
+  nombre_parcela: string;
+  estado_parcela: string;
+}
 
 export function useParcelasPorFinca(id_finca: number | null) {
-  return useQuery({
-    queryKey: ['parcelas', id_finca],
-    queryFn: () => parcelasService.listarPorFinca(id_finca as number),
-    enabled: id_finca != null,
-  });
+  const query = useMiFincaResumenQuery(id_finca);
+
+  return {
+    ...query,
+    data: query.data?.parcelas as ParcelaResumen[] | undefined,
+  };
 }

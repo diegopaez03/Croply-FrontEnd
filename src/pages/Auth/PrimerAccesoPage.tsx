@@ -11,6 +11,7 @@ import { primerAccesoSchema, PrimerAccesoFormValues } from '../../utils/validato
 import { useAuth } from '../../context/AuthContext';
 import { handleFormError } from '../../utils/errorHandler';
 import { showSuccessToast } from '../../utils/successHandler';
+import { ROUTES } from '../../constants/routes';
 
 import { Card, CardContent, CardHeader } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -46,9 +47,9 @@ export default function PrimerAccesoPage() {
       const isSystemAdmin = !!role;
       
       if (isSystemAdmin) {
-        navigate('/admin-croply/dashboard');
+        navigate(ROUTES.CROPLY.DASHBOARD);
       } else {
-        navigate('/admin-finca/mi-finca');
+        navigate(ROUTES.FINCA.MI_FINCA);
       }
     },
     onError: (error) => {

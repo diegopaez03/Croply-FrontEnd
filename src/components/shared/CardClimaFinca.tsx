@@ -77,7 +77,7 @@ export function CardClimaFinca({ idFinca, variant }: CardClimaFincaProps) {
                 {getClimaIcon(dia.condicion, "size-5")}
               </div>
               <span className="text-sm font-bold text-foreground">
-                {dia.temperatura_max}°
+                {dia.temperatura_max}° <span className="text-muted-foreground/70 font-medium">/ {dia.temperatura_min}°</span>
               </span>
             </div>
           ))}

@@ -1,12 +1,12 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
+import { ROUTES } from '../../constants/routes';
 import { 
   ArrowLeft01Icon, 
   QrCodeIcon, 
-  AiBrain01Icon,
-  NoteEditIcon,
   PlusSignIcon,
-  Plant01Icon
+  Plant01Icon,
+  NoteAddIcon
 } from '@hugeicons/core-free-icons';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -17,12 +17,19 @@ import { useState } from 'react';
 import { useGenerarQRParcela, useConsultarQRParcela } from '../../hooks/useFincas';
 import { QRModal } from './components/QRModal';
 import { CardMonitoreoSensores } from './components/CardMonitoreoSensores';
+import { RecomendacionIaCard } from './components/RecomendacionIaCard';
 import { CardClimaFinca } from '../../components/shared/CardClimaFinca';
+import { CapturarNotaModal } from './components/CapturarNotaModal';
+import { VerNotasModal } from './components/VerNotasModal';
+import { isNetworkOrTimeoutError } from '../../utils/errorHandler';
+import { ErrorConexionServidor } from '../../components/shared/ErrorConexionServidor';
 
 export default function ParcelaDetallePage() {
   const [activeTab, setActiveTab] = useState<'cultivo' | 'historial'>('cultivo');
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [qrUrl, setQrUrl] = useState('');
+  const [isNotaModalOpen, setIsNotaModalOpen] = useState(false);
+  const [isVerNotasModalOpen, setIsVerNotasModalOpen] = useState(false);
 
   const { mutate: generarQR, isPending: isGeneratingQR } = useGenerarQRParcela((res: any) => {
     setQrUrl(res.url_acceso_qr);
@@ -46,7 +53,7 @@ export default function ParcelaDetallePage() {
   const navigate = useNavigate();
   
   const idParcela = id ? Number(id) : null;
-  const { data: parcela, isLoading } = useParcelaQuery(idParcela);
+  const { data: parcela, isLoading, error: errorParcela, refetch: refetchParcela, isFetching: isFetchingParcela } = useParcelaQuery(idParcela);
   const fincaId = parcela?.id_finca;
   const { data: fincaDetalle } = useFincaQuery(fincaId || null);
   const { data: historialRes, isLoading: loadingHistorial } = useHistorialCultivosQuery(activeTab === 'historial' ? idParcela : null);
@@ -60,11 +67,20 @@ export default function ParcelaDetallePage() {
     );
   }
 
+  if (isNetworkOrTimeoutError(errorParcela)) {
+    return (
+      <ErrorConexionServidor
+        onReintentar={() => refetchParcela()}
+        isReintentando={isFetchingParcela}
+      />
+    );
+  }
+
   if (!parcela) {
     return (
       <div className="text-center py-16">
         <h2 className="text-2xl font-bold mb-4 text-foreground">Parcela no encontrada</h2>
-        <Button onClick={() => navigate('/admin-finca/mi-finca')}>Volver a Mi finca</Button>
+        <Button onClick={() => navigate(ROUTES.FINCA.MI_FINCA)}>Volver a Mi finca</Button>
       </div>
     );
   }
@@ -82,7 +98,7 @@ export default function ParcelaDetallePage() {
       {/* Header navegación */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <Link
-          to="/admin-finca/mi-finca"
+          to={ROUTES.FINCA.MI_FINCA}
           className="inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors"
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
@@ -144,42 +160,36 @@ export default function ParcelaDetallePage() {
         <CardClimaFinca variant="extendida" idFinca={fincaId ?? null} />
       </div>
 
-      {/* Grid media: Sensores IoT Placeholder + Recomendación IA Placeholder */}
+      {/* Sensores IoT y recomendación de IA */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Card Sensores IoT */}
         <CardMonitoreoSensores idParcela={parcela.id_parcela} />
 
-        {/* Card Recomendación IA Placeholder */}
-        <div className="bg-card border border-dashed border-border rounded-2xl p-6 flex flex-col justify-between space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={AiBrain01Icon} className="size-4 text-muted-foreground" />
-              <h4 className="font-bold text-sm text-foreground">Recomendación IA</h4>
-            </div>
-            <span className="text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground font-mono">// TODO: HU-NA-03</span>
-          </div>
-          <div className="py-6 text-center text-muted-foreground space-y-1">
-            <p className="text-xs font-medium">// TODO: Recomendaciones contextuales de IA</p>
-            <p className="text-[11px] text-muted-foreground/70">Generadas según estado del cultivo y sensores</p>
-          </div>
-        </div>
+        <RecomendacionIaCard
+          idParcela={parcela.id_parcela}
+          nombreParcela={parcela.nombre_parcela}
+          consultar={hasCultivo && parcela.estado_parcela === 'Activa'}
+          sinPlan={!hasCultivo}
+          variante="detalle"
+        />
       </div>
 
-      {/* Banner de Observaciones Placeholder */}
-      <div className="bg-card border border-dashed border-border rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="size-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
-            <HugeiconsIcon icon={NoteEditIcon} className="size-5" />
+      {/* Cuaderno de Notas Horizontal */}
+      <div className="bg-card border border-border shadow-sm rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-4">
+          <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <HugeiconsIcon icon={NoteAddIcon} className="size-6 text-primary" />
           </div>
           <div>
-            <h4 className="font-bold text-xs text-foreground">Cuaderno de Notas de Campo</h4>
-            <p className="text-[11px] text-muted-foreground">// TODO: HU-TC-07 Captura y seguimiento de notas de campo</p>
+            <h3 className="text-sm font-bold text-primary">¿Alguna observación hoy?</h3>
+            <p className="text-sm text-muted-foreground mt-1">Ingresa una nota con tu observación o mira las notas que has ingresado</p>
           </div>
         </div>
-        <Button size="sm" variant="outline" disabled className="text-xs h-8 rounded-xl cursor-not-allowed">
-          Capturar Nota (// TODO)
-        </Button>
+        <div className="flex items-center gap-3 shrink-0">
+          <Button onClick={() => setIsNotaModalOpen(true)}>Capturar Nota</Button>
+          <Button variant="outline" className="text-primary hover:text-primary hover:bg-primary/5" onClick={() => setIsVerNotasModalOpen(true)}>Ver notas</Button>
+        </div>
       </div>
       {/* SECCIÓN DE CULTIVOS ASOCIADOS (HU-FP-04 & HU-FP-06) */}
       <div className="space-y-0 pt-4">
@@ -199,7 +209,7 @@ export default function ParcelaDetallePage() {
           {/* Botones derecha */}
           <div className="flex items-center gap-3 pb-3">
             <Button
-              onClick={() => navigate(`/admin-finca/biblioteca?id_finca=${fincaId}&id_parcela=${parcela.id_parcela}`)}
+              onClick={() => navigate(`${ROUTES.FINCA.BIBLIOTECA}?id_finca=${fincaId}&id_parcela=${parcela.id_parcela}`)}
               disabled={activeTab === 'historial' || !canAsociar || parcela.estado_parcela === 'Inactiva'}
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl text-xs h-9"
             >
@@ -237,7 +247,7 @@ export default function ParcelaDetallePage() {
                 </div>
                 <Button
                   disabled={parcela.estado_parcela === 'Inactiva' || !canAsociar}
-                  onClick={() => navigate(`/admin-finca/biblioteca?id_finca=${fincaId}&id_parcela=${parcela.id_parcela}`)}
+                  onClick={() => navigate(`${ROUTES.FINCA.BIBLIOTECA}?id_finca=${fincaId}&id_parcela=${parcela.id_parcela}`)}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl px-6 text-sm mt-4"
                 >
                   <HugeiconsIcon icon={Plant01Icon} className="size-4 mr-2" />
@@ -287,6 +297,18 @@ export default function ParcelaDetallePage() {
         onClose={() => setIsQRModalOpen(false)}
         url={qrUrl}
         nombreParcela={parcela?.nombre_parcela || 'Parcela'}
+      />
+      <CapturarNotaModal 
+        open={isNotaModalOpen} 
+        onOpenChange={setIsNotaModalOpen} 
+        idFincaInicial={fincaId}
+        idParcelaInicial={idParcela}
+      />
+      <VerNotasModal 
+        open={isVerNotasModalOpen}
+        onOpenChange={setIsVerNotasModalOpen}
+        idFinca={fincaId}
+        idParcela={idParcela}
       />
     </>
   );

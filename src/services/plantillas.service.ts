@@ -10,7 +10,7 @@ import {
   PlantillaBaseListado,
   PlantillaPcvDetalle,
 } from '../types/plantillas.types';
-import { findTipoTarea } from '../utils/tipo-tarea.catalog';
+import { mockTiposTarea } from './tiposTarea.service';
 
 function mockError(status: number, data: Record<string, unknown>): AxiosError {
   const err = new AxiosError(String(data.message ?? 'Error'));
@@ -67,7 +67,7 @@ export const mockPlantillas: PlantillaBaseDetalle[] = [
           {
             id_tarea_plantilla: 33,
             dia_relativo_tp: 0,
-            id_tipo_tarea: 2,
+            id_tipo_tarea: mockTiposTarea[0]?.id_tipo_tarea ?? 1,
             nombre_tipo_tarea: 'Siembra',
             descripcion_tp: 'Preparación del terreno y siembra',
           },
@@ -109,7 +109,7 @@ export const mockPlantillas: PlantillaBaseDetalle[] = [
           {
             id_tarea_plantilla: 34,
             dia_relativo_tp: 50,
-            id_tipo_tarea: 7,
+            id_tipo_tarea: mockTiposTarea[1]?.id_tipo_tarea ?? mockTiposTarea[0]?.id_tipo_tarea ?? 1,
             nombre_tipo_tarea: 'Cosecha',
             descripcion_tp: 'Corte manual',
           },
@@ -148,6 +148,20 @@ function validarCronograma(dto: CrearPlantillaBaseRequest) {
       errorCode: 'EMPTY_SCHEDULE',
       message: 'La plantilla debe tener al menos un hito con una tarea para poder guardarse.',
     });
+  }
+}
+
+function validarTiposTarea(dto: CrearPlantillaBaseRequest) {
+  for (const hito of dto.hitos) {
+    for (const tarea of hito.tareas) {
+      if (!mockTiposTarea.some((t) => t.id_tipo_tarea === tarea.id_tipo_tarea)) {
+        throw mockError(404, {
+          statusCode: 404,
+          errorCode: 'RESOURCE_NOT_FOUND',
+          message: 'El recurso solicitado no existe o ya fue eliminado.',
+        });
+      }
+    }
   }
 }
 
@@ -236,7 +250,7 @@ function construirDetalle(id: number, dto: CrearPlantillaBaseRequest): Plantilla
         id_tarea_plantilla: nextTareaId++,
         dia_relativo_tp: tarea.dia_relativo_tp,
         id_tipo_tarea: tarea.id_tipo_tarea,
-        nombre_tipo_tarea: findTipoTarea(tarea.id_tipo_tarea)?.nombre_tipo_tarea ?? 'Desconocido',
+        nombre_tipo_tarea: mockTiposTarea.find(t => t.id_tipo_tarea === tarea.id_tipo_tarea)?.nombre_tipo_tarea ?? 'Desconocido',
         descripcion_tp: tarea.descripcion_tp,
         nombre_producto: tarea.nombre_producto ?? null,
         dosis_aa: tarea.dosis_aa ?? null,
@@ -293,6 +307,7 @@ export const plantillasService = {
         validarCronograma(data);
         validarNombre(data.nombre_pb.trim());
         validarVariedadesAsignadas(data);
+        validarTiposTarea(data);
       } catch (error) {
         return delayReject(error as AxiosError);
       }
@@ -328,6 +343,7 @@ export const plantillasService = {
         validarCronograma(data);
         validarNombre(data.nombre_pb.trim(), id_plantilla_base);
         validarVariedadesAsignadas(data, id_plantilla_base);
+        validarTiposTarea(data);
       } catch (error) {
         return delayReject(error as AxiosError);
       }
